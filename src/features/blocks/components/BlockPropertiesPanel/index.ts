@@ -1,0 +1,1 @@
+export { BlockPropertiesPanel } from "./BlockPropertiesPanel";

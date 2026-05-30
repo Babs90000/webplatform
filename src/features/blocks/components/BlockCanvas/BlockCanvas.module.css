@@ -1,0 +1,76 @@
+.canvas {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: var(--space-xl);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: var(--color-bg-secondary);
+}
+
+.content {
+  width: 100%;
+  max-width: 1200px;
+  background: white;
+  min-height: 800px;
+  box-shadow: var(--shadow-sm);
+  border-radius: var(--radius-sm);
+  display: flex;
+  flex-direction: column;
+}
+
+.emptyState {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-tertiary);
+  padding: var(--space-3xl);
+  text-align: center;
+}
+
+.blockWrapper {
+  position: relative;
+  border: 2px solid transparent;
+  transition: border-color var(--transition-fast);
+}
+
+.blockWrapper:hover {
+  border-color: rgba(99, 102, 241, 0.3);
+}
+
+.blockWrapperActive {
+  border-color: var(--color-accent-primary);
+  z-index: 10;
+}
+
+.blockOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 5;
+  cursor: pointer;
+}
+
+.blockOverlayActive {
+  border: 2px solid var(--color-accent-primary);
+  pointer-events: none;
+}
+
+/* Debug placeholder for block render before Phase 5 */
+.debugBlock {
+  padding: var(--space-lg);
+  background: #f8fafc;
+  color: #0f172a;
+  border-bottom: 1px dashed #cbd5e1;
+  font-family: var(--font-mono);
+}
+
+.addBlockButton {
+  margin: var(--space-xl) auto;
+  display: flex;
+}

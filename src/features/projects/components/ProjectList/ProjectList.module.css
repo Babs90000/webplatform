@@ -1,0 +1,43 @@
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--space-lg);
+}
+
+.skeletonCard {
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border-primary);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  height: 140px;
+  display: flex;
+  flex-direction: column;
+}
+
+.skeletonTitle {
+  width: 60%;
+  height: 24px;
+  background: var(--color-bg-tertiary);
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--space-sm);
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
+.skeletonUrl {
+  width: 40%;
+  height: 16px;
+  background: var(--color-bg-tertiary);
+  border-radius: var(--radius-sm);
+  animation: pulse 1.5s infinite ease-in-out;
+  animation-delay: 0.2s;
+}
+
+.skeletonFooter {
+  margin-top: auto;
+  width: 30%;
+  height: 12px;
+  background: var(--color-bg-tertiary);
+  border-radius: var(--radius-sm);
+  animation: pulse 1.5s infinite ease-in-out;
+  animation-delay: 0.4s;
+}
