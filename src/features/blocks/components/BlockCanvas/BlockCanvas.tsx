@@ -104,7 +104,7 @@ export const BlockCanvas: React.FC<BlockCanvasProps> = ({ pageId }) => {
   const { data: blocks, isLoading } = useBlocks(pageId);
   const { mutate: createBlock } = useCreateBlock(pageId);
   const { mutate: reorderBlocks } = useReorderBlocks(pageId);
-  const { selectedBlockId, selectBlock } = useEditorStore();
+  const { selectedBlockId, selectBlock, switchRightPanel } = useEditorStore();
 
   const [items, setItems] = useState<Block[]>([]);
   const [prevBlocks, setPrevBlocks] = useState<Block[] | undefined>(undefined);
@@ -186,8 +186,21 @@ export const BlockCanvas: React.FC<BlockCanvasProps> = ({ pageId }) => {
       <div className={styles.content}>
         {items.length === 0 ? (
           <div className={styles.emptyState}>
-            <h3>This page is empty</h3>
-            <p>Add some blocks to build your design</p>
+            <span className={styles.emptyIcon}>✨</span>
+            <h3>Page vierge</h3>
+            <p>
+              Décrivez votre site à Hermes — navbar, hero, sections — et il construira
+              la page en temps réel.
+            </p>
+            <Button
+              variant="primary"
+              onClick={(e) => {
+                e.stopPropagation();
+                switchRightPanel("hermes");
+              }}
+            >
+              Construire avec Hermes
+            </Button>
           </div>
         ) : (
           <DndContext 

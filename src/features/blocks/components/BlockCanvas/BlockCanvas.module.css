@@ -29,6 +29,23 @@
   color: var(--color-text-tertiary);
   padding: var(--space-3xl);
   text-align: center;
+  gap: var(--space-md);
+}
+
+.emptyIcon {
+  font-size: 2.5rem;
+}
+
+.emptyState h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.emptyState p {
+  max-width: 360px;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
 }
 
 .blockWrapper {

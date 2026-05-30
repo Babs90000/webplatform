@@ -1,76 +1,93 @@
 import React from "react";
+import type { HeroProps } from "@/types";
 
-export interface HeroBlockProps {
-  title?: string;
-  subtitle?: string;
-  primaryCtaText?: string;
-  primaryCtaLink?: string;
-  secondaryCtaText?: string;
-  secondaryCtaLink?: string;
-  alignment?: "left" | "center" | "right";
-  backgroundColor?: string;
-  textColor?: string;
-}
-
-export const HeroBlock: React.FC<HeroBlockProps> = ({
-  title = "Build something amazing",
-  subtitle = "The most powerful platform to launch your next big idea. Fast, secure, and infinitely scalable.",
-  primaryCtaText = "Get Started",
-  primaryCtaLink = "#",
-  secondaryCtaText = "Learn More",
-  secondaryCtaLink = "#",
-  alignment = "center",
-  backgroundColor = "var(--color-bg-primary)",
-  textColor = "var(--color-text-primary)",
+export const HeroBlock: React.FC<HeroProps> = ({
+  headline = "Build something amazing",
+  subheadline = "The most powerful platform to launch your next big idea. Fast, secure, and infinitely scalable.",
+  cta_label = "Get Started",
+  cta_url = "#",
+  secondary_cta_label,
+  secondary_cta_url,
+  background_image,
+  background_color = "transparent",
+  style = "centered",
+  badge_text,
 }) => {
-  const getAlignment = () => {
-    switch (alignment) {
-      case "left": return "flex-start";
-      case "right": return "flex-end";
-      default: return "center";
-    }
-  };
-
-  const getTextAlign = () => {
-    switch (alignment) {
-      case "left": return "left";
-      case "right": return "right";
-      default: return "center";
-    }
-  };
+  const isSplit = style === "split";
+  const isFullscreen = style === "fullscreen";
 
   return (
     <section 
       style={{
-        backgroundColor,
-        color: textColor,
-        padding: "var(--space-4xl) var(--space-xl)",
+        backgroundColor: background_color,
+        backgroundImage: background_image ? `url(${background_image})` : undefined,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        color: "var(--color-text-primary)",
+        padding: isFullscreen ? "0 var(--space-xl)" : "var(--space-4xl) var(--space-xl)",
         display: "flex",
-        flexDirection: "column",
-        alignItems: getAlignment(),
-        textAlign: getTextAlign(),
-        minHeight: "60vh",
+        flexDirection: isSplit ? "row" : "column",
+        alignItems: "center",
+        textAlign: isSplit ? "left" : "center",
+        minHeight: isFullscreen ? "100vh" : "60vh",
         justifyContent: "center",
         position: "relative",
-        overflow: "hidden"
+        overflow: "hidden",
+        gap: isSplit ? "var(--space-3xl)" : "0",
       }}
     >
-      {/* Premium Glow Effect */}
-      <div 
-        style={{
+      {/* Background Overlay if image exists */}
+      {background_image && (
+        <div style={{
           position: "absolute",
-          top: "50%",
-          left: "50%",
-          transform: "translate(-50%, -50%)",
-          width: "80%",
-          height: "80%",
-          background: "radial-gradient(circle, rgba(99,102,241,0.15) 0%, rgba(0,0,0,0) 70%)",
-          zIndex: 0,
-          pointerEvents: "none"
-        }} 
-      />
+          inset: 0,
+          background: "linear-gradient(135deg, rgba(10,14,26,0.9) 0%, rgba(10,14,26,0.4) 100%)",
+          zIndex: 0
+        }} />
+      )}
 
-      <div style={{ position: "relative", zIndex: 1, maxWidth: "800px", width: "100%" }}>
+      {/* Premium Glow Effect for non-image backgrounds */}
+      {!background_image && !isSplit && (
+        <div 
+          style={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: "80%",
+            height: "80%",
+            background: "radial-gradient(circle, rgba(99,102,241,0.15) 0%, rgba(0,0,0,0) 70%)",
+            zIndex: 0,
+            pointerEvents: "none"
+          }} 
+        />
+      )}
+
+      <div style={{ 
+        position: "relative", 
+        zIndex: 1, 
+        maxWidth: isSplit ? "50%" : "800px", 
+        width: "100%",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: isSplit ? "flex-start" : "center"
+      }}>
+        {badge_text && (
+          <span style={{
+            display: "inline-block",
+            padding: "var(--space-xs) var(--space-md)",
+            background: "rgba(99, 102, 241, 0.1)",
+            color: "var(--color-accent-primary)",
+            borderRadius: "var(--radius-full)",
+            fontSize: "0.875rem",
+            fontWeight: 600,
+            marginBottom: "var(--space-md)",
+            border: "1px solid rgba(99, 102, 241, 0.2)"
+          }}>
+            {badge_text}
+          </span>
+        )}
+
         <h1 
           style={{ 
             fontSize: "clamp(2.5rem, 5vw, 4.5rem)", 
@@ -83,7 +100,7 @@ export const HeroBlock: React.FC<HeroBlockProps> = ({
             WebkitTextFillColor: "transparent"
           }}
         >
-          {title}
+          {headline}
         </h1>
         
         <p 
@@ -93,23 +110,22 @@ export const HeroBlock: React.FC<HeroBlockProps> = ({
             lineHeight: 1.5,
             marginBottom: "var(--space-2xl)",
             maxWidth: "600px",
-            marginInline: alignment === "center" ? "auto" : "0"
           }}
         >
-          {subtitle}
+          {subheadline}
         </p>
         
         <div 
           style={{ 
             display: "flex", 
             gap: "var(--space-md)", 
-            justifyContent: getAlignment(),
+            justifyContent: isSplit ? "flex-start" : "center",
             flexWrap: "wrap"
           }}
         >
-          {primaryCtaText && (
+          {cta_label && (
             <a 
-              href={primaryCtaLink}
+              href={cta_url}
               style={{
                 padding: "16px 32px",
                 backgroundColor: "var(--color-accent-primary)",
@@ -129,13 +145,13 @@ export const HeroBlock: React.FC<HeroBlockProps> = ({
                 e.currentTarget.style.backgroundColor = "var(--color-accent-primary)";
               }}
             >
-              {primaryCtaText}
+              {cta_label}
             </a>
           )}
           
-          {secondaryCtaText && (
+          {secondary_cta_label && (
             <a 
-              href={secondaryCtaLink}
+              href={secondary_cta_url || "#"}
               style={{
                 padding: "16px 32px",
                 backgroundColor: "rgba(255, 255, 255, 0.05)",
@@ -153,11 +169,37 @@ export const HeroBlock: React.FC<HeroBlockProps> = ({
                 e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.05)";
               }}
             >
-              {secondaryCtaText}
+              {secondary_cta_label}
             </a>
           )}
         </div>
       </div>
+
+      {/* Split layout placeholder image */}
+      {isSplit && (
+        <div style={{
+          flex: 1,
+          width: "100%",
+          height: "400px",
+          background: "var(--glass-bg)",
+          backdropFilter: "blur(var(--glass-blur))",
+          borderRadius: "var(--radius-xl)",
+          border: "1px solid var(--glass-border)",
+          position: "relative",
+          zIndex: 1,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          color: "var(--color-text-tertiary)"
+        }}>
+          {/* Placeholder illustration */}
+          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+            <polyline points="21 15 16 10 5 21"></polyline>
+          </svg>
+        </div>
+      )}
     </section>
   );
 };

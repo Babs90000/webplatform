@@ -54,6 +54,12 @@
   color: var(--color-text-primary);
 }
 
+.headerActions {
+  display: flex;
+  gap: var(--space-sm);
+  align-items: center;
+}
+
 .chatArea {
   flex: 1;
   overflow-y: auto;

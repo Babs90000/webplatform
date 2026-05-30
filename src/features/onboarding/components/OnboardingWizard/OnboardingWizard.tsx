@@ -75,6 +75,22 @@ export const OnboardingWizard: React.FC = () => {
     }
   };
 
+  const handleSkipToHermes = async () => {
+    try {
+      const res = await startOnboarding.mutateAsync(undefined);
+      const { pagesApi } = await import("@/features/pages/services/pagesApi");
+      await pagesApi.create(res.project_id, {
+        title: "Accueil",
+        slug: "accueil",
+        order_index: 0,
+      });
+      toast.success("Projet prêt — décrivez votre site à Hermes");
+      router.push(`/projects/${res.project_id}/editor?hermes=1`);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const currentQuestionsList =
     phase === "base" ? baseQuestions : dynamicQuestions;
   const currentQuestion = currentQuestionsList[currentStep];
@@ -309,8 +325,16 @@ export const OnboardingWizard: React.FC = () => {
               isLoading={startOnboarding.isPending}
               fullWidth
             >
-              C'est parti !
+              C&apos;est parti !
             </Button>
+            <button
+              type="button"
+              className={styles.skipLink}
+              onClick={handleSkipToHermes}
+              disabled={startOnboarding.isPending}
+            >
+              Ignorer et construire avec l&apos;IA →
+            </button>
           </div>
         </div>
       </div>

@@ -24,10 +24,10 @@ export const HermesChatSidebar: React.FC<HermesChatSidebarProps> = ({
 
   // Suggestions for rapid user building
   const defaultSuggestions = [
+    "Crée un site complet pour un garage automobile, thème rouge et noir",
     "Ajoute une section témoignages",
     "Remplace le titre du Hero",
     "Ajoute une section tarifs (pricing)",
-    "Créer une section FAQ à la fin",
   ];
 
   // Scroll to bottom on new messages
@@ -68,7 +68,7 @@ export const HermesChatSidebar: React.FC<HermesChatSidebarProps> = ({
             className={`${styles.statusIndicator} ${hermesIsThinking ? styles.statusIndicatorPulse : ""}`}
           />
         </div>
-        <div style={{ display: "flex", gap: "8px" }}>
+        <div className={styles.headerActions}>
           {hermesMessages.length > 0 && (
             <button
               onClick={clearHermesMessages}

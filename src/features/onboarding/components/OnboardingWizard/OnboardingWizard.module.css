@@ -355,6 +355,27 @@
   text-align: center;
 }
 
+.skipLink {
+  margin-top: var(--space-lg);
+  background: transparent;
+  border: none;
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color var(--transition-fast);
+}
+
+.skipLink:hover:not(:disabled) {
+  color: var(--color-accent-primary);
+}
+
+.skipLink:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .welcomeIcon {
   font-size: 3rem;
   margin-bottom: var(--space-md);

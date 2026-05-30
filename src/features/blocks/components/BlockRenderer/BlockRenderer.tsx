@@ -13,16 +13,15 @@ import { FooterBlock } from "../blocks/FooterBlock";
 
 // The registry mapping BlockType to React Components
 const BlockRegistry: Record<BlockType, React.FC<Record<string, unknown>>> = {
-  // Phase 1 (Implemented)
-  navbar: NavbarBlock as React.FC<Record<string, unknown>>,
-  hero: HeroBlock as React.FC<Record<string, unknown>>,
-  features: FeaturesBlock as React.FC<Record<string, unknown>>,
-  text: TextBlock as React.FC<Record<string, unknown>>,
-  gallery: GalleryBlock as React.FC<Record<string, unknown>>,
-  testimonials: TestimonialsBlock as React.FC<Record<string, unknown>>,
-  pricing: PricingBlock as React.FC<Record<string, unknown>>,
-  cta: CTABlock as React.FC<Record<string, unknown>>,
-  footer: FooterBlock as React.FC<Record<string, unknown>>,
+  navbar: NavbarBlock as unknown as React.FC<Record<string, unknown>>,
+  hero: HeroBlock as unknown as React.FC<Record<string, unknown>>,
+  features: FeaturesBlock as unknown as React.FC<Record<string, unknown>>,
+  text: TextBlock as unknown as React.FC<Record<string, unknown>>,
+  gallery: GalleryBlock as unknown as React.FC<Record<string, unknown>>,
+  testimonials: TestimonialsBlock as unknown as React.FC<Record<string, unknown>>,
+  pricing: PricingBlock as unknown as React.FC<Record<string, unknown>>,
+  cta: CTABlock as unknown as React.FC<Record<string, unknown>>,
+  footer: FooterBlock as unknown as React.FC<Record<string, unknown>>,
   
   // Phase 1 (Pending implementation)
   faq: PlaceholderBlock as unknown as React.FC<Record<string, unknown>>,

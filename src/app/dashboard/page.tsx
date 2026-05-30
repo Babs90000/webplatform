@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 import styles from "./Dashboard.module.css";
 import { AuthGuard } from "@/shared/components/AuthGuard";
 import { Button } from "@/shared/components/Button";
@@ -11,9 +13,19 @@ import { ProjectList } from "@/features/projects/components/ProjectList";
 import { CreateProjectForm } from "@/features/projects/components/CreateProjectForm";
 
 const DashboardPage: React.FC = () => {
+  const router = useRouter();
   const { user, logout } = useAuth();
   const { data: projects, isLoading, error, refetch } = useProjects();
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleProjectCreated = (
+    projectId: string,
+    options?: { openHermes?: boolean },
+  ): void => {
+    setIsModalOpen(false);
+    const query = options?.openHermes ? "?hermes=1" : "";
+    router.push(`/projects/${projectId}/editor${query}`);
+  };
 
   return (
     <AuthGuard>
@@ -26,8 +38,11 @@ const DashboardPage: React.FC = () => {
             </p>
           </div>
           <div className={styles.headerActions}>
+            <Link href="/onboarding" className={styles.onboardingLink}>
+              Assistant guidé
+            </Link>
             <Button variant="ghost" onClick={logout}>
-              Sign out
+              Déconnexion
             </Button>
             <Button onClick={() => setIsModalOpen(true)}>
               <svg 
@@ -57,8 +72,8 @@ const DashboardPage: React.FC = () => {
           onClose={() => setIsModalOpen(false)}
           title="Create a New Project"
         >
-          <CreateProjectForm 
-            onSuccess={() => setIsModalOpen(false)}
+          <CreateProjectForm
+            onSuccess={handleProjectCreated}
             onCancel={() => setIsModalOpen(false)}
           />
         </Modal>

@@ -4,21 +4,51 @@ import type { Page, CreatePageBody, UpdatePageBody, ReorderPagesBody } from "@/t
 
 const getToken = () => useAuthStore.getState().token || undefined;
 
+interface PagesListResponse {
+  pages: Page[];
+}
+
+interface PageResponse {
+  page: Page;
+}
+
 export const pagesApi = {
-  getAll: (projectId: string): Promise<Page[]> => {
-    return api.get<Page[]>(`/projects/${projectId}/pages`, getToken());
+  getAll: async (projectId: string): Promise<Page[]> => {
+    const data = await api.get<PagesListResponse>(
+      `/projects/${projectId}/pages`,
+      getToken(),
+    );
+    return data.pages;
   },
 
-  getById: (projectId: string, pageId: string): Promise<Page> => {
-    return api.get<Page>(`/projects/${projectId}/pages/${pageId}`, getToken());
+  getById: async (projectId: string, pageId: string): Promise<Page> => {
+    const data = await api.get<PageResponse>(
+      `/projects/${projectId}/pages/${pageId}`,
+      getToken(),
+    );
+    return data.page;
   },
 
-  create: (projectId: string, data: CreatePageBody): Promise<Page> => {
-    return api.post<Page>(`/projects/${projectId}/pages`, data, getToken());
+  create: async (projectId: string, data: CreatePageBody): Promise<Page> => {
+    const res = await api.post<PageResponse>(
+      `/projects/${projectId}/pages`,
+      data,
+      getToken(),
+    );
+    return res.page;
   },
 
-  update: (projectId: string, pageId: string, data: UpdatePageBody): Promise<Page> => {
-    return api.put<Page>(`/projects/${projectId}/pages/${pageId}`, data, getToken());
+  update: async (
+    projectId: string,
+    pageId: string,
+    data: UpdatePageBody,
+  ): Promise<Page> => {
+    const res = await api.put<PageResponse>(
+      `/projects/${projectId}/pages/${pageId}`,
+      data,
+      getToken(),
+    );
+    return res.page;
   },
 
   delete: (projectId: string, pageId: string): Promise<void> => {

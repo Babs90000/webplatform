@@ -4,28 +4,44 @@ import type { Project, CreateProjectBody, UpdateProjectBody } from "@/types";
 
 const getToken = () => useAuthStore.getState().token || undefined;
 
+interface ProjectsListResponse {
+  projects: Project[];
+}
+
+interface ProjectResponse {
+  project: Project;
+}
+
 export const projectsApi = {
-  getAll: (): Promise<Project[]> => {
-    return api.get<Project[]>("/projects", getToken());
+  getAll: async (): Promise<Project[]> => {
+    const data = await api.get<ProjectsListResponse>("/projects", getToken());
+    return data.projects;
   },
 
-  getById: (id: string): Promise<Project> => {
-    return api.get<Project>(`/projects/${id}`, getToken());
+  getById: async (id: string): Promise<Project> => {
+    const data = await api.get<ProjectResponse>(`/projects/${id}`, getToken());
+    return data.project;
   },
 
-  create: (data: CreateProjectBody): Promise<Project> => {
-    return api.post<Project>("/projects", data, getToken());
+  create: async (data: CreateProjectBody): Promise<Project> => {
+    const res = await api.post<ProjectResponse>("/projects", data, getToken());
+    return res.project;
   },
 
-  update: (id: string, data: UpdateProjectBody): Promise<Project> => {
-    return api.put<Project>(`/projects/${id}`, data, getToken());
+  update: async (id: string, data: UpdateProjectBody): Promise<Project> => {
+    const res = await api.put<ProjectResponse>(`/projects/${id}`, data, getToken());
+    return res.project;
   },
 
   delete: (id: string): Promise<void> => {
     return api.delete(`/projects/${id}`, getToken());
   },
 
-  publish: (id: string, data: { custom_domain?: string; subdomain?: string }): Promise<Project> => {
-    return api.post<Project>(`/projects/${id}/publish`, data, getToken());
+  publish: async (
+    id: string,
+    data: { custom_domain?: string; subdomain?: string },
+  ): Promise<Project> => {
+    const res = await api.post<ProjectResponse>(`/projects/${id}/publish`, data, getToken());
+    return res.project;
   },
 };

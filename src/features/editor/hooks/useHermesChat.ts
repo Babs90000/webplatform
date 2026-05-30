@@ -4,6 +4,7 @@ import { blocksApi } from "@/features/blocks/services/blocksApi";
 import { useEditorStore } from "@/store/editor";
 import { toast } from "@/store/toast";
 import { ApiError } from "@/lib/api";
+import { isBlockType, type BlockType } from "@/types";
 
 export const useSendHermesMessage = (pageId: string | null) => {
   const queryClient = useQueryClient();
@@ -45,10 +46,10 @@ export const useSendHermesMessage = (pageId: string | null) => {
       if (res.mutations && res.mutations.length > 0) {
         for (const mut of res.mutations) {
           try {
-            if (mut.action === "add" && mut.type) {
+            if (mut.action === "add" && mut.type && isBlockType(mut.type)) {
               await blocksApi.create(pageId, {
-                type: mut.type as any,
-                props: mut.props || {},
+                type: mut.type as BlockType,
+                props: mut.props ?? {},
                 order_index: mut.order_index,
               });
             } else if (mut.action === "update" && mut.block_id) {

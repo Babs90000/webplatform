@@ -1,48 +1,44 @@
 import React from "react";
+import type { NavbarProps } from "@/types";
 
-export interface NavbarBlockProps {
-  logoText?: string;
-  logoImageUrl?: string;
-  links?: Array<{ label: string; url: string }>;
-  ctaText?: string;
-  ctaLink?: string;
-  backgroundColor?: string;
-  textColor?: string;
-}
-
-export const NavbarBlock: React.FC<NavbarBlockProps> = ({
-  logoText = "WebPlatform",
-  logoImageUrl = "",
+export const NavbarBlock: React.FC<NavbarProps> = ({
+  logo_text = "WebPlatform",
+  logo_image = "",
   links = [
     { label: "Home", url: "#" },
     { label: "Features", url: "#" },
     { label: "Pricing", url: "#" },
     { label: "Contact", url: "#" },
   ],
-  ctaText = "Get Started",
-  ctaLink = "#",
-  backgroundColor = "transparent",
-  textColor = "var(--color-text-primary)",
+  cta_label = "Get Started",
+  cta_url = "#",
+  style = "transparent",
+  bg_color = "var(--color-bg-primary)",
 }) => {
+  const isCentered = style === "centered";
+  const isTransparent = style === "transparent";
+
   return (
     <nav
       style={{
-        backgroundColor,
-        color: textColor,
+        backgroundColor: isTransparent ? "transparent" : bg_color,
+        color: "var(--color-text-primary)",
         padding: "var(--space-md) var(--space-xl)",
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
-        borderBottom: backgroundColor === "transparent" ? "1px solid rgba(255,255,255,0.05)" : "none",
+        borderBottom: isTransparent ? "1px solid rgba(255,255,255,0.05)" : "1px solid var(--color-border-subtle)",
         width: "100%",
         position: "relative",
-        zIndex: 10
+        zIndex: 10,
+        flexDirection: isCentered ? "column" : "row",
+        gap: isCentered ? "var(--space-md)" : "0"
       }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: "var(--space-sm)", fontWeight: 700, fontSize: "1.25rem" }}>
-        {logoImageUrl ? (
+        {logo_image ? (
           /* eslint-disable-next-line @next/next/no-img-element */
-          <img src={logoImageUrl} alt={logoText} style={{ height: "32px" }} />
+          <img src={logo_image} alt={logo_text} style={{ height: "32px" }} />
         ) : (
           <div style={{
             width: "32px",
@@ -55,10 +51,10 @@ export const NavbarBlock: React.FC<NavbarBlockProps> = ({
             color: "white",
             fontSize: "1rem"
           }}>
-            {logoText.charAt(0)}
+            {logo_text.charAt(0)}
           </div>
         )}
-        <span>{logoText}</span>
+        <span>{logo_text}</span>
       </div>
 
       <div style={{ display: "flex", alignItems: "center", gap: "var(--space-xl)" }}>
@@ -81,9 +77,9 @@ export const NavbarBlock: React.FC<NavbarBlockProps> = ({
         ))}
       </div>
 
-      {ctaText && (
+      {cta_label && (
         <a
-          href={ctaLink}
+          href={cta_url}
           style={{
             padding: "10px 20px",
             backgroundColor: "var(--color-text-primary)",
@@ -97,7 +93,7 @@ export const NavbarBlock: React.FC<NavbarBlockProps> = ({
           onMouseOver={(e) => e.currentTarget.style.transform = "scale(1.05)"}
           onMouseOut={(e) => e.currentTarget.style.transform = "scale(1)"}
         >
-          {ctaText}
+          {cta_label}
         </a>
       )}
     </nav>

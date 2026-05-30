@@ -4,21 +4,51 @@ import type { Block, CreateBlockBody, UpdateBlockBody, ReorderBlocksBody } from 
 
 const getToken = () => useAuthStore.getState().token || undefined;
 
+interface BlocksListResponse {
+  blocks: Block[];
+}
+
+interface BlockResponse {
+  block: Block;
+}
+
 export const blocksApi = {
-  getAll: (pageId: string): Promise<Block[]> => {
-    return api.get<Block[]>(`/pages/${pageId}/blocks`, getToken());
+  getAll: async (pageId: string): Promise<Block[]> => {
+    const data = await api.get<BlocksListResponse>(
+      `/pages/${pageId}/blocks`,
+      getToken(),
+    );
+    return data.blocks;
   },
 
-  getById: (pageId: string, blockId: string): Promise<Block> => {
-    return api.get<Block>(`/pages/${pageId}/blocks/${blockId}`, getToken());
+  getById: async (pageId: string, blockId: string): Promise<Block> => {
+    const data = await api.get<BlockResponse>(
+      `/pages/${pageId}/blocks/${blockId}`,
+      getToken(),
+    );
+    return data.block;
   },
 
-  create: (pageId: string, data: CreateBlockBody): Promise<Block> => {
-    return api.post<Block>(`/pages/${pageId}/blocks`, data, getToken());
+  create: async (pageId: string, data: CreateBlockBody): Promise<Block> => {
+    const res = await api.post<BlockResponse>(
+      `/pages/${pageId}/blocks`,
+      data,
+      getToken(),
+    );
+    return res.block;
   },
 
-  update: (pageId: string, blockId: string, data: UpdateBlockBody): Promise<Block> => {
-    return api.put<Block>(`/pages/${pageId}/blocks/${blockId}`, data, getToken());
+  update: async (
+    pageId: string,
+    blockId: string,
+    data: UpdateBlockBody,
+  ): Promise<Block> => {
+    const res = await api.put<BlockResponse>(
+      `/pages/${pageId}/blocks/${blockId}`,
+      data,
+      getToken(),
+    );
+    return res.block;
   },
 
   delete: (pageId: string, blockId: string): Promise<void> => {
