@@ -172,6 +172,22 @@ export const BlockPropertiesPanel: React.FC<BlockPropertiesPanelProps> = ({ page
       </div>
 
       <div className={styles.content}>
+        <div className={styles.fieldGroup}>
+          <label className={styles.label}>A/B Variant ID</label>
+          <input
+            type="text"
+            className={styles.input}
+            placeholder="e.g. variant_a"
+            value={selectedBlock.ab_variant || ""}
+            onChange={(e) => {
+              updateBlock({
+                blockId: selectedBlock.id,
+                data: { ab_variant: e.target.value || null }
+              });
+            }}
+          />
+        </div>
+        <hr style={{ margin: "16px 0", borderColor: "var(--color-border-subtle)" }} />
         {schema && schema.length > 0 ? (
           schema.map(renderField)
         ) : (

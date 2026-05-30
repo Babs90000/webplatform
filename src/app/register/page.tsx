@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import { Suspense } from "react";
 import { AuthLayout } from "@/shared/components/AuthLayout";
 import { RegisterForm } from "@/features/auth/components/RegisterForm";
 
@@ -13,7 +14,9 @@ const RegisterPage: React.FC = () => {
       title="Create an account"
       subtitle="Start building beautiful websites today"
     >
-      <RegisterForm />
+      <Suspense fallback={<div style={{ textAlign: "center", padding: "1rem" }}>Chargement...</div>}>
+        <RegisterForm />
+      </Suspense>
     </AuthLayout>
   );
 };

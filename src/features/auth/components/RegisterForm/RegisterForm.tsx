@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { z } from "zod";
 import styles from "./RegisterForm.module.css";
 import { Input } from "@/shared/components/Input";
@@ -21,6 +21,9 @@ type RegisterFormData = z.infer<typeof registerSchema>;
 
 export const RegisterForm: React.FC = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const refCode = searchParams.get("ref");
+  
   const { register, isLoading, error, clearError, isAuthenticated } = useAuth();
   
   const [formData, setFormData] = useState<RegisterFormData>({
@@ -30,12 +33,13 @@ export const RegisterForm: React.FC = () => {
   });
   
   const [validationErrors, setValidationErrors] = useState<Partial<Record<keyof RegisterFormData, string>>>({});
+  const [isRegistering, setIsRegistering] = useState(false);
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && !isRegistering) {
       router.replace("/dashboard");
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, router, isRegistering]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -62,10 +66,17 @@ export const RegisterForm: React.FC = () => {
     }
 
     try {
-      await register(result.data.email, result.data.password, result.data.name);
+      setIsRegistering(true);
+      await register(
+        result.data.email,
+        result.data.password,
+        result.data.name,
+        refCode || undefined,
+      );
       toast.success("Account created successfully");
-      router.push("/dashboard");
+      router.push("/onboarding");
     } catch (err) {
+      setIsRegistering(false);
       console.error(err);
     }
   };

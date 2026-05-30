@@ -24,4 +24,8 @@ export const projectsApi = {
   delete: (id: string): Promise<void> => {
     return api.delete(`/projects/${id}`, getToken());
   },
+
+  publish: (id: string, data: { custom_domain?: string; subdomain?: string }): Promise<Project> => {
+    return api.post<Project>(`/projects/${id}/publish`, data, getToken());
+  },
 };

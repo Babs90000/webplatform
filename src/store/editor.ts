@@ -2,6 +2,11 @@
 
 import { create } from "zustand";
 
+export interface ChatMessage {
+  role: "user" | "assistant";
+  content: string;
+}
+
 interface EditorState {
   projectId: string | null;
   selectedPageId: string | null;
@@ -9,6 +14,11 @@ interface EditorState {
   isPreviewMode: boolean;
   isSidebarCollapsed: boolean;
   isPropertiesCollapsed: boolean;
+  
+  // Hermes V2 Chat State
+  hermesMessages: ChatMessage[];
+  hermesIsThinking: boolean;
+  activeRightPanel: "properties" | "hermes";
 
   setProjectId: (id: string) => void;
   selectPage: (id: string) => void;
@@ -16,6 +26,13 @@ interface EditorState {
   togglePreview: () => void;
   toggleSidebar: () => void;
   toggleProperties: () => void;
+  
+  // Hermes V2 Chat Actions
+  addHermesMessage: (message: ChatMessage) => void;
+  setHermesIsThinking: (isThinking: boolean) => void;
+  switchRightPanel: (panel: "properties" | "hermes") => void;
+  clearHermesMessages: () => void;
+  
   reset: () => void;
 }
 
@@ -26,6 +43,9 @@ const INITIAL_STATE = {
   isPreviewMode: false,
   isSidebarCollapsed: false,
   isPropertiesCollapsed: false,
+  hermesMessages: [] as ChatMessage[],
+  hermesIsThinking: false,
+  activeRightPanel: "properties" as "properties" | "hermes",
 };
 
 export const useEditorStore = create<EditorState>((set) => ({
@@ -53,6 +73,22 @@ export const useEditorStore = create<EditorState>((set) => ({
 
   toggleProperties: (): void => {
     set((state) => ({ isPropertiesCollapsed: !state.isPropertiesCollapsed }));
+  },
+
+  addHermesMessage: (message: ChatMessage): void => {
+    set((state) => ({ hermesMessages: [...state.hermesMessages, message] }));
+  },
+
+  setHermesIsThinking: (isThinking: boolean): void => {
+    set({ hermesIsThinking: isThinking });
+  },
+
+  switchRightPanel: (panel: "properties" | "hermes"): void => {
+    set({ activeRightPanel: panel, isPropertiesCollapsed: false });
+  },
+
+  clearHermesMessages: (): void => {
+    set({ hermesMessages: [] });
   },
 
   reset: (): void => {

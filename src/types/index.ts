@@ -405,6 +405,7 @@ export interface Block {
   order_index: number;
   props: BlockProps;
   template_id?: string | null;
+  ab_variant?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -508,11 +509,13 @@ export interface CreateBlockBody {
   props: BlockProps;
   order_index?: number;
   template_id?: string | null;
+  ab_variant?: string;
 }
 
 export interface UpdateBlockBody {
   props?: BlockProps;
   order_index?: number;
+  ab_variant?: string | null;
 }
 
 export interface ReorderBlocksBody {

@@ -12,6 +12,8 @@ interface EditorLayoutProps {
   projectId: string;
 }
 
+import { HermesChatSidebar } from "../HermesChatSidebar";
+
 export const EditorLayout: React.FC<EditorLayoutProps> = ({
   toolbar,
   pageTree,
@@ -19,7 +21,15 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
   propertiesPanel,
   projectId,
 }) => {
-  const { isSidebarCollapsed, isPropertiesCollapsed, setProjectId, reset } = useEditorStore();
+  const {
+    isSidebarCollapsed,
+    isPropertiesCollapsed,
+    activeRightPanel,
+    switchRightPanel,
+    selectedPageId,
+    setProjectId,
+    reset,
+  } = useEditorStore();
 
   useEffect(() => {
     setProjectId(projectId);
@@ -30,20 +40,47 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
     <div className={styles.layout}>
       {toolbar}
       <main className={styles.main}>
-        <aside 
+        <aside
           className={`${styles.sidebarLeft} ${isSidebarCollapsed ? styles.sidebarLeftCollapsed : ""}`}
         >
           {pageTree}
         </aside>
-        
-        <section className={styles.canvas}>
-          {canvas}
-        </section>
-        
-        <aside 
+
+        <section className={styles.canvas}>{canvas}</section>
+
+        <aside
           className={`${styles.sidebarRight} ${isPropertiesCollapsed ? styles.sidebarRightCollapsed : ""}`}
         >
-          {propertiesPanel}
+          {!isPropertiesCollapsed && (
+            <div className={styles.rightPanelContainer}>
+              <div className={styles.tabHeaders}>
+                <button
+                  type="button"
+                  className={`${styles.tabHeader} ${activeRightPanel === "properties" ? styles.tabHeaderActive : ""}`}
+                  onClick={() => switchRightPanel("properties")}
+                >
+                  Propriétés
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.tabHeader} ${activeRightPanel === "hermes" ? styles.tabHeaderActive : ""}`}
+                  onClick={() => switchRightPanel("hermes")}
+                >
+                  Assistant IA ✨
+                </button>
+              </div>
+              <div className={styles.tabContent}>
+                {activeRightPanel === "properties" ? (
+                  propertiesPanel
+                ) : (
+                  <HermesChatSidebar
+                    pageId={selectedPageId}
+                    onClose={() => useEditorStore.getState().toggleProperties()}
+                  />
+                )}
+              </div>
+            </div>
+          )}
         </aside>
       </main>
     </div>

@@ -51,3 +51,45 @@
 .sidebarRightCollapsed {
   margin-right: calc(-1 * var(--properties-width));
 }
+
+.rightPanelContainer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.tabHeaders {
+  display: flex;
+  background: var(--color-bg-primary);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.tabHeader {
+  flex: 1;
+  padding: var(--space-sm) var(--space-md);
+  background: transparent;
+  border: none;
+  color: var(--color-text-secondary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  transition: all var(--transition-fast);
+  border-bottom: 2px solid transparent;
+}
+
+.tabHeader:hover {
+  color: var(--color-text-primary);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.tabHeaderActive {
+  color: var(--color-accent-primary);
+  border-bottom-color: var(--color-accent-primary);
+  background: rgba(99, 102, 241, 0.05);
+}
+
+.tabContent {
+  flex: 1;
+  overflow: hidden;
+}
