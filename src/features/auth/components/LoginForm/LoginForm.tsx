@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { z } from "zod";
@@ -8,12 +8,13 @@ import styles from "./LoginForm.module.css";
 import { Input } from "@/shared/components/Input";
 import { Button } from "@/shared/components/Button";
 import { ErrorMessage } from "@/shared/components/ErrorMessage";
+import { useZodForm } from "@/shared/hooks/useZodForm";
 import { useAuth } from "../../hooks/useAuth";
 import { toast } from "@/store/toast";
 
 const loginSchema = z.object({
-  email: z.string().email("Invalid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  email: z.string().email("Email invalide"),
+  password: z.string().min(6, "Le mot de passe doit contenir au moins 6 caractères"),
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
@@ -22,12 +23,18 @@ export const LoginForm: React.FC = () => {
   const router = useRouter();
   const { login, isLoading, error, clearError, isAuthenticated } = useAuth();
   
-  const [formData, setFormData] = useState<LoginFormData>({
-    email: "",
-    password: "",
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useZodForm({
+    schema: loginSchema,
+    defaultValues: {
+      email: "",
+      password: "",
+    },
   });
-  
-  const [validationErrors, setValidationErrors] = useState<Partial<Record<keyof LoginFormData, string>>>({});
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -35,88 +42,72 @@ export const LoginForm: React.FC = () => {
     }
   }, [isAuthenticated, router]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    // Clear field specific error
-    if (validationErrors[name as keyof LoginFormData]) {
-      setValidationErrors((prev) => ({ ...prev, [name]: undefined }));
-    }
+  useEffect(() => {
     if (error) clearError();
-  };
+  }, [error, clearError]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Validate
-    const result = loginSchema.safeParse(formData);
-    if (!result.success) {
-      const errors: Partial<Record<keyof LoginFormData, string>> = {};
-      result.error.issues.forEach((err) => {
-        if (err.path[0]) {
-          errors[err.path[0] as keyof LoginFormData] = err.message;
-        }
-      });
-      setValidationErrors(errors);
-      return;
-    }
-
+  const onSubmit = async (data: LoginFormData) => {
     try {
-      await login(result.data.email, result.data.password);
-      toast.success("Successfully logged in");
+      await login(data.email, data.password);
+      toast.success("Connexion réussie");
+      reset();
       router.push("/dashboard");
     } catch (err) {
-      // Error is handled in the store, just prevent unhandled rejection
       console.error(err);
     }
   };
 
   return (
     <div>
-      {error && (
-        <ErrorMessage 
-          message={error} 
-          className="mb-4"
-          onRetry={() => clearError()} 
-        />
-      )}
+      {error && <ErrorMessage message={error} className="mb-4" />}
       
-      <form onSubmit={handleSubmit} className={styles.form}>
-        <Input
-          label="Email"
-          type="email"
-          name="email"
-          value={formData.email}
-          onChange={handleChange}
-          error={validationErrors.email}
-          placeholder="you@example.com"
-          required
-        />
+      <form onSubmit={handleSubmit(onSubmit)} className={styles.form} noValidate>
+        <div>
+          <Input
+            label="Email"
+            type="email"
+            placeholder="you@example.com"
+            aria-invalid={!!errors.email}
+            aria-describedby={errors.email ? "email-error" : undefined}
+            {...register("email")}
+          />
+          {errors.email && (
+            <span id="email-error" className={styles.error} role="alert">
+              {errors.email.message}
+            </span>
+          )}
+        </div>
         
-        <Input
-          label="Password"
-          type="password"
-          name="password"
-          value={formData.password}
-          onChange={handleChange}
-          error={validationErrors.password}
-          placeholder="••••••••"
-          required
-        />
+        <div>
+          <Input
+            label="Mot de passe"
+            type="password"
+            placeholder="••••••••"
+            aria-invalid={!!errors.password}
+            aria-describedby={errors.password ? "password-error" : undefined}
+            {...register("password")}
+          />
+          {errors.password && (
+            <span id="password-error" className={styles.error} role="alert">
+              {errors.password.message}
+            </span>
+          )}
+        </div>
         
         <Button 
           type="submit" 
           fullWidth 
           isLoading={isLoading}
+          ariaLabel="Se connecter"
         >
-          Sign In
+          Se connecter
         </Button>
       </form>
       
       <div className={styles.footer}>
-        Don&apos;t have an account?{" "}
+        Pas de compte ?{" "}
         <Link href="/register" className={styles.link}>
-          Sign up
+          S&apos;inscrire
         </Link>
       </div>
     </div>

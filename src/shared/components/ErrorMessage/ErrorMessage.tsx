@@ -15,7 +15,7 @@ export const ErrorMessage: React.FC<ErrorMessageProps> = ({
   className,
 }) => {
   return (
-    <div className={`${styles.container} ${className ?? ""}`}>
+    <div className={`${styles.container} ${className ?? ""}`} role="alert">
       <svg
         className={styles.icon}
         viewBox="0 0 24 24"

@@ -3,6 +3,7 @@
 import React, { useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useAuthStore } from "@/store/auth";
+import { ErrorBoundary } from "@/shared/components/ErrorBoundary";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -15,19 +16,28 @@ const queryClient = new QueryClient({
 });
 
 const AuthHydrator: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const hydrate = useAuthStore((s) => s.hydrate);
-
   useEffect(() => {
-    hydrate();
-  }, [hydrate]);
+    if (useAuthStore.persist.hasHydrated()) {
+      useAuthStore.setState({ isHydrated: true });
+      return;
+    }
+
+    const unsub = useAuthStore.persist.onFinishHydration(() => {
+      useAuthStore.setState({ isHydrated: true });
+    });
+
+    return unsub;
+  }, []);
 
   return <>{children}</>;
 };
 
 export const Providers: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthHydrator>{children}</AuthHydrator>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <AuthHydrator>{children}</AuthHydrator>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 };

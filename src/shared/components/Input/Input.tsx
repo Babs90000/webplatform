@@ -8,15 +8,10 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   as?: "input" | "textarea";
 }
 
-export const Input: React.FC<InputProps> = ({
-  label,
-  error,
-  icon,
-  as = "input",
-  id,
-  className,
-  ...rest
-}) => {
+export const Input = React.forwardRef<
+  HTMLInputElement | HTMLTextAreaElement,
+  InputProps
+>(({ label, error, icon, as = "input", id, className, ...rest }, ref) => {
   const inputId = id || label?.toLowerCase().replace(/\s+/g, "-");
   const inputClasses = [
     styles.input,
@@ -40,14 +35,22 @@ export const Input: React.FC<InputProps> = ({
         {as === "textarea" ? (
           <textarea
             id={inputId}
+            ref={ref as React.Ref<HTMLTextAreaElement>}
             className={inputClasses}
             {...(rest as React.TextareaHTMLAttributes<HTMLTextAreaElement>)}
           />
         ) : (
-          <input id={inputId} className={inputClasses} {...rest} />
+          <input
+            id={inputId}
+            ref={ref as React.Ref<HTMLInputElement>}
+            className={inputClasses}
+            {...rest}
+          />
         )}
       </div>
       {error && <span className={styles.errorMessage}>{error}</span>}
     </div>
   );
-};
+});
+
+Input.displayName = "Input";

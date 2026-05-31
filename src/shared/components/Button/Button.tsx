@@ -1,11 +1,13 @@
 import React from "react";
 import styles from "./Button.module.css";
+import clsx from "clsx";
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "primary" | "secondary" | "ghost" | "danger";
   size?: "sm" | "md" | "lg";
   isLoading?: boolean;
   fullWidth?: boolean;
+  ariaLabel?: string;
   children: React.ReactNode;
 }
 
@@ -14,25 +16,28 @@ export const Button: React.FC<ButtonProps> = ({
   size = "md",
   isLoading = false,
   fullWidth = false,
+  ariaLabel,
   children,
   disabled,
   className,
+  type = "button",
   ...rest
 }) => {
-  const classNames = [
+  const classNames = clsx(
     styles.button,
     styles[variant],
     styles[size],
-    fullWidth ? styles.fullWidth : "",
-    className ?? "",
-  ]
-    .filter(Boolean)
-    .join(" ");
+    fullWidth && styles.fullWidth,
+    className
+  );
 
   return (
     <button
+      type={type}
       className={classNames}
       disabled={disabled || isLoading}
+      aria-label={ariaLabel}
+      aria-busy={isLoading}
       {...rest}
     >
       {isLoading && (
@@ -41,6 +46,7 @@ export const Button: React.FC<ButtonProps> = ({
           viewBox="0 0 24 24"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
+          aria-hidden="true"
         >
           <circle
             cx="12"
@@ -59,7 +65,7 @@ export const Button: React.FC<ButtonProps> = ({
           />
         </svg>
       )}
-      {children}
+      <span>{children}</span>
     </button>
   );
 };

@@ -1,6 +1,7 @@
 "use client";
 
 import { create } from "zustand";
+import { persist, devtools } from "zustand/middleware";
 import { api, ApiError } from "@/lib/api";
 import type { JwtUser } from "@/types";
 
@@ -25,71 +26,91 @@ interface AuthResponse {
   user: JwtUser;
 }
 
-export const useAuthStore = create<AuthState>((set, get) => ({
-  token: null,
-  user: null,
-  isHydrated: false,
-  isLoading: false,
-  error: null,
+export const useAuthStore = create<AuthState>()(
+  devtools(
+    persist(
+      (set, get) => ({
+        token: null,
+        user: null,
+        isHydrated: false,
+        isLoading: false,
+        error: null,
 
-  login: async (email: string, password: string): Promise<void> => {
-    set({ isLoading: true, error: null });
-    try {
-      const data = await api.post<AuthResponse>("/auth/login", { email, password });
-      localStorage.setItem(TOKEN_KEY, data.token);
-      localStorage.setItem(USER_KEY, JSON.stringify(data.user));
-      // Mirror token in cookie for SSR-aware redirects
-      document.cookie = `${TOKEN_KEY}=${data.token}; path=/; max-age=604800; SameSite=Lax`;
-      set({ token: data.token, user: data.user, isLoading: false });
-    } catch (err) {
-      const message = err instanceof ApiError ? err.message : "Login failed";
-      set({ isLoading: false, error: message });
-      throw err;
-    }
-  },
+        login: async (email: string, password: string): Promise<void> => {
+          set({ isLoading: true, error: null });
+          try {
+            const data = await api.post<AuthResponse>("/auth/login", { email, password });
+            localStorage.setItem(TOKEN_KEY, data.token);
+            localStorage.setItem(USER_KEY, JSON.stringify(data.user));
+            // Mirror token in cookie for SSR-aware redirects
+            document.cookie = `${TOKEN_KEY}=${data.token}; path=/; max-age=604800; SameSite=Lax`;
+            set({ token: data.token, user: data.user, isLoading: false });
+          } catch (err) {
+            const message = err instanceof ApiError ? err.message : "Login failed";
+            set({ isLoading: false, error: message });
+            throw err;
+          }
+        },
 
-  register: async (email: string, password: string, name: string, ref?: string): Promise<void> => {
-    set({ isLoading: true, error: null });
-    try {
-      const data = await api.post<AuthResponse>("/auth/register", {
-        email,
-        password,
-        name,
-        ref,
-      });
-      localStorage.setItem(TOKEN_KEY, data.token);
-      localStorage.setItem(USER_KEY, JSON.stringify(data.user));
-      document.cookie = `${TOKEN_KEY}=${data.token}; path=/; max-age=604800; SameSite=Lax`;
-      set({ token: data.token, user: data.user, isLoading: false });
-    } catch (err) {
-      const message = err instanceof ApiError ? err.message : "Registration failed";
-      set({ isLoading: false, error: message });
-      throw err;
-    }
-  },
+        register: async (email: string, password: string, name: string, ref?: string): Promise<void> => {
+          set({ isLoading: true, error: null });
+          try {
+            const data = await api.post<AuthResponse>("/auth/register", {
+              email,
+              password,
+              name,
+              ref,
+            });
+            localStorage.setItem(TOKEN_KEY, data.token);
+            localStorage.setItem(USER_KEY, JSON.stringify(data.user));
+            document.cookie = `${TOKEN_KEY}=${data.token}; path=/; max-age=604800; SameSite=Lax`;
+            set({ token: data.token, user: data.user, isLoading: false });
+          } catch (err) {
+            const message = err instanceof ApiError ? err.message : "Registration failed";
+            set({ isLoading: false, error: message });
+            throw err;
+          }
+        },
 
-  logout: (): void => {
-    localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem(USER_KEY);
-    document.cookie = `${TOKEN_KEY}=; path=/; max-age=0`;
-    set({ token: null, user: null, error: null });
-  },
+        logout: (): void => {
+          localStorage.removeItem(TOKEN_KEY);
+          localStorage.removeItem(USER_KEY);
+          document.cookie = `${TOKEN_KEY}=; path=/; max-age=0`;
+          set({ token: null, user: null, error: null });
+        },
 
-  hydrate: (): void => {
-    if (get().isHydrated) return;
-    try {
-      const token = localStorage.getItem(TOKEN_KEY);
-      const userStr = localStorage.getItem(USER_KEY);
-      const user = userStr ? (JSON.parse(userStr) as JwtUser) : null;
-      set({ token, user, isHydrated: true });
-    } catch {
-      localStorage.removeItem(TOKEN_KEY);
-      localStorage.removeItem(USER_KEY);
-      set({ token: null, user: null, isHydrated: true });
-    }
-  },
+        hydrate: (): void => {
+          if (get().isHydrated) return;
+          try {
+            const token = localStorage.getItem(TOKEN_KEY);
+            const userStr = localStorage.getItem(USER_KEY);
+            const user = userStr ? (JSON.parse(userStr) as JwtUser) : null;
+            set({ token, user, isHydrated: true });
+          } catch {
+            localStorage.removeItem(TOKEN_KEY);
+            localStorage.removeItem(USER_KEY);
+            set({ token: null, user: null, isHydrated: true });
+          }
+        },
 
-  clearError: (): void => {
-    set({ error: null });
-  },
-}));
+        clearError: (): void => {
+          set({ error: null });
+        },
+      }),
+      {
+        name: "auth-store",
+        partialize: (state) => ({
+          token: state.token,
+          user: state.user,
+        }),
+        onRehydrateStorage: () => (state) => {
+          if (state?.token && typeof document !== "undefined") {
+            document.cookie = `${TOKEN_KEY}=${state.token}; path=/; max-age=604800; SameSite=Lax`;
+          }
+          useAuthStore.setState({ isHydrated: true });
+        },
+      },
+    ),
+    { name: "AuthStore" }
+  )
+);
