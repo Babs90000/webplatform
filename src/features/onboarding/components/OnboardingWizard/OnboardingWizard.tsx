@@ -7,6 +7,8 @@ import { Button } from "@/shared/components/Button";
 import { Input } from "@/shared/components/Input";
 import { Spinner } from "@/shared/components/Spinner";
 import { toast } from "@/store/toast";
+import { ApiError } from "@/lib/api";
+import { AI_ASSISTANT_NAME } from "@/lib/branding";
 import {
   useStartOnboarding,
   useSubmitBaseAnswers,
@@ -31,6 +33,8 @@ export const OnboardingWizard: React.FC = () => {
   const [currentStep, setCurrentStep] = useState<number>(0);
   const [answers, setAnswers] = useState<Record<string, any>>({});
   const [fakeStatusIndex, setFakeStatusIndex] = useState<number>(0);
+  const [startError, setStartError] = useState<string | null>(null);
+  const [stepError, setStepError] = useState<string | null>(null);
 
   // TanStack Query Mutations
   const startOnboarding = useStartOnboarding();
@@ -62,6 +66,7 @@ export const OnboardingWizard: React.FC = () => {
   }, [phase]);
 
   const handleStart = async () => {
+    setStartError(null);
     try {
       const res = await startOnboarding.mutateAsync(undefined);
       setSessionId(res.session_id);
@@ -71,11 +76,19 @@ export const OnboardingWizard: React.FC = () => {
       setCurrentStep(0);
       setPhase("base");
     } catch (err) {
+      const message =
+        err instanceof ApiError
+          ? err.status === 401
+            ? "Session expirée — reconnectez-vous pour continuer."
+            : err.message
+          : "Impossible de démarrer l'assistant. Réessayez.";
+      setStartError(message);
       console.error(err);
     }
   };
 
   const handleSkipToHermes = async () => {
+    setStartError(null);
     try {
       const res = await startOnboarding.mutateAsync(undefined);
       const { pagesApi } = await import("@/features/pages/services/pagesApi");
@@ -84,9 +97,14 @@ export const OnboardingWizard: React.FC = () => {
         slug: "accueil",
         order_index: 0,
       });
-      toast.success("Projet prêt — décrivez votre site à Hermes");
+      toast.success(`Projet prêt — décrivez votre site à ${AI_ASSISTANT_NAME}`);
       router.push(`/projects/${res.project_id}/editor?hermes=1`);
     } catch (err) {
+      const message =
+        err instanceof ApiError
+          ? err.message
+          : "Impossible de créer le projet. Réessayez.";
+      setStartError(message);
       console.error(err);
     }
   };
@@ -116,6 +134,7 @@ export const OnboardingWizard: React.FC = () => {
   };
 
   const handleNext = async () => {
+    setStepError(null);
     if (!isCurrentStepValid()) {
       toast.error("Veuillez répondre à cette question obligatoire.");
       return;
@@ -144,6 +163,12 @@ export const OnboardingWizard: React.FC = () => {
           }
         } catch (err) {
           setPhase("base");
+          const message =
+            err instanceof ApiError
+              ? err.message
+              : "Impossible d'enregistrer vos réponses. Réessayez.";
+          setStepError(message);
+          toast.error(message);
           console.error(err);
         }
       } else if (phase === "dynamic") {
@@ -177,14 +202,24 @@ export const OnboardingWizard: React.FC = () => {
         answers: dynamicPayload,
       });
 
-      // Trigger the AI site generation
-      await generateSite.mutateAsync({
+      // Trigger the AI site generation (pages + real blocks)
+      const result = await generateSite.mutateAsync({
         sessionId,
         projectId,
       });
 
-      toast.success("Site internet généré avec succès !");
-      router.push(`/projects/${projectId}/editor`);
+      const blocksCreated = result.blocks_created ?? 0;
+      if (blocksCreated > 0) {
+        toast.success("Site internet généré avec succès !");
+        router.push(`/projects/${projectId}/editor`);
+      } else {
+        // Aucun bloc généré (modèle indisponible ou backend non à jour) :
+        // on ouvre directement le chat pour que l'utilisateur construise avec l'IA.
+        toast.success(
+          `Pages créées — terminez votre site avec ${AI_ASSISTANT_NAME}`,
+        );
+        router.push(`/projects/${projectId}/editor?hermes=1`);
+      }
     } catch (err) {
       // Revert to current step if failed
       setPhase(dynamicQuestions.length > 0 ? "dynamic" : "base");
@@ -317,9 +352,15 @@ export const OnboardingWizard: React.FC = () => {
             <span className={styles.welcomeIcon}>✨</span>
             <h1 className={styles.title}>Créons votre site internet idéal</h1>
             <p className={styles.subtitle} style={{ marginBottom: "var(--space-2xl)" }}>
-              Notre IA Hermes va vous guider à travers quelques questions simples pour concevoir un
-              site ultra-performant et personnalisé pour votre activité.
+              Notre IA {AI_ASSISTANT_NAME} va vous guider à travers quelques questions simples pour
+              concevoir un site ultra-performant et personnalisé pour votre activité.
             </p>
+            {startError && (
+              <div className={styles.errorBanner} role="alert">
+                <strong>Erreur</strong>
+                <p>{startError}</p>
+              </div>
+            )}
             <Button
               onClick={handleStart}
               isLoading={startOnboarding.isPending}
@@ -350,7 +391,7 @@ export const OnboardingWizard: React.FC = () => {
             Réponses enregistrées !
           </h2>
           <p className={styles.subtitle} style={{ textAlign: "center", maxWidth: "400px" }}>
-            Hermes est en train d'analyser vos objectifs pour générer des questions d'approfondissement sur mesure...
+            {AI_ASSISTANT_NAME} est en train d'analyser vos objectifs pour générer des questions d'approfondissement sur mesure...
           </p>
         </div>
       </div>
@@ -405,7 +446,15 @@ export const OnboardingWizard: React.FC = () => {
           )}
         </div>
 
-        <div className={styles.questionBody}>{renderQuestionInput()}</div>
+        <div className={styles.questionBody}>
+          {stepError && (
+            <div className={styles.errorBanner} role="alert">
+              <strong>Erreur</strong>
+              <p>{stepError}</p>
+            </div>
+          )}
+          {renderQuestionInput()}
+        </div>
 
         <div className={styles.footerActions}>
           <button

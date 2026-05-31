@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   DndContext,
   closestCenter,
@@ -22,8 +22,10 @@ import styles from "./BlockCanvas.module.css";
 import { useBlocks, useCreateBlock, useReorderBlocks } from "../../hooks/useBlocks";
 import { useEditorStore } from "@/store/editor";
 import { Button } from "@/shared/components/Button";
-import { BLOCK_TYPES, type BlockType, type Block } from "@/types";
+import { AI_ASSISTANT_NAME } from "@/lib/branding";
+import { type BlockType, type Block } from "@/types";
 import { BlockRenderer } from "../BlockRenderer";
+import { BlockPicker } from "../BlockPicker";
 
 // --- Sortable Block Wrapper ---
 interface SortableBlockProps {
@@ -101,19 +103,18 @@ interface BlockCanvasProps {
 }
 
 export const BlockCanvas: React.FC<BlockCanvasProps> = ({ pageId }) => {
-  const { data: blocks, isLoading } = useBlocks(pageId);
+  const { data: blocks, isLoading, isError, refetch } = useBlocks(pageId);
   const { mutate: createBlock } = useCreateBlock(pageId);
   const { mutate: reorderBlocks } = useReorderBlocks(pageId);
   const { selectedBlockId, selectBlock, switchRightPanel } = useEditorStore();
 
   const [items, setItems] = useState<Block[]>([]);
-  const [prevBlocks, setPrevBlocks] = useState<Block[] | undefined>(undefined);
+  const [isPickerOpen, setIsPickerOpen] = useState(false);
 
-  // Sync blocks to local items for DnD using render-phase state update
-  if (blocks !== prevBlocks) {
-    setPrevBlocks(blocks);
+  // Synchronise les blocs serveur vers l'état local du DnD (hors phase render).
+  useEffect(() => {
     setItems(blocks ? [...blocks].sort((a, b) => a.order_index - b.order_index) : []);
-  }
+  }, [blocks]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -149,12 +150,8 @@ export const BlockCanvas: React.FC<BlockCanvasProps> = ({ pageId }) => {
     }
   };
 
-  const handleAddBlock = () => {
+  const handleSelectBlockType = (type: BlockType) => {
     if (!pageId) return;
-    const typeStr = prompt(`Enter block type:\n${BLOCK_TYPES.join(", ")}`);
-    if (!typeStr || !BLOCK_TYPES.includes(typeStr as BlockType)) return;
-    
-    const type = typeStr as BlockType;
     const order_index = items.length;
     createBlock({ type, props: {} as Record<string, unknown>, order_index });
   };
@@ -164,7 +161,7 @@ export const BlockCanvas: React.FC<BlockCanvasProps> = ({ pageId }) => {
       <div className={styles.canvas}>
         <div className={styles.content}>
           <div className={styles.emptyState}>
-            <p>Select a page to start editing</p>
+            <p>Sélectionnez une page pour commencer l'édition</p>
           </div>
         </div>
       </div>
@@ -175,7 +172,26 @@ export const BlockCanvas: React.FC<BlockCanvasProps> = ({ pageId }) => {
     return (
       <div className={styles.canvas}>
         <div className={styles.content}>
-          <div className={styles.emptyState}>Loading blocks...</div>
+          <div className={styles.emptyState}>Chargement des blocs…</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className={styles.canvas}>
+        <div className={styles.content}>
+          <div className={styles.emptyState}>
+            <span className={styles.emptyIcon}>⚠️</span>
+            <h3>Impossible de charger les blocs</h3>
+            <p>Une erreur est survenue lors du chargement de cette page.</p>
+            <div className={styles.emptyActions}>
+              <Button variant="secondary" onClick={() => refetch()}>
+                Réessayer
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -189,18 +205,29 @@ export const BlockCanvas: React.FC<BlockCanvasProps> = ({ pageId }) => {
             <span className={styles.emptyIcon}>✨</span>
             <h3>Page vierge</h3>
             <p>
-              Décrivez votre site à Hermes — navbar, hero, sections — et il construira
-              la page en temps réel.
+              Décrivez votre site à {AI_ASSISTANT_NAME} — navbar, hero, sections — et il
+              construira la page en temps réel. Ou ajoutez vos blocs manuellement.
             </p>
-            <Button
-              variant="primary"
-              onClick={(e) => {
-                e.stopPropagation();
-                switchRightPanel("hermes");
-              }}
-            >
-              Construire avec Hermes
-            </Button>
+            <div className={styles.emptyActions}>
+              <Button
+                variant="primary"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  switchRightPanel("hermes");
+                }}
+              >
+                Construire avec {AI_ASSISTANT_NAME}
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsPickerOpen(true);
+                }}
+              >
+                + Ajouter un bloc
+              </Button>
+            </div>
           </div>
         ) : (
           <DndContext 
@@ -226,10 +253,16 @@ export const BlockCanvas: React.FC<BlockCanvasProps> = ({ pageId }) => {
       </div>
 
       <div className={styles.addBlockButton}>
-        <Button onClick={(e) => { e.stopPropagation(); handleAddBlock(); }} variant="secondary">
-          + Add Block
+        <Button onClick={(e) => { e.stopPropagation(); setIsPickerOpen(true); }} variant="secondary">
+          + Ajouter un bloc
         </Button>
       </div>
+
+      <BlockPicker
+        isOpen={isPickerOpen}
+        onClose={() => setIsPickerOpen(false)}
+        onSelect={handleSelectBlockType}
+      />
     </div>
   );
 };

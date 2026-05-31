@@ -1,17 +1,30 @@
-import { Metadata } from "next";
+"use client";
+
 import { AuthGuard } from "@/shared/components/AuthGuard";
+import { ClientOnly } from "@/shared/components/ClientOnly";
+import { Spinner } from "@/shared/components/Spinner";
 import { OnboardingWizard } from "@/features/onboarding/components/OnboardingWizard/OnboardingWizard";
 
-export const metadata: Metadata = {
-  title: "Onboarding Wizard | WebPlatform",
-  description: "Configure your new project and let Hermes generate a beautiful, custom layout for you.",
-};
+const loadingFallback = (
+  <div
+    style={{
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      minHeight: "100vh",
+    }}
+  >
+    <Spinner size="lg" />
+  </div>
+);
 
 const OnboardingPage: React.FC = () => {
   return (
-    <AuthGuard>
-      <OnboardingWizard />
-    </AuthGuard>
+    <ClientOnly fallback={loadingFallback}>
+      <AuthGuard fallback={loadingFallback}>
+        <OnboardingWizard />
+      </AuthGuard>
+    </ClientOnly>
   );
 };
 

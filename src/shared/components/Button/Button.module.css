@@ -14,7 +14,7 @@
 }
 
 .button:focus-visible {
-  outline: 2px solid var(--color-primary);
+  outline: 2px solid var(--color-border-focus);
   outline-offset: 2px;
 }
 
@@ -87,6 +87,22 @@
 .danger:hover:not(:disabled) {
   background: #dc2626;
   transform: translateY(-1px);
+}
+
+/* CTA "run/publish" — vert action */
+.cta {
+  background: var(--color-accent-cta);
+  color: #052e16;
+}
+
+.cta:hover:not(:disabled) {
+  background: var(--color-accent-cta-hover);
+  color: #f0fdf4;
+  transform: translateY(-1px);
+}
+
+.cta:active:not(:disabled) {
+  transform: translateY(0);
 }
 
 /* Full width */

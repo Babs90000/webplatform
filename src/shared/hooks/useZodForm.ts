@@ -8,12 +8,10 @@ import {
   UseFormProps,
   UseFormReturn,
   FieldValues,
+  FieldErrors,
 } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { createLogger } from "@/lib/logger";
-
-const logger = createLogger("useZodForm");
+import { createSafeZodResolver } from "./createSafeZodResolver";
 
 interface UseZodFormOptions<T extends FieldValues>
   extends Omit<UseFormProps<T>, "resolver"> {
@@ -29,20 +27,17 @@ export const useZodForm = <T extends FieldValues>({
   ) => (e?: React.BaseSyntheticEvent) => Promise<void>;
 } => {
   const methods = useForm<T>({
-    resolver: zodResolver(schema),
-    mode: "onBlur",
+    resolver: createSafeZodResolver(schema),
+    mode: "onSubmit",
+    reValidateMode: "onSubmit",
+    shouldFocusError: true,
     ...formProps,
   });
 
   const onSubmit = useCallback(
     (callback: (data: T) => Promise<void> | void) => {
       return methods.handleSubmit(async (data) => {
-        try {
-          await callback(data);
-        } catch (error) {
-          logger.error({ error, message: "Form submission failed" });
-          throw error;
-        }
+        await callback(data);
       });
     },
     [methods],

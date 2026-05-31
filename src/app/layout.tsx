@@ -1,13 +1,20 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
 import { Providers } from "./providers";
 import { ToastProvider } from "@/shared/components/Toast";
 import "./globals.css";
 
-const inter = Inter({
+const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
   display: "swap",
-  variable: "--font-inter",
+  weight: ["300", "400", "500", "600", "700"],
+  variable: "--font-jakarta",
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-jetbrains",
 });
 
 export const metadata: Metadata = {
@@ -19,7 +26,10 @@ export const metadata: Metadata = {
 
 const RootLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
-    <html lang="fr" className={inter.variable}>
+    <html
+      lang="fr"
+      className={`${jakarta.variable} ${jetbrainsMono.variable}`}
+    >
       <body>
         <Providers>
           {children}

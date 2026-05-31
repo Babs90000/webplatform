@@ -8,15 +8,14 @@ import { isBlockType, type BlockType } from "@/types";
 
 export const useSendHermesMessage = (pageId: string | null) => {
   const queryClient = useQueryClient();
-  const {
-    projectId,
-    hermesMessages,
-    addHermesMessage,
-    setHermesIsThinking,
-  } = useEditorStore();
+  const { addHermesMessage, setHermesIsThinking } = useEditorStore();
 
   return useMutation({
     mutationFn: async (content: string) => {
+      // Lire l'état FRAIS du store (évite la stale closure si plusieurs
+      // messages partent avant un re-render).
+      const { projectId, hermesMessages } = useEditorStore.getState();
+
       if (!projectId || !pageId) {
         throw new Error("Projet ou page non sélectionné");
       }
@@ -80,7 +79,7 @@ export const useSendHermesMessage = (pageId: string | null) => {
     onError: (error) => {
       setHermesIsThinking(false);
       const message =
-        error instanceof ApiError ? error.message : "Erreur de connexion avec Hermes";
+        error instanceof ApiError ? error.message : "Erreur de connexion avec Koala Codeur";
       toast.error(message);
     },
   });

@@ -3,11 +3,16 @@ import { projectsApi } from "../services/projectsApi";
 import type { CreateProjectBody, UpdateProjectBody } from "@/types";
 import { toast } from "@/store/toast";
 import { ApiError } from "@/lib/api";
+import { useAuthStore } from "@/store/auth";
 
 export const useProjects = () => {
+  const token = useAuthStore((s) => s.token);
+  const isHydrated = useAuthStore((s) => s.isHydrated);
+
   return useQuery({
     queryKey: ["projects"],
     queryFn: projectsApi.getAll,
+    enabled: isHydrated && !!token,
   });
 };
 

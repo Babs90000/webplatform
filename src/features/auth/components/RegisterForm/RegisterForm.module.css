@@ -21,6 +21,10 @@
   color: var(--color-accent-primary-hover);
 }
 
+.apiError {
+  margin-bottom: var(--space-lg);
+}
+
 .error {
   display: block;
   margin-top: var(--space-xs);

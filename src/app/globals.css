@@ -23,6 +23,10 @@
   --color-accent-danger: #ef4444;
   --color-accent-info: #3b82f6;
 
+  /* CTA "run/publish" — vert action (design system ui-ux-pro-max) */
+  --color-accent-cta: #22c55e;
+  --color-accent-cta-hover: #16a34a;
+
   /* Gradients */
   --gradient-primary: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a78bfa 100%);
   --gradient-hero: linear-gradient(135deg, #0a0e1a 0%, #1a1040 40%, #0a0e1a 100%);
@@ -85,9 +89,10 @@
   --z-modal: 400;
   --z-toast: 500;
 
-  /* Typography */
-  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
-  --font-mono: "JetBrains Mono", "Fira Code", monospace;
+  /* Typography — Plus Jakarta Sans (chargée via next/font dans layout.tsx) */
+  --font-sans: var(--font-jakarta), "Plus Jakarta Sans", system-ui,
+    -apple-system, sans-serif;
+  --font-mono: var(--font-jetbrains), "JetBrains Mono", "Fira Code", monospace;
 
   /* Sidebar widths for editor */
   --sidebar-width: 260px;
@@ -293,4 +298,16 @@ video {
   max-width: 100%;
   height: auto;
   display: block;
+}
+
+/* --- Accessibilité : respecter la préférence de mouvement réduit --- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }

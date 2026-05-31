@@ -81,7 +81,7 @@ export const CreateProjectForm: React.FC<CreateProjectFormProps> = ({
         result.data.subdomain,
       );
       await queryClient.invalidateQueries({ queryKey: ["projects"] });
-      toast.success("Projet créé — ouvrez Hermes pour construire votre site");
+      toast.success("Projet créé — ouvrez Koala Codeur pour construire votre site");
       onSuccess(project.id, { openHermes });
     } catch (error) {
       const message =

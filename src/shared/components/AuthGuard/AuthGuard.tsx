@@ -38,7 +38,18 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children, fallback }) => {
   }
 
   if (!token) {
-    return null;
+    return (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: "100vh",
+        }}
+      >
+        {fallback || <Spinner size="lg" />}
+      </div>
+    );
   }
 
   return <>{children}</>;

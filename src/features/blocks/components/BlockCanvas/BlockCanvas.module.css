@@ -48,6 +48,14 @@
   color: var(--color-text-secondary);
 }
 
+.emptyActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  justify-content: center;
+  margin-top: var(--space-sm);
+}
+
 .blockWrapper {
   position: relative;
   border: 2px solid transparent;

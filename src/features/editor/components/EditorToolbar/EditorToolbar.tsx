@@ -2,9 +2,11 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { useIsMutating } from "@tanstack/react-query";
 import styles from "./EditorToolbar.module.css";
 import { useEditorStore } from "@/store/editor";
 import { Button } from "@/shared/components/Button";
+import { AI_ASSISTANT_NAME } from "@/lib/branding";
 import { PublishModal } from "@/features/projects/components/PublishModal";
 
 interface EditorToolbarProps {
@@ -14,9 +16,9 @@ interface EditorToolbarProps {
 }
 
 export const EditorToolbar: React.FC<EditorToolbarProps> = ({
-  projectName = "Loading...",
+  projectName = "Chargement...",
   projectId,
-  saveStatus = "saved",
+  saveStatus,
 }) => {
   const {
     isSidebarCollapsed,
@@ -29,8 +31,14 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
 
   const [showPublish, setShowPublish] = useState(false);
 
+  // Statut de sauvegarde dérivé de l'activité réelle des mutations
+  // (création/màj/réordonnancement de blocs) si non fourni explicitement.
+  const mutatingCount = useIsMutating();
+  const effectiveStatus: "saved" | "saving" | "error" =
+    saveStatus ?? (mutatingCount > 0 ? "saving" : "saved");
+
   const getStatusDotClass = () => {
-    switch (saveStatus) {
+    switch (effectiveStatus) {
       case "saving":
         return styles.statusSaving;
       case "error":
@@ -41,13 +49,13 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
   };
 
   const getStatusText = () => {
-    switch (saveStatus) {
+    switch (effectiveStatus) {
       case "saving":
-        return "Saving...";
+        return "Enregistrement...";
       case "error":
-        return "Save failed";
+        return "Échec de l'enregistrement";
       default:
-        return "All changes saved";
+        return "Toutes les modifications enregistrées";
     }
   };
 
@@ -129,8 +137,8 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
         <button
           className={`${styles.iconButton} ${!isPropertiesCollapsed && activeRightPanel === "hermes" ? styles.active : ""}`}
           onClick={handleToggleHermes}
-          aria-label="Toggle Hermes AI Chat"
-          title="Assistant IA Hermes"
+          aria-label={`Assistant IA ${AI_ASSISTANT_NAME}`}
+          title={`Assistant IA ${AI_ASSISTANT_NAME}`}
           style={{ marginRight: "var(--space-sm)", fontSize: "1.1rem" }}
         >
           ✨
@@ -172,12 +180,12 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
         </Link>
 
         <Button
-          variant="primary"
+          variant="cta"
           size="sm"
           onClick={() => setShowPublish(true)}
           style={{ marginRight: "var(--space-md)" }}
         >
-          Publish
+          Publier
         </Button>
 
         <button

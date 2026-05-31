@@ -57,6 +57,7 @@ export interface GenerateResponse {
     suggested_blocks: any[];
   }>;
   suggested_blocks_per_page: Record<string, any[]>;
+  blocks_created?: number;
   project_id: string;
 }
 

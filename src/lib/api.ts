@@ -3,6 +3,8 @@
  * Base URL is set via NEXT_PUBLIC_API_URL (already includes /api/v1).
  */
 
+import { clearAuthToken, getAuthToken, isAuthRoute } from "./authToken";
+
 const BASE = process.env.NEXT_PUBLIC_API_URL!;
 
 export class ApiError extends Error {
@@ -20,7 +22,9 @@ interface RequestOptions extends RequestInit {
 }
 
 const request = async <T>(path: string, options: RequestOptions = {}): Promise<T> => {
-  const { token, headers: customHeaders, ...rest } = options;
+  const { token: tokenOption, headers: customHeaders, ...rest } = options;
+
+  const token = tokenOption ?? getAuthToken();
 
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
@@ -42,9 +46,22 @@ const request = async <T>(path: string, options: RequestOptions = {}): Promise<T
       const body = await response.json();
       message = body.message || body.error || message;
     } catch {
-      // Response body is not JSON, use status text
       message = response.statusText || message;
     }
+
+    if (
+      response.status === 401 &&
+      typeof window !== "undefined" &&
+      !isAuthRoute(path)
+    ) {
+      clearAuthToken();
+      const loginUrl = new URL("/login", window.location.origin);
+      loginUrl.searchParams.set("reason", "session");
+      if (!window.location.pathname.startsWith("/login")) {
+        window.location.assign(loginUrl.toString());
+      }
+    }
+
     throw new ApiError(response.status, message);
   }
 

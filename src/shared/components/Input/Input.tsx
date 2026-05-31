@@ -30,13 +30,14 @@ export const Input = React.forwardRef<
           {label}
         </label>
       )}
-      <div className={styles.inputWrapper}>
+      <div className={styles.inputWrapper} suppressHydrationWarning>
         {icon && <span className={styles.icon}>{icon}</span>}
         {as === "textarea" ? (
           <textarea
             id={inputId}
             ref={ref as React.Ref<HTMLTextAreaElement>}
             className={inputClasses}
+            suppressHydrationWarning
             {...(rest as React.TextareaHTMLAttributes<HTMLTextAreaElement>)}
           />
         ) : (
@@ -44,6 +45,7 @@ export const Input = React.forwardRef<
             id={inputId}
             ref={ref as React.Ref<HTMLInputElement>}
             className={inputClasses}
+            suppressHydrationWarning
             {...rest}
           />
         )}

@@ -1,56 +1,50 @@
 import React from "react";
+import type { TextProps } from "@/types";
 
-export interface TextBlockProps {
-  content?: string;
-  alignment?: "left" | "center" | "right" | "justify";
-  size?: "small" | "medium" | "large";
-  backgroundColor?: string;
-  textColor?: string;
-}
+const MAX_WIDTHS: Record<NonNullable<TextProps["max_width"]>, string> = {
+  narrow: "600px",
+  normal: "800px",
+  wide: "1040px",
+};
 
-export const TextBlock: React.FC<TextBlockProps> = ({
-  content = "This is a simple text block. You can use it to add paragraphs of text to your page.",
-  alignment = "left",
-  size = "medium",
-  backgroundColor = "transparent",
-  textColor = "var(--color-text-primary)",
+export const TextBlock: React.FC<TextProps> = ({
+  title,
+  body = "Ce bloc de texte vous permet d'ajouter des paragraphes à votre page.",
+  align = "left",
+  max_width = "normal",
 }) => {
-  const getFontSize = () => {
-    switch (size) {
-      case "small": return "0.875rem";
-      case "large": return "1.25rem";
-      default: return "1rem";
-    }
-  };
-
-  const getLineHeight = () => {
-    switch (size) {
-      case "small": return 1.5;
-      case "large": return 1.8;
-      default: return 1.6;
-    }
-  };
-
   return (
-    <div 
+    <div
       style={{
-        backgroundColor,
         padding: "var(--space-xl)",
         width: "100%",
         display: "flex",
-        justifyContent: "center"
+        justifyContent: "center",
       }}
     >
-      <div style={{
-        maxWidth: "800px",
-        width: "100%",
-        color: textColor,
-        textAlign: alignment,
-        fontSize: getFontSize(),
-        lineHeight: getLineHeight(),
-        whiteSpace: "pre-wrap"
-      }}>
-        {content}
+      <div
+        style={{
+          maxWidth: MAX_WIDTHS[max_width],
+          width: "100%",
+          color: "var(--color-text-primary)",
+          textAlign: align,
+          lineHeight: 1.7,
+          whiteSpace: "pre-wrap",
+        }}
+      >
+        {title && (
+          <h2
+            style={{
+              fontSize: "1.75rem",
+              fontWeight: 700,
+              marginBottom: "var(--space-md)",
+              letterSpacing: "-0.01em",
+            }}
+          >
+            {title}
+          </h2>
+        )}
+        {body}
       </div>
     </div>
   );

@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import styles from "./HermesChatSidebar.module.css";
 import { useEditorStore } from "@/store/editor";
+import { AI_ASSISTANT_NAME } from "@/lib/branding";
 import { useSendHermesMessage } from "../../hooks/useHermesChat";
 
 interface HermesChatSidebarProps {
@@ -63,7 +64,7 @@ export const HermesChatSidebar: React.FC<HermesChatSidebarProps> = ({
       <header className={styles.header}>
         <div className={styles.titleArea}>
           <span className={styles.emoji}>✨</span>
-          <span className={styles.title}>Assistant IA Hermes</span>
+          <span className={styles.title}>Assistant IA {AI_ASSISTANT_NAME}</span>
           <span
             className={`${styles.statusIndicator} ${hermesIsThinking ? styles.statusIndicatorPulse : ""}`}
           />
@@ -101,7 +102,7 @@ export const HermesChatSidebar: React.FC<HermesChatSidebarProps> = ({
       <div className={styles.chatArea}>
         {hermesMessages.length === 0 && (
           <div className={`${styles.bubbleAssistant} ${styles.bubble}`}>
-            Bonjour ! Je suis Hermes. Je peux éditer et construire votre site en temps réel.
+            Bonjour ! Je suis {AI_ASSISTANT_NAME}. Je peux éditer et construire votre site en temps réel.
             Dites-moi simplement quoi faire : ajouter des blocs, modifier le texte, changer le layout ou le design.
           </div>
         )}

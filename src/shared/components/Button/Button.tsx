@@ -3,7 +3,7 @@ import styles from "./Button.module.css";
 import clsx from "clsx";
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "primary" | "secondary" | "ghost" | "danger";
+  variant?: "primary" | "secondary" | "ghost" | "danger" | "cta";
   size?: "sm" | "md" | "lg";
   isLoading?: boolean;
   fullWidth?: boolean;

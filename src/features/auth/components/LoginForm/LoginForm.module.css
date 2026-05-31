@@ -21,6 +21,40 @@
   color: var(--color-accent-primary-hover);
 }
 
+.apiError {
+  margin-bottom: var(--space-lg);
+}
+
+.alert {
+  margin-bottom: var(--space-lg);
+  padding: var(--space-md) var(--space-lg);
+  border-radius: var(--radius-md);
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #fecaca;
+}
+
+.alertTitle {
+  display: block;
+  font-weight: 700;
+  font-size: 0.9375rem;
+  margin-bottom: var(--space-xs);
+  color: #fca5a5;
+}
+
+.alertMessage {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: #fecaca;
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-2xl);
+}
+
 .error {
   display: block;
   margin-top: var(--space-xs);
