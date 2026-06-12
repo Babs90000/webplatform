@@ -1,23 +1,29 @@
 import React from "react";
 import type { PricingProps } from "@/types";
 
+const CheckIcon = () => (
+  <svg className="w-4 h-4 shrink-0 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+    <path d="M20 6L9 17L4 12" />
+  </svg>
+);
+
 const DEFAULT_PLANS: PricingProps["plans"] = [
   {
     name: "Starter",
     price_monthly: "0€",
     period: "/mois",
-    description: "Parfait pour les projets personnels.",
-    features: ["Jusqu'à 3 projets", "Composants de base", "Support communautaire", "1 Go de stockage"],
-    cta_label: "Commencer",
+    description: "Parfait pour démarrer un projet personnel.",
+    features: ["Jusqu'à 3 projets", "Composants essentiels", "Support communautaire", "1 Go de stockage"],
+    cta_label: "Commencer gratuitement",
     cta_url: "#",
   },
   {
     name: "Pro",
     price_monthly: "29€",
     period: "/mois",
-    description: "Pour les créateurs professionnels.",
-    features: ["Projets illimités", "Composants premium", "Support prioritaire", "10 Go de stockage", "Domaines personnalisés"],
-    cta_label: "Passer au Pro",
+    description: "Pour les créateurs et les indépendants.",
+    features: ["Projets illimités", "Composants premium", "Support prioritaire 24h", "10 Go de stockage", "Domaines personnalisés", "Analyses avancées"],
+    cta_label: "Démarrer l'essai gratuit",
     cta_url: "#",
     highlighted: true,
     badge: "Le plus populaire",
@@ -26,114 +32,103 @@ const DEFAULT_PLANS: PricingProps["plans"] = [
     name: "Entreprise",
     price_monthly: "99€",
     period: "/mois",
-    description: "Pour les grandes équipes.",
-    features: ["Tout le plan Pro", "Intégrations sur mesure", "Account manager dédié", "Stockage illimité", "SSO"],
-    cta_label: "Contacter l'équipe",
+    description: "Pour les équipes et les grandes organisations.",
+    features: ["Tout le plan Pro", "Intégrations sur mesure", "Account manager dédié", "Stockage illimité", "SSO / SAML", "SLA garanti"],
+    cta_label: "Contacter l'équipe commerciale",
     cta_url: "#",
   },
 ];
 
 export const PricingBlock: React.FC<PricingProps> = ({
   title = "Une tarification simple et transparente",
-  subtitle = "Choisissez l'offre qui vous convient.",
+  subtitle = "Commencez gratuitement, évoluez selon vos besoins. Aucune carte bancaire requise.",
   plans = DEFAULT_PLANS,
 }) => {
   return (
-    <section style={{ backgroundColor: "var(--color-bg-primary)", padding: "var(--space-4xl) var(--space-xl)" }}>
-      <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
-        <div style={{ textAlign: "center", marginBottom: "var(--space-3xl)" }}>
-          {title && <h2 style={{ fontSize: "2.5rem", fontWeight: 700, marginBottom: "var(--space-sm)", color: "var(--color-text-primary)" }}>{title}</h2>}
-          {subtitle && <p style={{ fontSize: "1.125rem", color: "var(--color-text-secondary)" }}>{subtitle}</p>}
+    <section className="w-full py-24 px-4 md:px-6 bg-background">
+      <div className="container mx-auto">
+        {/* Header */}
+        <div className="max-w-2xl mx-auto text-center mb-16">
+          {title && (
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-foreground mb-4">
+              {title}
+            </h2>
+          )}
+          {subtitle && (
+            <p className="text-lg text-muted-foreground">{subtitle}</p>
+          )}
         </div>
 
-        <div style={{
-          display: "flex",
-          flexWrap: "wrap",
-          justifyContent: "center",
-          gap: "var(--space-xl)",
-          alignItems: "center",
-        }}>
+        {/* Plans */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
           {plans.map((plan, i) => (
             <div
               key={i}
-              style={{
-                flex: "1 1 300px",
-                maxWidth: "380px",
-                padding: plan.highlighted ? "var(--space-3xl) var(--space-2xl)" : "var(--space-2xl)",
-                background: plan.highlighted ? "var(--color-bg-primary)" : "var(--color-bg-elevated)",
-                border: plan.highlighted ? "2px solid var(--color-accent-primary)" : "1px solid var(--color-border-subtle)",
-                borderRadius: "var(--radius-xl)",
-                position: "relative",
-                boxShadow: plan.highlighted ? "var(--shadow-xl)" : "none",
-                display: "flex",
-                flexDirection: "column",
-              }}
+              className={`relative flex flex-col rounded-2xl p-8 transition-all ${
+                plan.highlighted
+                  ? "bg-primary text-primary-foreground ring-2 ring-primary shadow-2xl scale-[1.02]"
+                  : "bg-card border border-border hover:border-primary/30 hover:shadow-lg"
+              }`}
             >
+              {/* Badge */}
               {(plan.badge || plan.highlighted) && (
-                <div style={{
-                  position: "absolute",
-                  top: 0,
-                  left: "50%",
-                  transform: "translate(-50%, -50%)",
-                  background: "var(--color-accent-primary)",
-                  color: "white",
-                  padding: "4px 12px",
-                  borderRadius: "var(--radius-full)",
-                  fontSize: "0.75rem",
-                  fontWeight: 700,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.05em",
-                }}>
+                <div className={`absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${
+                  plan.highlighted
+                    ? "bg-white text-primary"
+                    : "bg-primary text-primary-foreground"
+                }`}>
                   {plan.badge ?? "Le plus populaire"}
                 </div>
               )}
 
-              <h3 style={{ fontSize: "1.25rem", fontWeight: 600, color: "var(--color-text-primary)", marginBottom: "var(--space-xs)" }}>
+              {/* Plan name */}
+              <h3 className={`text-lg font-semibold mb-1 ${plan.highlighted ? "text-primary-foreground" : "text-foreground"}`}>
                 {plan.name}
               </h3>
               {plan.description && (
-                <p style={{ color: "var(--color-text-tertiary)", fontSize: "0.875rem", marginBottom: "var(--space-lg)" }}>
+                <p className={`text-sm mb-6 ${plan.highlighted ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
                   {plan.description}
                 </p>
               )}
 
-              <div style={{ display: "flex", alignItems: "baseline", gap: "4px", marginBottom: "var(--space-2xl)" }}>
-                <span style={{ fontSize: "3rem", fontWeight: 800, color: "var(--color-text-primary)", lineHeight: 1 }}>
+              {/* Price */}
+              <div className="flex items-baseline gap-1 mb-8">
+                <span className={`text-5xl font-extrabold ${plan.highlighted ? "text-primary-foreground" : "text-foreground"}`}>
                   {plan.price_monthly}
                 </span>
-                {plan.period && <span style={{ color: "var(--color-text-secondary)" }}>{plan.period}</span>}
+                {plan.period && (
+                  <span className={`text-sm ${plan.highlighted ? "text-primary-foreground/60" : "text-muted-foreground"}`}>
+                    {plan.period}
+                  </span>
+                )}
               </div>
 
-              <ul style={{ listStyle: "none", padding: 0, margin: "0 0 var(--space-2xl) 0", flexGrow: 1, display: "flex", flexDirection: "column", gap: "var(--space-md)" }}>
+              {/* Features */}
+              <ul className="flex flex-col gap-3 mb-10 flex-grow">
                 {plan.features.map((feature, j) => (
-                  <li key={j} style={{ display: "flex", alignItems: "flex-start", gap: "12px", color: "var(--color-text-secondary)" }}>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{ color: "var(--color-accent-primary)", flexShrink: 0 }}>
-                      <path d="M20 6L9 17L4 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                    <span>{feature}</span>
+                  <li key={j} className="flex items-center gap-3 text-sm">
+                    {plan.highlighted ? (
+                      <svg className="w-4 h-4 shrink-0 text-primary-foreground/80" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M20 6L9 17L4 12" />
+                      </svg>
+                    ) : (
+                      <CheckIcon />
+                    )}
+                    <span className={plan.highlighted ? "text-primary-foreground/90" : "text-muted-foreground"}>
+                      {feature}
+                    </span>
                   </li>
                 ))}
               </ul>
 
+              {/* CTA */}
               <a
                 href={plan.cta_url}
-                style={{
-                  display: "block",
-                  textAlign: "center",
-                  padding: "14px 24px",
-                  background: plan.highlighted ? "var(--color-accent-primary)" : "var(--color-bg-tertiary)",
-                  color: plan.highlighted ? "white" : "var(--color-text-primary)",
-                  borderRadius: "var(--radius-md)",
-                  fontWeight: 600,
-                  textDecoration: "none",
-                  transition: "background var(--transition-fast)",
-                }}
-                onMouseOver={(e) => {
-                  e.currentTarget.style.background = plan.highlighted ? "var(--color-accent-primary-hover)" : "var(--color-border-subtle)";
-                }}
-                onMouseOut={(e) => {
-                  e.currentTarget.style.background = plan.highlighted ? "var(--color-accent-primary)" : "var(--color-bg-tertiary)";
-                }}
+                className={`block text-center py-3 px-6 rounded-xl font-semibold transition-all no-underline ${
+                  plan.highlighted
+                    ? "bg-white text-primary hover:bg-white/90"
+                    : "bg-primary text-primary-foreground hover:bg-primary/90"
+                }`}
               >
                 {plan.cta_label}
               </a>
