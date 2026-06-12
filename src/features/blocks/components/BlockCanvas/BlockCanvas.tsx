@@ -26,6 +26,29 @@ import { type BlockType, type Block } from "@/types";
 import { BlockRenderer } from "../BlockRenderer";
 import { BlockPicker } from "../BlockPicker";
 
+// --- Skeleton Block for AI "Thinking" State ---
+const SkeletonBlock: React.FC = () => {
+  return (
+    <div className="relative border-2 border-indigo-400/50 rounded-xl overflow-hidden bg-white shadow-[0_0_15px_rgba(99,102,241,0.2)] animate-pulse my-4">
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-indigo-50/30 to-transparent -translate-x-full animate-[shimmer_2s_infinite]"></div>
+      <div className="p-8 md:p-12">
+        <div className="w-full flex flex-col items-center gap-6">
+          <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center">
+            <span className="text-2xl animate-bounce">✨</span>
+          </div>
+          <div className="w-1/3 h-6 bg-zinc-200 rounded-md"></div>
+          <div className="w-2/3 h-4 bg-zinc-100 rounded-md"></div>
+          <div className="w-1/2 h-4 bg-zinc-100 rounded-md"></div>
+          <div className="flex gap-4 mt-4">
+            <div className="w-32 h-10 bg-indigo-100 rounded-md"></div>
+            <div className="w-32 h-10 bg-zinc-100 rounded-md"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // --- Sortable Block Wrapper ---
 interface SortableBlockProps {
   block: Block;
@@ -53,8 +76,8 @@ const SortableBlock: React.FC<SortableBlockProps> = ({ block, isActive, onSelect
     <div
       ref={setNodeRef}
       style={style}
-      className={`relative border-2 transition-colors duration-200 group ${
-        isActive ? "border-primary z-10" : "border-transparent hover:border-indigo-500/30"
+      className={`relative border-[3px] transition-all duration-200 group ${
+        isActive ? "border-indigo-500 z-10 shadow-lg scale-[1.002]" : "border-transparent hover:border-indigo-200"
       }`}
       onClick={(e) => {
         e.stopPropagation();
@@ -66,17 +89,17 @@ const SortableBlock: React.FC<SortableBlockProps> = ({ block, isActive, onSelect
       <div className={`absolute inset-0 z-10 cursor-pointer ${isActive ? "pointer-events-none" : ""}`} />
       
       {/* Real Block Render */}
-      <div className="pointer-events-none">
+      <div className="pointer-events-none bg-white">
         <BlockRenderer block={block} />
       </div>
 
       {/* Drag Handle */}
       <div 
-        className={`absolute top-2 right-2 bg-white shadow-md p-1 rounded cursor-grab z-20 ${
-          isActive ? "block" : "hidden group-hover:block"
+        className={`absolute top-3 right-3 bg-white text-zinc-400 shadow-md p-1.5 rounded-md cursor-grab z-20 border border-zinc-200 hover:text-zinc-600 hover:bg-zinc-50 transition-colors ${
+          isActive ? "flex" : "hidden group-hover:flex"
         }`}
       >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-zinc-500">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="9" cy="5" r="1.5" fill="currentColor" />
           <circle cx="15" cy="5" r="1.5" fill="currentColor" />
           <circle cx="9" cy="12" r="1.5" fill="currentColor" />
@@ -98,12 +121,11 @@ export const BlockCanvas: React.FC<BlockCanvasProps> = ({ pageId }) => {
   const { data: blocks, isLoading, isError, refetch } = useBlocks(pageId);
   const { mutate: createBlock } = useCreateBlock(pageId);
   const { mutate: reorderBlocks } = useReorderBlocks(pageId);
-  const { selectedBlockId, selectBlock, switchRightPanel, setMobileView } = useEditorStore();
+  const { selectedBlockId, selectBlock, switchRightPanel, setMobileView, hermesIsThinking } = useEditorStore();
 
   const [items, setItems] = useState<Block[]>([]);
   const [isPickerOpen, setIsPickerOpen] = useState(false);
 
-  // Synchronise les blocs serveur vers l'état local du DnD.
   useEffect(() => {
     setItems(blocks ? [...blocks].sort((a, b) => a.order_index - b.order_index) : []);
   }, [blocks]);
@@ -149,8 +171,15 @@ export const BlockCanvas: React.FC<BlockCanvasProps> = ({ pageId }) => {
 
   if (!pageId) {
     return (
-      <div className="flex-1 flex items-center justify-center p-4 lg:p-8">
-        <div className="text-zinc-500 font-medium bg-zinc-900/50 px-6 py-4 rounded-xl border border-zinc-800">
+      <div className="flex-1 flex items-center justify-center p-4 lg:p-8 bg-zinc-50/80">
+        <div className="text-zinc-500 font-medium bg-white px-6 py-4 rounded-2xl border border-zinc-200 shadow-sm flex items-center gap-3">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-400">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+            <polyline points="10 9 9 9 8 9"></polyline>
+          </svg>
           Sélectionnez une page pour commencer l'édition
         </div>
       </div>
@@ -159,19 +188,22 @@ export const BlockCanvas: React.FC<BlockCanvasProps> = ({ pageId }) => {
 
   if (isLoading) {
     return (
-      <div className="flex-1 flex items-center justify-center p-4 lg:p-8">
-        <div className="text-zinc-400 font-medium animate-pulse">Chargement du canevas...</div>
+      <div className="flex-1 flex items-center justify-center bg-zinc-50/80">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 rounded-full border-2 border-indigo-500 border-t-transparent animate-spin"></div>
+          <div className="text-zinc-500 font-medium">Chargement du canevas...</div>
+        </div>
       </div>
     );
   }
 
   if (isError) {
     return (
-      <div className="flex-1 flex items-center justify-center p-4 lg:p-8">
-        <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-8 max-w-md text-center">
-          <span className="text-4xl block mb-4">⚠️</span>
-          <h3 className="text-red-400 font-bold text-lg mb-2">Impossible de charger la page</h3>
-          <p className="text-zinc-400 mb-6">Une erreur est survenue lors de la récupération des données.</p>
+      <div className="flex-1 flex items-center justify-center bg-zinc-50/80 p-4">
+        <div className="bg-white border border-red-200 rounded-2xl p-8 max-w-md text-center shadow-lg shadow-red-100/50">
+          <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">⚠️</div>
+          <h3 className="text-zinc-900 font-bold text-lg mb-2">Impossible de charger la page</h3>
+          <p className="text-zinc-500 mb-6">Une erreur est survenue lors de la récupération des données.</p>
           <Button variant="secondary" onClick={() => refetch()}>
             Réessayer
           </Button>
@@ -182,53 +214,54 @@ export const BlockCanvas: React.FC<BlockCanvasProps> = ({ pageId }) => {
 
   return (
     <div 
-      className="flex-1 flex flex-col items-center overflow-y-auto overflow-x-hidden p-2 sm:p-4 lg:p-8 relative"
+      className="flex-1 flex flex-col items-center overflow-y-auto overflow-x-hidden p-4 sm:p-8 lg:p-12 relative bg-zinc-50/80 scrollbar-thin scrollbar-thumb-zinc-300 scrollbar-track-transparent"
       onClick={() => selectBlock(null)}
     >
-      {/* Browser-like Frame */}
-      <div className="w-full max-w-6xl bg-white min-h-[800px] rounded-xl shadow-2xl overflow-hidden flex flex-col ring-1 ring-zinc-800">
-        {/* Fake Browser Bar */}
-        <div className="h-10 bg-zinc-100 border-b border-zinc-200 flex items-center px-4 shrink-0">
-          <div className="flex gap-1.5">
-            <div className="w-3 h-3 rounded-full bg-zinc-300"></div>
-            <div className="w-3 h-3 rounded-full bg-zinc-300"></div>
-            <div className="w-3 h-3 rounded-full bg-zinc-300"></div>
-          </div>
-          <div className="mx-auto bg-white border border-zinc-200 text-zinc-400 text-xs px-24 py-1 rounded-md hidden sm:block">
-            localhost:3000
-          </div>
-        </div>
+      <style dangerouslySetInnerHTML={{__html: `
+        @keyframes shimmer {
+          100% { transform: translateX(100%); }
+        }
+      `}} />
 
+      {/* Floating Canvas Frame (Webflow / Framer style) */}
+      <div className="w-full max-w-[1200px] bg-white min-h-[800px] rounded-sm shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden flex flex-col ring-1 ring-zinc-200/50 transition-all">
+        
         {/* Content */}
         <div className="flex-1 flex flex-col w-full relative bg-white">
-          {items.length === 0 ? (
-            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-zinc-50/50">
-              <span className="text-5xl mb-6">✨</span>
-              <h3 className="text-xl font-bold text-zinc-800 mb-3">Une toile vierge</h3>
-              <p className="text-zinc-500 max-w-md mb-8 leading-relaxed">
-                Décrivez votre site à {AI_ASSISTANT_NAME} (ex: "Je veux un site pour mon restaurant avec un menu et une galerie"), ou assemblez vos blocs manuellement.
+          {items.length === 0 && !hermesIsThinking ? (
+            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-zinc-50/30">
+              <div className="w-20 h-20 bg-gradient-to-br from-indigo-100 to-white rounded-3xl flex items-center justify-center shadow-sm border border-indigo-50 mb-6">
+                <span className="text-4xl">✨</span>
+              </div>
+              <h3 className="text-2xl font-bold text-zinc-900 mb-3 tracking-tight">Une toile vierge</h3>
+              <p className="text-zinc-500 max-w-md mb-8 leading-relaxed text-[15px]">
+                Décrivez votre site à {AI_ASSISTANT_NAME} (ex: "Je veux un site pour mon restaurant italien avec un menu"), ou ajoutez des blocs manuellement.
               </p>
               <div className="flex flex-wrap items-center justify-center gap-4">
-                <Button
-                  variant="primary"
+                <button
+                  className="px-6 py-3 bg-zinc-900 hover:bg-zinc-800 text-white font-medium rounded-xl transition-all shadow-md shadow-zinc-900/10 flex items-center gap-2"
                   onClick={(e) => {
                     e.stopPropagation();
                     if (window.innerWidth < 1024) setMobileView("ai");
                     else switchRightPanel("hermes");
                   }}
                 >
+                  <span className="text-lg">✨</span>
                   Générer avec {AI_ASSISTANT_NAME}
-                </Button>
-                <Button
-                  variant="secondary"
+                </button>
+                <button
+                  className="px-6 py-3 bg-white hover:bg-zinc-50 text-zinc-700 border border-zinc-200 font-medium rounded-xl transition-all shadow-sm flex items-center gap-2"
                   onClick={(e) => {
                     e.stopPropagation();
                     setIsPickerOpen(true);
                   }}
-                  style={{ color: "black", borderColor: "#e4e4e7" }}
                 >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                  </svg>
                   Ajouter un bloc
-                </Button>
+                </button>
               </div>
             </div>
           ) : (
@@ -253,14 +286,18 @@ export const BlockCanvas: React.FC<BlockCanvasProps> = ({ pageId }) => {
             </DndContext>
           )}
 
+          {/* SKELETON BLOCK FOR FLUID AI ILLUSION */}
+          {hermesIsThinking && <SkeletonBlock />}
+
           {/* Bottom Add Button if not empty */}
-          {items.length > 0 && (
-            <div className="py-12 flex justify-center w-full border-t border-dashed border-zinc-200 mt-auto">
+          {(items.length > 0 || hermesIsThinking) && (
+            <div className="py-16 flex justify-center w-full mt-auto relative group">
+              <div className="absolute inset-0 top-1/2 -translate-y-1/2 border-t border-dashed border-zinc-200 z-0"></div>
               <button
                 onClick={(e) => { e.stopPropagation(); setIsPickerOpen(true); }}
-                className="flex items-center gap-2 px-4 py-2 bg-zinc-100 hover:bg-zinc-200 text-zinc-600 rounded-full text-sm font-medium transition-colors"
+                className="relative z-10 flex items-center gap-2 px-6 py-3 bg-white border border-zinc-200 text-zinc-600 rounded-full text-[14px] font-medium transition-all hover:border-zinc-300 hover:shadow-md hover:text-zinc-900"
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="12" y1="5" x2="12" y2="19"></line>
                   <line x1="5" y1="12" x2="19" y2="12"></line>
                 </svg>

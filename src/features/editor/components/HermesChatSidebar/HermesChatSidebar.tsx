@@ -27,7 +27,6 @@ export const HermesChatSidebar: React.FC<HermesChatSidebarProps> = ({
     "Crée un site complet pour un restaurant italien",
     "Ajoute une section témoignages",
     "Remplace le titre du Hero",
-    "Ajoute une section tarifs (pricing)",
   ];
 
   // Scroll to bottom on new messages
@@ -66,23 +65,25 @@ export const HermesChatSidebar: React.FC<HermesChatSidebarProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-full bg-zinc-900 text-zinc-100 font-sans">
-      <header className="flex items-center justify-between px-4 py-3 border-b border-zinc-800 shrink-0">
-        <div className="flex items-center gap-2">
-          <span className="text-xl">✨</span>
-          <span className="font-semibold text-sm">Assistant {AI_ASSISTANT_NAME}</span>
+    <div className="flex flex-col h-full bg-white text-zinc-800 font-sans">
+      <header className="flex items-center justify-between px-5 py-4 shrink-0">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center border border-indigo-100 shadow-sm">
+            <span className="text-sm">✨</span>
+          </div>
+          <span className="font-bold text-[15px] tracking-tight text-zinc-800">{AI_ASSISTANT_NAME}</span>
           {hermesIsThinking && (
-            <span className="w-2 h-2 rounded-full bg-primary animate-pulse ml-2" />
+            <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse ml-1" />
           )}
         </div>
         <div className="flex items-center gap-1">
           {hermesMessages.length > 0 && (
             <button
               onClick={clearHermesMessages}
-              className="p-1.5 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 rounded-md transition-colors"
-              title="Effacer l'historique"
+              className="p-1.5 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 rounded-md transition-colors"
+              title="Effacer le chat"
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"></path>
               </svg>
             </button>
@@ -90,10 +91,10 @@ export const HermesChatSidebar: React.FC<HermesChatSidebarProps> = ({
           {onClose && (
             <button 
               onClick={onClose} 
-              className="p-1.5 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 rounded-md transition-colors" 
+              className="p-1.5 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 rounded-md transition-colors" 
               title="Fermer"
             >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="18" y1="6" x2="6" y2="18" />
                 <line x1="6" y1="6" x2="18" y2="18" />
               </svg>
@@ -102,15 +103,29 @@ export const HermesChatSidebar: React.FC<HermesChatSidebarProps> = ({
         </div>
       </header>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-6 scrollbar-thin scrollbar-thumb-zinc-700 scrollbar-track-transparent">
+      <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-5 scrollbar-thin scrollbar-thumb-zinc-200 scrollbar-track-transparent">
         {hermesMessages.length === 0 && (
-          <div className="flex flex-col items-center justify-center h-full text-center space-y-4 text-zinc-400">
-            <div className="w-16 h-16 bg-zinc-800 rounded-2xl flex items-center justify-center shadow-inner">
-              <span className="text-3xl">🤖</span>
+          <div className="flex flex-col items-center justify-center h-full text-center mt-4">
+            <div className="w-16 h-16 bg-gradient-to-br from-indigo-100 to-white rounded-2xl flex items-center justify-center shadow-sm border border-indigo-50 mb-4">
+              <span className="text-3xl">👋</span>
             </div>
-            <p className="text-sm max-w-[250px] leading-relaxed">
-              Bonjour ! Je suis l'assistant <strong className="text-zinc-200">{AI_ASSISTANT_NAME}</strong>. Décrivez-moi ce que vous souhaitez accomplir.
+            <h3 className="text-lg font-bold text-zinc-800 mb-2">Bonjour !</h3>
+            <p className="text-[14px] text-zinc-500 max-w-[240px] leading-relaxed mb-8">
+              Que souhaitez-vous ajouter ou modifier sur votre site aujourd'hui ?
             </p>
+            
+            <div className="flex flex-col gap-2 w-full max-w-[260px]">
+              {defaultSuggestions.map((sug, i) => (
+                <button
+                  key={i}
+                  className="text-[13px] bg-white border border-zinc-200 hover:border-indigo-300 hover:bg-indigo-50/30 text-zinc-600 px-4 py-3 rounded-xl text-left transition-all shadow-sm truncate w-full"
+                  onClick={() => handleSend(sug)}
+                  disabled={hermesIsThinking}
+                >
+                  {sug}
+                </button>
+              ))}
+            </div>
           </div>
         )}
 
@@ -119,13 +134,19 @@ export const HermesChatSidebar: React.FC<HermesChatSidebarProps> = ({
           return (
             <div
               key={index}
-              className={`flex ${isUser ? "justify-end" : "justify-start"} animate-in fade-in slide-in-from-bottom-2 duration-300`}
+              className={`flex flex-col ${isUser ? "items-end" : "items-start"} animate-in fade-in slide-in-from-bottom-2 duration-300`}
             >
+              {!isUser && (
+                <div className="flex items-center gap-1.5 mb-1.5 ml-1">
+                  <span className="text-sm">✨</span>
+                  <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">{AI_ASSISTANT_NAME}</span>
+                </div>
+              )}
               <div
-                className={`max-w-[85%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed shadow-sm ${
+                className={`max-w-[90%] px-4 py-3 text-[14px] leading-relaxed break-words shadow-sm ${
                   isUser 
-                    ? "bg-primary text-primary-foreground rounded-tr-sm" 
-                    : "bg-zinc-800 text-zinc-100 rounded-tl-sm border border-zinc-700/50"
+                    ? "bg-zinc-900 text-white rounded-2xl rounded-tr-sm" 
+                    : "bg-white border border-zinc-200 text-zinc-700 rounded-2xl rounded-tl-sm"
                 }`}
               >
                 {msg.content}
@@ -135,39 +156,28 @@ export const HermesChatSidebar: React.FC<HermesChatSidebarProps> = ({
         })}
 
         {hermesIsThinking && (
-          <div className="flex justify-start animate-in fade-in duration-300">
-            <div className="bg-zinc-800 text-zinc-100 px-4 py-3 rounded-2xl rounded-tl-sm border border-zinc-700/50 flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 bg-zinc-400 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
-              <span className="w-1.5 h-1.5 bg-zinc-400 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
-              <span className="w-1.5 h-1.5 bg-zinc-400 rounded-full animate-bounce"></span>
+          <div className="flex flex-col items-start animate-in fade-in duration-300">
+            <div className="flex items-center gap-1.5 mb-1.5 ml-1">
+              <span className="text-sm">✨</span>
+              <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">{AI_ASSISTANT_NAME} réfléchit...</span>
+            </div>
+            <div className="bg-white border border-zinc-200 px-4 py-3.5 rounded-2xl rounded-tl-sm shadow-sm flex items-center gap-1.5 h-10">
+              <span className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+              <span className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+              <span className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce"></span>
             </div>
           </div>
         )}
         <div ref={chatEndRef} className="h-1" />
       </div>
 
-      <div className="p-3 bg-zinc-900 border-t border-zinc-800 shrink-0">
-        {hermesMessages.length === 0 && (
-          <div className="flex flex-wrap gap-2 mb-3">
-            {defaultSuggestions.map((sug, i) => (
-              <button
-                key={i}
-                className="text-[11px] bg-zinc-800 hover:bg-zinc-700 border border-zinc-700/50 text-zinc-300 px-2.5 py-1.5 rounded-lg text-left transition-colors truncate max-w-full"
-                onClick={() => handleSend(sug)}
-                disabled={hermesIsThinking}
-              >
-                {sug}
-              </button>
-            ))}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="relative group flex items-end">
+      <div className="p-4 shrink-0 bg-white border-t border-zinc-100">
+        <form onSubmit={handleSubmit} className="relative flex items-end">
           <textarea
             ref={inputRef}
             rows={1}
-            className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 pr-12 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-transparent resize-none max-h-32 transition-shadow"
-            placeholder="Demandez à l'IA... (Ctrl+K)"
+            className="w-full bg-zinc-50 border border-zinc-200 hover:border-zinc-300 rounded-2xl px-4 py-3 pr-12 text-[14px] text-zinc-800 placeholder-zinc-400 focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 resize-none max-h-32 transition-all shadow-sm"
+            placeholder="Écrivez un message... (Ctrl+K)"
             value={inputValue}
             onChange={(e) => {
               setInputValue(e.target.value);
@@ -180,7 +190,11 @@ export const HermesChatSidebar: React.FC<HermesChatSidebarProps> = ({
           />
           <button
             type="submit"
-            className="absolute right-2 bottom-2 p-1.5 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
+            className={`absolute right-2 bottom-2 p-2 rounded-xl transition-all ${
+              inputValue.trim() && !hermesIsThinking
+                ? "bg-indigo-600 hover:bg-indigo-700 text-white shadow-md"
+                : "bg-zinc-100 text-zinc-400"
+            }`}
             disabled={!inputValue.trim() || hermesIsThinking}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -189,8 +203,8 @@ export const HermesChatSidebar: React.FC<HermesChatSidebarProps> = ({
             </svg>
           </button>
         </form>
-        <div className="text-center mt-2">
-          <span className="text-[10px] text-zinc-600">L'IA peut faire des erreurs. Vérifiez son travail.</span>
+        <div className="text-center mt-2.5">
+          <span className="text-[11px] text-zinc-400">L'IA peut faire des erreurs. Vérifiez le rendu.</span>
         </div>
       </div>
     </div>
