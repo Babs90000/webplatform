@@ -21,7 +21,10 @@ interface RequestOptions extends RequestInit {
   token?: string;
 }
 
-const request = async <T>(path: string, options: RequestOptions = {}): Promise<T> => {
+const request = async <T>(
+  path: string,
+  options: RequestOptions = {},
+): Promise<T> => {
   const { token: tokenOption, headers: customHeaders, ...rest } = options;
 
   const token = tokenOption ?? getAuthToken();

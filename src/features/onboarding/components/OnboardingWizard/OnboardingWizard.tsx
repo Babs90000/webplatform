@@ -59,7 +59,11 @@ export const OnboardingWizard: React.FC = () => {
     let interval: NodeJS.Timeout;
     if (phase === "generating") {
       interval = setInterval(() => {
-        setFakeStatusIndex((prev) => (prev + 1) % statusMessages.length);
+        setFakeStatusIndex((prev) => {
+          // Si on a atteint la dernière étape (4 étapes * 2 = 8), on reste dessus
+          if (prev >= 8) return 8;
+          return prev + 1;
+        });
       }, 2000);
     }
     return () => clearInterval(interval);
@@ -408,11 +412,34 @@ export const OnboardingWizard: React.FC = () => {
             <h2 className={styles.aiTitle}>Création de votre site web</h2>
             <p className={styles.aiSub}>{statusMessages[fakeStatusIndex]}</p>
           </div>
-          <div className={styles.fakeBlockContainer}>
-            <div className={styles.fakeBlock} />
-            <div className={styles.fakeBlock} />
-            <div className={styles.fakeBlock} />
-            <div className={styles.fakeBlock} />
+          <div className={styles.generationSteps}>
+            {[
+              "Analyse de vos réponses et objectifs",
+              "Création de l'architecture du site",
+              "Rédaction du contenu percutant",
+              "Application du design premium"
+            ].map((step, idx) => {
+              // 8 status messages total. Let's divide by 2 to map to 4 steps.
+              const isCompleted = fakeStatusIndex >= (idx + 1) * 2;
+              const isActive = !isCompleted && fakeStatusIndex >= idx * 2;
+              
+              return (
+                <div key={idx} className={`${styles.generationStep} ${isCompleted ? styles.stepCompleted : isActive ? styles.stepActive : ""}`}>
+                  <div className={styles.stepIcon}>
+                    {isCompleted ? (
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                      </svg>
+                    ) : isActive ? (
+                      <div className={styles.stepSpinner} />
+                    ) : (
+                      <div className={styles.stepDot} />
+                    )}
+                  </div>
+                  <span className={styles.stepText}>{step}</span>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>

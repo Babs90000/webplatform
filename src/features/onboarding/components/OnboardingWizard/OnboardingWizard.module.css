@@ -299,56 +299,91 @@
   animation: fadeIn 0.5s ease;
 }
 
-/* Materializing Blocks Animation */
-.fakeBlockContainer {
+/* Intelligent Generation Steps Animation */
+.generationSteps {
   display: flex;
   flex-direction: column;
-  gap: var(--space-sm);
-  width: 280px;
-  margin: 0 auto;
+  gap: var(--space-md);
+  margin-top: var(--space-2xl);
+  text-align: left;
 }
 
-.fakeBlock {
-  height: 12px;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: var(--radius-sm);
-  width: 100%;
-  position: relative;
-  overflow: hidden;
+.generationStep {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  opacity: 0.5;
+  transform: translateY(10px);
+  transition: all var(--transition-normal);
 }
 
-.fakeBlock::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  height: 100%;
-  width: 30%;
-  background: var(--gradient-primary);
-  border-radius: var(--radius-sm);
-  animation: slideBlock 2s infinite ease-in-out;
+.generationStep.stepActive {
+  opacity: 1;
+  transform: translateY(0);
+  background: rgba(99, 102, 241, 0.05);
+  border-color: rgba(99, 102, 241, 0.2);
+  box-shadow: var(--shadow-glow);
 }
 
-.fakeBlock:nth-child(2)::after {
-  animation-delay: 0.4s;
-  width: 50%;
-}
-.fakeBlock:nth-child(3)::after {
-  animation-delay: 0.8s;
-  width: 40%;
-}
-.fakeBlock:nth-child(4)::after {
-  animation-delay: 1.2s;
-  width: 60%;
+.generationStep.stepCompleted {
+  opacity: 1;
+  transform: translateY(0);
+  background: rgba(16, 185, 129, 0.05);
+  border-color: rgba(16, 185, 129, 0.2);
 }
 
-@keyframes slideBlock {
-  0% {
-    left: -100%;
-  }
-  100% {
-    left: 100%;
-  }
+.stepIcon {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.stepCompleted .stepIcon {
+  background: var(--color-accent-success);
+  color: white;
+}
+
+.stepActive .stepIcon {
+  background: transparent;
+}
+
+.stepSpinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(99, 102, 241, 0.3);
+  border-top-color: var(--color-accent-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.stepDot {
+  width: 8px;
+  height: 8px;
+  background: var(--color-text-muted);
+  border-radius: 50%;
+}
+
+.stepText {
+  font-size: 1.05rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.stepActive .stepText {
+  color: var(--color-text-primary);
+  font-weight: 600;
+}
+
+.stepCompleted .stepText {
+  color: var(--color-text-primary);
 }
 
 .welcomeCard {
