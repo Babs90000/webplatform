@@ -1,0 +1,7 @@
+/**
+ * Fichier de référence Tailwind pour les CSS Modules.
+ * À importer en tête de tout *.module.css qui utilise @apply :
+ *
+ *   @reference "#tailwind-reference";
+ */
+@import "tailwindcss";

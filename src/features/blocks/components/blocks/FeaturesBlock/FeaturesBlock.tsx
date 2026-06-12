@@ -10,124 +10,84 @@ export const FeaturesBlock: React.FC<FeaturesProps> = ({
     { title: "Infinitely Scalable", description: "Grows with your business without breaking a sweat." },
   ],
   layout = "grid-3",
-  bg_color = "var(--color-bg-secondary)",
+  bg_color,
 }) => {
-  const getGridTemplate = () => {
+  const getGridClasses = () => {
     switch (layout) {
-      case "grid-2": return "repeat(auto-fit, minmax(400px, 1fr))";
-      case "grid-3": return "repeat(auto-fit, minmax(300px, 1fr))";
-      case "grid-4": return "repeat(auto-fit, minmax(250px, 1fr))";
-      case "list": return "1fr";
-      case "alternating": return "1fr";
-      default: return "repeat(auto-fit, minmax(300px, 1fr))";
+      case "grid-2": return "grid-cols-1 md:grid-cols-2";
+      case "grid-3": return "grid-cols-1 md:grid-cols-2 lg:grid-cols-3";
+      case "grid-4": return "grid-cols-1 md:grid-cols-2 lg:grid-cols-4";
+      case "list": return "grid-cols-1 max-w-3xl mx-auto";
+      case "alternating": return "grid-cols-1 max-w-5xl mx-auto";
+      default: return "grid-cols-1 md:grid-cols-3";
     }
   };
 
+  const isAlternating = layout === "alternating";
+
   return (
     <section 
-      style={{
-        backgroundColor: bg_color,
-        color: "var(--color-text-primary)",
-        padding: "var(--space-4xl) var(--space-xl)",
-      }}
+      className="w-full py-24 px-4 md:px-8"
+      style={{ backgroundColor: bg_color || "var(--color-bg-secondary)" }}
     >
-      <div style={{ maxWidth: "1200px", margin: "0 auto", textAlign: "center", marginBottom: "var(--space-3xl)" }}>
-        {title && (
-          <h2 style={{ 
-            fontSize: "clamp(2rem, 4vw, 3rem)", 
-            fontWeight: 700, 
-            marginBottom: "var(--space-md)",
-            letterSpacing: "-0.02em"
-          }}>
-            {title}
-          </h2>
-        )}
-        {subtitle && (
-          <p style={{ 
-            fontSize: "1.125rem", 
-            color: "var(--color-text-secondary)",
-            maxWidth: "600px",
-            margin: "0 auto"
-          }}>
-            {subtitle}
-          </p>
-        )}
-      </div>
+      <div className="container mx-auto">
+        <div className="max-w-3xl mx-auto text-center mb-16">
+          {title && (
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-foreground mb-4">
+              {title}
+            </h2>
+          )}
+          {subtitle && (
+            <p className="text-lg md:text-xl text-muted-foreground">
+              {subtitle}
+            </p>
+          )}
+        </div>
 
-      <div style={{
-        display: "grid",
-        gridTemplateColumns: getGridTemplate(),
-        gap: layout === "alternating" ? "var(--space-3xl)" : "var(--space-xl)",
-        maxWidth: "1200px",
-        margin: "0 auto"
-      }}>
-        {items.map((item, i) => {
-          const isAlternating = layout === "alternating";
-          const isEven = i % 2 === 0;
+        <div className={`grid gap-8 ${getGridClasses()}`}>
+          {items.map((item, i) => {
+            const isEven = i % 2 === 0;
 
-          return (
-            <div 
-              key={i}
-              style={{
-                padding: isAlternating ? "0" : "var(--space-2xl)",
-                background: isAlternating ? "transparent" : "var(--glass-bg)",
-                backdropFilter: isAlternating ? "none" : "blur(var(--glass-blur))",
-                border: isAlternating ? "none" : "1px solid var(--glass-border)",
-                borderRadius: "var(--radius-xl)",
-                transition: "transform var(--transition-normal), box-shadow var(--transition-normal)",
-                cursor: "default",
-                display: "flex",
-                flexDirection: isAlternating ? (isEven ? "row" : "row-reverse") : "column",
-                alignItems: isAlternating ? "center" : "flex-start",
-                gap: isAlternating ? "var(--space-2xl)" : "0"
-              }}
-              onMouseOver={(e) => {
-                if (!isAlternating) {
-                  e.currentTarget.style.transform = "translateY(-4px)";
-                  e.currentTarget.style.boxShadow = "var(--shadow-xl)";
-                }
-              }}
-              onMouseOut={(e) => {
-                if (!isAlternating) {
-                  e.currentTarget.style.transform = "translateY(0)";
-                  e.currentTarget.style.boxShadow = "none";
-                }
-              }}
-            >
-              {/* If alternating, show a placeholder image on one side */}
-              {isAlternating && (
-                <div style={{
-                  flex: 1,
-                  height: "300px",
-                  background: "rgba(99, 102, 241, 0.05)",
-                  borderRadius: "var(--radius-xl)",
-                  border: "1px solid rgba(99, 102, 241, 0.1)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "var(--color-accent-primary)"
-                }}>
-                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                    <polyline points="21 15 16 10 5 21"></polyline>
-                  </svg>
+            if (isAlternating) {
+              return (
+                <div key={i} className={`flex flex-col gap-8 md:gap-16 items-center ${isEven ? 'md:flex-row' : 'md:flex-row-reverse'}`}>
+                  <div className="w-full md:w-1/2 min-h-[300px] flex items-center justify-center bg-card/50 backdrop-blur-md rounded-3xl border border-border shadow-sm relative overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-tr from-primary/10 to-transparent" />
+                    <svg className="w-12 h-12 text-muted-foreground relative z-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                      <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                      <polyline points="21 15 16 10 5 21"></polyline>
+                    </svg>
+                  </div>
+                  <div className="w-full md:w-1/2 space-y-4">
+                    <div className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center text-xl">
+                      {item.icon ? (
+                        <span>{item.icon}</span>
+                      ) : (
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                          <polyline points="2 17 12 22 22 17"></polyline>
+                          <polyline points="2 12 12 17 22 12"></polyline>
+                        </svg>
+                      )}
+                    </div>
+                    <h3 className="text-2xl font-semibold text-foreground tracking-tight">
+                      {item.title}
+                    </h3>
+                    <p className="text-lg text-muted-foreground leading-relaxed">
+                      {item.description}
+                    </p>
+                  </div>
                 </div>
-              )}
+              );
+            }
 
-              <div style={{ flex: 1 }}>
-                <div style={{
-                  width: "48px",
-                  height: "48px",
-                  borderRadius: "12px",
-                  background: "rgba(99, 102, 241, 0.1)",
-                  color: "var(--color-accent-primary)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  marginBottom: "var(--space-lg)",
-                  fontSize: "1.5rem"
-                }}>
+            return (
+              <div 
+                key={i}
+                className="group flex flex-col p-8 bg-card border border-border rounded-2xl transition-all hover:shadow-lg hover:-translate-y-1 hover:border-primary/30"
+              >
+                <div className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center text-xl mb-6 transition-transform group-hover:scale-110">
                   {item.icon ? (
                     <span>{item.icon}</span>
                   ) : (
@@ -138,16 +98,16 @@ export const FeaturesBlock: React.FC<FeaturesProps> = ({
                     </svg>
                   )}
                 </div>
-                <h3 style={{ fontSize: "1.25rem", fontWeight: 600, marginBottom: "var(--space-sm)" }}>
+                <h3 className="text-xl font-semibold text-foreground mb-3 tracking-tight">
                   {item.title}
                 </h3>
-                <p style={{ color: "var(--color-text-secondary)", lineHeight: 1.6 }}>
+                <p className="text-muted-foreground leading-relaxed flex-grow">
                   {item.description}
                 </p>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
     </section>
   );

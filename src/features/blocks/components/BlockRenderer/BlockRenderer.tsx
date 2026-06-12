@@ -10,6 +10,7 @@ import { TestimonialsBlock } from "../blocks/TestimonialsBlock";
 import { PricingBlock } from "../blocks/PricingBlock";
 import { CTABlock } from "../blocks/CTABlock";
 import { FooterBlock } from "../blocks/FooterBlock";
+import { AboutBlock } from "../blocks/AboutBlock";
 
 // The registry mapping BlockType to React Components
 const BlockRegistry: Record<BlockType, React.FC<Record<string, unknown>>> = {
@@ -22,10 +23,10 @@ const BlockRegistry: Record<BlockType, React.FC<Record<string, unknown>>> = {
   pricing: PricingBlock as unknown as React.FC<Record<string, unknown>>,
   cta: CTABlock as unknown as React.FC<Record<string, unknown>>,
   footer: FooterBlock as unknown as React.FC<Record<string, unknown>>,
+  about: AboutBlock as unknown as React.FC<Record<string, unknown>>,
   
   // Phase 1 (Pending implementation)
   faq: PlaceholderBlock as unknown as React.FC<Record<string, unknown>>,
-  about: PlaceholderBlock as unknown as React.FC<Record<string, unknown>>,
   team: PlaceholderBlock as unknown as React.FC<Record<string, unknown>>,
   form: PlaceholderBlock as unknown as React.FC<Record<string, unknown>>,
   blog_post: PlaceholderBlock as unknown as React.FC<Record<string, unknown>>,

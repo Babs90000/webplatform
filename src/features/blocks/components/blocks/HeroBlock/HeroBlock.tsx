@@ -9,7 +9,7 @@ export const HeroBlock: React.FC<HeroProps> = ({
   secondary_cta_label,
   secondary_cta_url,
   background_image,
-  background_color = "transparent",
+  background_color,
   style = "centered",
   badge_text,
 }) => {
@@ -18,188 +18,76 @@ export const HeroBlock: React.FC<HeroProps> = ({
 
   return (
     <section 
+      className={`relative w-full flex items-center overflow-hidden ${
+        isFullscreen ? "min-h-screen px-4 md:px-8" : "min-h-[60vh] py-24 px-4 md:px-8"
+      }`}
       style={{
-        backgroundColor: background_color,
+        backgroundColor: background_color || "var(--color-bg-primary)",
         backgroundImage: background_image ? `url(${background_image})` : undefined,
         backgroundSize: "cover",
         backgroundPosition: "center",
-        color: "var(--color-text-primary)",
-        padding: isFullscreen ? "0 var(--space-xl)" : "var(--space-4xl) var(--space-xl)",
-        display: "flex",
-        flexDirection: isSplit ? "row" : "column",
-        alignItems: "center",
-        textAlign: isSplit ? "left" : "center",
-        minHeight: isFullscreen ? "100vh" : "60vh",
-        justifyContent: "center",
-        position: "relative",
-        overflow: "hidden",
-        gap: isSplit ? "var(--space-3xl)" : "0",
       }}
     >
       {/* Background Overlay if image exists */}
       {background_image && (
-        <div style={{
-          position: "absolute",
-          inset: 0,
-          background: "linear-gradient(135deg, rgba(10,14,26,0.9) 0%, rgba(10,14,26,0.4) 100%)",
-          zIndex: 0
-        }} />
+        <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-0" />
       )}
 
       {/* Premium Glow Effect for non-image backgrounds */}
       {!background_image && !isSplit && (
-        <div 
-          style={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            width: "80%",
-            height: "80%",
-            background: "radial-gradient(circle, rgba(99,102,241,0.15) 0%, rgba(0,0,0,0) 70%)",
-            zIndex: 0,
-            pointerEvents: "none"
-          }} 
-        />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[80%] bg-[radial-gradient(circle,rgba(99,102,241,0.15)_0%,transparent_70%)] z-0 pointer-events-none" />
       )}
 
-      <div style={{ 
-        position: "relative", 
-        zIndex: 1, 
-        maxWidth: isSplit ? "50%" : "800px", 
-        width: "100%",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: isSplit ? "flex-start" : "center"
-      }}>
-        {badge_text && (
-          <span style={{
-            display: "inline-block",
-            padding: "var(--space-xs) var(--space-md)",
-            background: "rgba(99, 102, 241, 0.1)",
-            color: "var(--color-accent-primary)",
-            borderRadius: "var(--radius-full)",
-            fontSize: "0.875rem",
-            fontWeight: 600,
-            marginBottom: "var(--space-md)",
-            border: "1px solid rgba(99, 102, 241, 0.2)"
-          }}>
-            {badge_text}
-          </span>
-        )}
-
-        <h1 
-          style={{ 
-            fontSize: "clamp(2.5rem, 5vw, 4.5rem)", 
-            fontWeight: 800, 
-            letterSpacing: "-0.03em",
-            lineHeight: 1.1,
-            marginBottom: "var(--space-lg)",
-            background: "linear-gradient(to right, var(--color-text-primary), var(--color-text-secondary))",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent"
-          }}
-        >
-          {headline}
-        </h1>
+      <div className={`relative z-10 container mx-auto flex flex-col ${isSplit ? "lg:flex-row items-center gap-12" : "items-center text-center"}`}>
         
-        <p 
-          style={{ 
-            fontSize: "clamp(1.125rem, 2vw, 1.5rem)", 
-            color: "var(--color-text-secondary)",
-            lineHeight: 1.5,
-            marginBottom: "var(--space-2xl)",
-            maxWidth: "600px",
-          }}
-        >
-          {subheadline}
-        </p>
-        
-        <div 
-          style={{ 
-            display: "flex", 
-            gap: "var(--space-md)", 
-            justifyContent: isSplit ? "flex-start" : "center",
-            flexWrap: "wrap"
-          }}
-        >
-          {cta_label && (
-            <a 
-              href={cta_url}
-              style={{
-                padding: "16px 32px",
-                backgroundColor: "var(--color-accent-primary)",
-                color: "#ffffff",
-                borderRadius: "var(--radius-full)",
-                fontWeight: 600,
-                textDecoration: "none",
-                transition: "all var(--transition-normal)",
-                boxShadow: "0 10px 25px -5px rgba(99, 102, 241, 0.4)"
-              }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.transform = "translateY(-2px)";
-                e.currentTarget.style.backgroundColor = "var(--color-accent-primary-hover)";
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.backgroundColor = "var(--color-accent-primary)";
-              }}
-            >
-              {cta_label}
-            </a>
+        <div className={`flex flex-col ${isSplit ? "items-start text-left lg:w-1/2" : "items-center max-w-4xl"}`}>
+          {badge_text && (
+            <span className="inline-block px-4 py-1.5 mb-6 text-sm font-semibold text-primary bg-primary/10 border border-primary/20 rounded-full">
+              {badge_text}
+            </span>
           )}
+
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-foreground leading-[1.1] mb-6">
+            {headline}
+          </h1>
           
-          {secondary_cta_label && (
-            <a 
-              href={secondary_cta_url || "#"}
-              style={{
-                padding: "16px 32px",
-                backgroundColor: "rgba(255, 255, 255, 0.05)",
-                color: "var(--color-text-primary)",
-                border: "1px solid var(--color-border-primary)",
-                borderRadius: "var(--radius-full)",
-                fontWeight: 600,
-                textDecoration: "none",
-                transition: "all var(--transition-normal)"
-              }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.1)";
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.05)";
-              }}
-            >
-              {secondary_cta_label}
-            </a>
-          )}
+          <p className="text-lg md:text-xl text-muted-foreground leading-relaxed mb-10 max-w-2xl">
+            {subheadline}
+          </p>
+          
+          <div className={`flex flex-wrap gap-4 ${isSplit ? "justify-start" : "justify-center"}`}>
+            {cta_label && (
+              <a 
+                href={cta_url}
+                className="inline-flex items-center justify-center h-12 px-8 font-medium text-primary-foreground bg-primary rounded-full transition-all hover:bg-primary/90 shadow-sm hover:shadow-md hover:-translate-y-0.5"
+              >
+                {cta_label}
+              </a>
+            )}
+            
+            {secondary_cta_label && (
+              <a 
+                href={secondary_cta_url || "#"}
+                className="inline-flex items-center justify-center h-12 px-8 font-medium text-foreground bg-background border border-border rounded-full transition-all hover:bg-accent hover:text-accent-foreground"
+              >
+                {secondary_cta_label}
+              </a>
+            )}
+          </div>
         </div>
-      </div>
 
-      {/* Split layout placeholder image */}
-      {isSplit && (
-        <div style={{
-          flex: 1,
-          width: "100%",
-          height: "400px",
-          background: "var(--glass-bg)",
-          backdropFilter: "blur(var(--glass-blur))",
-          borderRadius: "var(--radius-xl)",
-          border: "1px solid var(--glass-border)",
-          position: "relative",
-          zIndex: 1,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          color: "var(--color-text-tertiary)"
-        }}>
-          {/* Placeholder illustration */}
-          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-            <circle cx="8.5" cy="8.5" r="1.5"></circle>
-            <polyline points="21 15 16 10 5 21"></polyline>
-          </svg>
-        </div>
-      )}
+        {/* Split layout placeholder image */}
+        {isSplit && (
+          <div className="w-full lg:w-1/2 min-h-[400px] flex items-center justify-center bg-card/50 backdrop-blur-md rounded-3xl border border-border shadow-2xl relative overflow-hidden">
+             <div className="absolute inset-0 bg-gradient-to-tr from-primary/10 to-transparent" />
+             <svg className="w-16 h-16 text-muted-foreground relative z-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+              <circle cx="8.5" cy="8.5" r="1.5"></circle>
+              <polyline points="21 15 16 10 5 21"></polyline>
+            </svg>
+          </div>
+        )}
+      </div>
     </section>
   );
 };
