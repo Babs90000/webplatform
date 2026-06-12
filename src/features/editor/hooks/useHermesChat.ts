@@ -78,8 +78,16 @@ export const useSendHermesMessage = (pageId: string | null) => {
     },
     onError: (error) => {
       setHermesIsThinking(false);
-      const message =
-        error instanceof ApiError ? error.message : "Erreur de connexion avec Koala Codeur";
+      let message = "Erreur de connexion avec Koala Codeur";
+      
+      if (error instanceof ApiError) {
+        if (error.message.includes("is not a valid model ID") || error.message.includes("LLM_ERROR")) {
+          message = "Erreur de configuration de l'IA. Veuillez vérifier les modèles LLM dans l'environnement.";
+        } else {
+          message = error.message;
+        }
+      }
+      
       toast.error(message);
     },
   });

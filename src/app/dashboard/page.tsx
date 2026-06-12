@@ -16,16 +16,6 @@ const DashboardPage: React.FC = () => {
   const router = useRouter();
   const { user, logout } = useAuth();
   const { data: projects, isLoading, error, refetch } = useProjects();
-  const [isModalOpen, setIsModalOpen] = useState(false);
-
-  const handleProjectCreated = (
-    projectId: string,
-    options?: { openHermes?: boolean },
-  ): void => {
-    setIsModalOpen(false);
-    const query = options?.openHermes ? "?hermes=1" : "";
-    router.push(`/projects/${projectId}/editor${query}`);
-  };
 
   return (
     <AuthGuard>
@@ -44,7 +34,7 @@ const DashboardPage: React.FC = () => {
             <Button variant="ghost" onClick={logout}>
               Déconnexion
             </Button>
-            <Button onClick={() => setIsModalOpen(true)}>
+            <Button onClick={() => router.push("/onboarding")}>
               <svg 
                 width="20" height="20" viewBox="0 0 24 24" fill="none" 
                 xmlns="http://www.w3.org/2000/svg"
@@ -63,20 +53,9 @@ const DashboardPage: React.FC = () => {
             isLoading={isLoading} 
             error={error} 
             onRetry={refetch}
-            onCreateProject={() => setIsModalOpen(true)}
+            onCreateProject={() => router.push("/onboarding")}
           />
         </main>
-
-        <Modal 
-          isOpen={isModalOpen} 
-          onClose={() => setIsModalOpen(false)}
-          title="Create a New Project"
-        >
-          <CreateProjectForm
-            onSuccess={handleProjectCreated}
-            onCancel={() => setIsModalOpen(false)}
-          />
-        </Modal>
       </div>
     </AuthGuard>
   );
