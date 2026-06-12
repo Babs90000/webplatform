@@ -37,12 +37,16 @@ interface EditorState {
   isSaving: boolean;
   lastSaveTime: number | null;
 
+  // Responsive UI tracking
+  mobileView: "pages" | "canvas" | "ai";
+
   setProjectId: (id: string) => void;
   selectPage: (id: string) => void;
   selectBlock: (id: string | null) => void;
   togglePreview: () => void;
   toggleSidebar: () => void;
   toggleProperties: () => void;
+  setMobileView: (view: "pages" | "canvas" | "ai") => void;
   
   // Hermes V2 Chat Actions
   addHermesMessage: (message: ChatMessage) => void;
@@ -75,6 +79,7 @@ const INITIAL_STATE = {
   isPreviewMode: false,
   isSidebarCollapsed: false,
   isPropertiesCollapsed: false,
+  mobileView: "canvas" as "pages" | "canvas" | "ai",
   hermesMessages: [] as ChatMessage[],
   hermesIsThinking: false,
   activeRightPanel: "properties" as "properties" | "hermes",
@@ -96,7 +101,7 @@ export const useEditorStore = create<EditorState>()(
       },
 
       selectPage: (id: string): void => {
-        set({ selectedPageId: id, selectedBlockId: null });
+        set({ selectedPageId: id, selectedBlockId: null, mobileView: "canvas" });
         get().markDirty();
       },
 
@@ -115,6 +120,11 @@ export const useEditorStore = create<EditorState>()(
 
       toggleProperties: (): void => {
         set((state) => ({ isPropertiesCollapsed: !state.isPropertiesCollapsed }));
+      },
+
+      setMobileView: (view: "pages" | "canvas" | "ai"): void => {
+        set({ mobileView: view });
+        if (view === "ai") set({ activeRightPanel: "hermes", isPropertiesCollapsed: false });
       },
 
       addHermesMessage: (message: ChatMessage): void => {
