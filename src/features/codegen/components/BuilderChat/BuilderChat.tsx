@@ -1,14 +1,16 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import styles from "./BuilderChat.module.css";
 import { AI_ASSISTANT_NAME } from "@/lib/branding";
+import { toast } from "@/store/toast";
 
 interface BuilderChatProps {
   messages: Array<{ role: "user" | "assistant"; content: string }>;
   isBusy: boolean;
   statusMessage: string;
   onSend: (instruction: string) => void;
+  onUploadImage?: (file: File) => Promise<string>;
 }
 
 export const BuilderChat: React.FC<BuilderChatProps> = ({
@@ -16,15 +18,37 @@ export const BuilderChat: React.FC<BuilderChatProps> = ({
   isBusy,
   statusMessage,
   onSend,
+  onUploadImage,
 }) => {
   const [input, setInput] = useState("");
+  const [attachedUrl, setAttachedUrl] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleAttach = async (file: File): Promise<void> => {
+    if (!onUploadImage) return;
+    setIsUploading(true);
+    try {
+      const url = await onUploadImage(file);
+      setAttachedUrl(url);
+      toast.success("Image importée");
+    } catch {
+      toast.error("Import de l'image impossible — réessayez");
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const text = input.trim();
-    if (!text || isBusy) return;
+    if ((!text && !attachedUrl) || isBusy) return;
+    const instruction = attachedUrl
+      ? `${text || "Utilise cette image dans le site."}\n\nImage importée (utilise cette URL exacte) : ${attachedUrl}`
+      : text;
     setInput("");
-    onSend(text);
+    setAttachedUrl(null);
+    onSend(instruction);
   };
 
   return (
@@ -40,6 +64,8 @@ export const BuilderChat: React.FC<BuilderChatProps> = ({
         {messages.length === 0 ? (
           <p className={styles.hint}>
             Demandez une modification : couleurs, textes, sections, layout…
+            Pour changer le fond du hero, importez une image puis décrivez le
+            rendu voulu.
           </p>
         ) : (
           messages.map((msg, i) => (
@@ -61,11 +87,25 @@ export const BuilderChat: React.FC<BuilderChatProps> = ({
       </div>
 
       <form className={styles.form} onSubmit={handleSubmit}>
+        {attachedUrl && (
+          <div className={styles.attachment}>
+            <img src={attachedUrl} alt="Image importée" className={styles.attachmentThumb} />
+            <span className={styles.attachmentLabel}>Image prête à utiliser</span>
+            <button
+              type="button"
+              className={styles.attachmentRemove}
+              onClick={() => setAttachedUrl(null)}
+              aria-label="Retirer l'image"
+            >
+              ×
+            </button>
+          </div>
+        )}
         <textarea
           className={styles.input}
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Ex : rends le hero plus sombre et ajoute un bouton contact"
+          placeholder="Ex : mets cette image en fond du hero avec un voile sombre"
           rows={3}
           disabled={isBusy}
           aria-label="Instruction pour Koala Codeur"
@@ -76,9 +116,38 @@ export const BuilderChat: React.FC<BuilderChatProps> = ({
             }
           }}
         />
-        <button type="submit" className={styles.sendBtn} disabled={isBusy || !input.trim()}>
-          Envoyer
-        </button>
+        <div className={styles.actions}>
+          {onUploadImage && (
+            <>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className={styles.hiddenInput}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) void handleAttach(file);
+                  e.target.value = "";
+                }}
+              />
+              <button
+                type="button"
+                className={styles.attachBtn}
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isBusy || isUploading}
+              >
+                {isUploading ? "Import…" : "🖼 Importer une image"}
+              </button>
+            </>
+          )}
+          <button
+            type="submit"
+            className={styles.sendBtn}
+            disabled={isBusy || (!input.trim() && !attachedUrl)}
+          >
+            Envoyer
+          </button>
+        </div>
       </form>
     </div>
   );

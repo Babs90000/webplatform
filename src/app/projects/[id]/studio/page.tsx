@@ -43,17 +43,20 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
     statusMessage,
     chatMessages,
     visualEditMode,
+    codeVisible,
     setFiles,
     selectPath,
     setPreviewPage,
     setPreviewHtml,
     upsertFile,
     setVisualEditMode,
+    setCodeVisible,
   } = useStudioStore();
 
-  const [pendingImageSelector, setPendingImageSelector] = useState<string | null>(
-    null,
-  );
+  const [pendingImage, setPendingImage] = useState<{
+    path: string;
+    mode: "image" | "background";
+  } | null>(null);
 
   useEffect(() => {
     if (serverFiles) {
@@ -121,8 +124,8 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
 
   const persistPageEdit = useCallback(
     async (
-      kind: "text" | "image",
-      selector: string,
+      kind: "text" | "image" | "background",
+      path: string,
       value: string,
       alt?: string,
     ) => {
@@ -134,7 +137,7 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
 
       const updated = applyVisualEdit(pageFile.content, {
         kind,
-        selector,
+        path,
         value,
         alt,
       });
@@ -146,7 +149,10 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
       upsertFile(previewPage, updated);
       try {
         await saveProjectFile(projectId, previewPage, updated);
-        await refreshPreview();
+        // Le texte est déjà visible dans l'iframe (contenteditable) : on évite
+        // de recharger l'aperçu pour ne pas perdre le focus/scroll. Pour une
+        // image, on recharge afin d'afficher la nouvelle source.
+        if (kind === "image") await refreshPreview();
       } catch {
         toast.error("Échec de l'enregistrement de la modification");
       }
@@ -155,25 +161,26 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
   );
 
   const handleEditText = useCallback(
-    (selector: string, value: string) => {
-      void persistPageEdit("text", selector, value);
+    (path: string, value: string) => {
+      void persistPageEdit("text", path, value);
     },
     [persistPageEdit],
   );
 
   const handleImageConfirm = useCallback(
     async (url: string, alt?: string) => {
-      if (!pendingImageSelector) return;
-      const selector = pendingImageSelector;
-      setPendingImageSelector(null);
-      await persistPageEdit("image", selector, url, alt);
+      if (!pendingImage) return;
+      const { path, mode } = pendingImage;
+      setPendingImage(null);
+      await persistPageEdit(mode, path, url, alt);
     },
-    [pendingImageSelector, persistPageEdit],
+    [pendingImage, persistPageEdit],
   );
 
   return (
     <>
     <StudioLayout
+      showCode={codeVisible}
       toolbar={
         <StudioToolbar
           projectId={projectId}
@@ -185,13 +192,18 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
           hasFiles={files.length > 0}
           visualEditMode={visualEditMode}
           onToggleVisualEdit={() => setVisualEditMode(!visualEditMode)}
+          codeVisible={codeVisible}
+          onToggleCode={() => setCodeVisible(!codeVisible)}
         />
       }
       fileTree={
         <FileTree
           files={files}
           selectedPath={selectedPath}
-          onSelect={selectPath}
+          onSelect={(path) => {
+            selectPath(path);
+            setCodeVisible(true);
+          }}
         />
       }
       codeView={
@@ -212,7 +224,8 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
           editable={visualEditMode}
           onNavigate={(path) => void handlePreviewNavigate(path)}
           onEditText={handleEditText}
-          onEditImageRequest={(selector) => setPendingImageSelector(selector)}
+          onEditImageRequest={(path) => setPendingImage({ path, mode: "image" })}
+          onEditBgRequest={(path) => setPendingImage({ path, mode: "background" })}
         />
       }
       chat={
@@ -221,14 +234,16 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
           isBusy={isBusy}
           statusMessage={statusMessage}
           onSend={(instruction) => void edit(instruction)}
+          onUploadImage={(file) => uploadProjectAsset(projectId, file)}
         />
       }
     />
     <ImageReplaceModal
-      isOpen={pendingImageSelector !== null}
-      onClose={() => setPendingImageSelector(null)}
+      isOpen={pendingImage !== null}
+      onClose={() => setPendingImage(null)}
       onConfirm={(url, alt) => void handleImageConfirm(url, alt)}
       onUpload={(file) => uploadProjectAsset(projectId, file)}
+      title={pendingImage?.mode === "background" ? "Changer le fond" : "Remplacer l'image"}
     />
     </>
   );

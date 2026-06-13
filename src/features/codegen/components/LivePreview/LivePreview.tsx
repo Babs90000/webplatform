@@ -9,8 +9,9 @@ interface LivePreviewProps {
   isLoading?: boolean;
   editable?: boolean;
   onNavigate?: (path: string) => void;
-  onEditText?: (selector: string, value: string) => void;
-  onEditImageRequest?: (selector: string) => void;
+  onEditText?: (path: string, value: string) => void;
+  onEditImageRequest?: (path: string) => void;
+  onEditBgRequest?: (path: string) => void;
 }
 
 export const LivePreview: React.FC<LivePreviewProps> = ({
@@ -20,6 +21,7 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
   onNavigate,
   onEditText,
   onEditImageRequest,
+  onEditBgRequest,
 }) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [throttledHtml, setThrottledHtml] = useState(html);
@@ -54,18 +56,23 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
         onNavigate?.(data.path);
       } else if (
         data.type === "wp-edit-text" &&
-        typeof data.selector === "string" &&
+        typeof data.path === "string" &&
         typeof data.value === "string"
       ) {
-        onEditText?.(data.selector, data.value);
+        onEditText?.(data.path, data.value);
       } else if (
         data.type === "wp-edit-image-request" &&
-        typeof data.selector === "string"
+        typeof data.path === "string"
       ) {
-        onEditImageRequest?.(data.selector);
+        onEditImageRequest?.(data.path);
+      } else if (
+        data.type === "wp-edit-bg-request" &&
+        typeof data.path === "string"
+      ) {
+        onEditBgRequest?.(data.path);
       }
     },
-    [onNavigate, onEditText, onEditImageRequest],
+    [onNavigate, onEditText, onEditImageRequest, onEditBgRequest],
   );
 
   useEffect(() => {

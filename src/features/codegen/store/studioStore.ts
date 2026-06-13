@@ -20,6 +20,7 @@ interface StudioState {
   streamingPaths: Record<string, string>;
   chatMessages: Array<{ role: "user" | "assistant"; content: string }>;
   visualEditMode: boolean;
+  codeVisible: boolean;
 
   setFiles: (files: ProjectFile[]) => void;
   upsertFile: (path: string, content: string) => void;
@@ -33,6 +34,7 @@ interface StudioState {
   addChatMessage: (role: "user" | "assistant", content: string) => void;
   resetStreaming: () => void;
   setVisualEditMode: (on: boolean) => void;
+  setCodeVisible: (visible: boolean) => void;
 }
 
 export const useStudioStore = create<StudioState>((set, get) => ({
@@ -46,6 +48,7 @@ export const useStudioStore = create<StudioState>((set, get) => ({
   streamingPaths: {},
   chatMessages: [],
   visualEditMode: false,
+  codeVisible: false,
 
   setFiles: (files) => set({ files }),
   upsertFile: (path, content) => {
@@ -87,4 +90,5 @@ export const useStudioStore = create<StudioState>((set, get) => ({
     set({ chatMessages: [...get().chatMessages, { role, content }] }),
   resetStreaming: () => set({ streamingPaths: {} }),
   setVisualEditMode: (on) => set({ visualEditMode: on }),
+  setCodeVisible: (visible) => set({ codeVisible: visible }),
 }));

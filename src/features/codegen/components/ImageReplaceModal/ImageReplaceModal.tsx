@@ -10,6 +10,7 @@ interface ImageReplaceModalProps {
   onClose: () => void;
   onConfirm: (url: string, alt?: string) => void;
   onUpload: (file: File) => Promise<string>;
+  title?: string;
 }
 
 export const ImageReplaceModal: React.FC<ImageReplaceModalProps> = ({
@@ -17,6 +18,7 @@ export const ImageReplaceModal: React.FC<ImageReplaceModalProps> = ({
   onClose,
   onConfirm,
   onUpload,
+  title = "Remplacer l'image",
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [url, setUrl] = useState("");
@@ -63,7 +65,7 @@ export const ImageReplaceModal: React.FC<ImageReplaceModalProps> = ({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="Remplacer l'image" size="sm">
+    <Modal isOpen={isOpen} onClose={handleClose} title={title} size="sm">
       <div className={styles.body}>
         <button
           type="button"

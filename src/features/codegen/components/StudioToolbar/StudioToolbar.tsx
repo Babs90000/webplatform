@@ -18,6 +18,8 @@ interface StudioToolbarProps {
   hasFiles: boolean;
   visualEditMode: boolean;
   onToggleVisualEdit: () => void;
+  codeVisible: boolean;
+  onToggleCode: () => void;
 }
 
 export const StudioToolbar: React.FC<StudioToolbarProps> = ({
@@ -30,6 +32,8 @@ export const StudioToolbar: React.FC<StudioToolbarProps> = ({
   hasFiles,
   visualEditMode,
   onToggleVisualEdit,
+  codeVisible,
+  onToggleCode,
 }) => {
   const handleExport = async () => {
     const token = getAuthToken();
@@ -59,6 +63,14 @@ export const StudioToolbar: React.FC<StudioToolbarProps> = ({
       </div>
 
       <div className={styles.right}>
+        <Button
+          variant={codeVisible ? "primary" : "secondary"}
+          size="sm"
+          onClick={onToggleCode}
+          disabled={!hasFiles}
+        >
+          {codeVisible ? "Masquer le code" : "Afficher le code"}
+        </Button>
         <Button
           variant={visualEditMode ? "primary" : "secondary"}
           size="sm"
