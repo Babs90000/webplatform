@@ -2,6 +2,7 @@ import React from "react";
 import Link from "next/link";
 import styles from "./ProjectCard.module.css";
 import type { Project } from "@/types";
+import { getProjectEditorPath } from "@/lib/projectRoutes";
 
 interface ProjectCardProps {
   project: Project;
@@ -25,7 +26,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
   const domain = project.custom_domain || `${project.subdomain}.kdevs.io`;
 
   return (
-    <Link href={`/projects/${project.id}/editor`} className={styles.card}>
+    <Link href={getProjectEditorPath(project.id)} className={styles.card}>
       <div className={styles.header}>
         <div>
           <h3 className={styles.title} title={project.name}>{project.name}</h3>

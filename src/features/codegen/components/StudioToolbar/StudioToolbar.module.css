@@ -1,0 +1,38 @@
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-sm) var(--space-md);
+  background: var(--color-bg-secondary);
+  border-bottom: 1px solid var(--color-border-subtle);
+  min-height: 56px;
+}
+
+.left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.projectInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.projectName {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.status {
+  font-size: 0.75rem;
+  color: var(--color-text-tertiary);
+}
+
+.right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}

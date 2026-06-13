@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import styles from "./OnboardingWizard.module.css";
+import { OnboardingShell } from "../OnboardingShell";
 import { Button } from "@/shared/components/Button";
 import { Input } from "@/shared/components/Input";
 import { Spinner } from "@/shared/components/Spinner";
@@ -16,54 +17,80 @@ import {
   useGenerateSite,
 } from "../../hooks/useOnboarding";
 import type { OnboardingQuestion } from "../../services/onboardingApi";
+import { isStudioEnabled } from "@/lib/features";
+import {
+  getProjectStudioGeneratePath,
+  getProjectStudioPath,
+} from "@/lib/projectRoutes";
+
+const WELCOME_STEPS = [
+  { num: "1", title: "Brief express", desc: "Quelques questions sur votre activité et vos objectifs." },
+  { num: "2", title: "Approfondissement IA", desc: `${AI_ASSISTANT_NAME} affine le brief si nécessaire.` },
+  { num: "3", title: "Studio", desc: "Génération HTML/CSS/JS et aperçu live en quelques minutes." },
+] as const;
 
 export const OnboardingWizard: React.FC = () => {
   const router = useRouter();
 
-  // Wizard States
   const [phase, setPhase] = useState<
     "welcome" | "base" | "thinking" | "dynamic" | "generating"
   >("welcome");
   const [sessionId, setSessionId] = useState<string>("");
   const [projectId, setProjectId] = useState<string>("");
   const [baseQuestions, setBaseQuestions] = useState<OnboardingQuestion[]>([]);
-  const [dynamicQuestions, setDynamicQuestions] = useState<OnboardingQuestion[]>(
-    [],
-  );
+  const [dynamicQuestions, setDynamicQuestions] = useState<OnboardingQuestion[]>([]);
   const [currentStep, setCurrentStep] = useState<number>(0);
-  const [answers, setAnswers] = useState<Record<string, any>>({});
+  const [answers, setAnswers] = useState<Record<string, unknown>>({});
   const [fakeStatusIndex, setFakeStatusIndex] = useState<number>(0);
   const [startError, setStartError] = useState<string | null>(null);
   const [stepError, setStepError] = useState<string | null>(null);
 
-  // TanStack Query Mutations
   const startOnboarding = useStartOnboarding();
   const submitBase = useSubmitBaseAnswers();
   const submitDynamic = useSubmitDynamicAnswers();
   const generateSite = useGenerateSite();
 
-  // Simulated status messages for the generation overlay
-  const statusMessages = [
-    "Analyse de vos réponses et du brief...",
-    "Planification des pages optimales...",
-    "Création de la structure et du menu...",
-    "Génération du bloc de navigation principal...",
-    "Conception du Hero banner principal avec l'IA...",
-    "Ajout des sections services et témoignages...",
-    "Ajustement du design et des harmonies de couleurs...",
-    "Finalisation de votre espace de travail...",
-  ];
+  const statusMessages = isStudioEnabled()
+    ? [
+        "Enregistrement de votre brief...",
+        "Analyse de vos objectifs...",
+        "Préparation de l'architecte IA...",
+        "Planification de l'architecture du site...",
+        "Configuration du Studio...",
+        "Lancement de la génération de code...",
+        "Préparation des fichiers HTML/CSS/JS...",
+        "Redirection vers votre espace de travail...",
+      ]
+    : [
+        "Analyse de vos réponses et du brief...",
+        "Planification des pages optimales...",
+        "Création de la structure et du menu...",
+        "Génération du bloc de navigation principal...",
+        "Conception du Hero banner principal avec l'IA...",
+        "Ajout des sections services et témoignages...",
+        "Ajustement du design et des harmonies de couleurs...",
+        "Finalisation de votre espace de travail...",
+      ];
 
-  // Effect to rotate simulated status messages in generate overlay
+  const generationSteps = isStudioEnabled()
+    ? [
+        "Analyse de vos réponses",
+        "Architecture & design system",
+        "Génération du code",
+        "Ouverture du Studio",
+      ]
+    : [
+        "Analyse de vos réponses et objectifs",
+        "Création de l'architecture du site",
+        "Rédaction du contenu percutant",
+        "Application du design premium",
+      ];
+
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (phase === "generating") {
       interval = setInterval(() => {
-        setFakeStatusIndex((prev) => {
-          // Si on a atteint la dernière étape (4 étapes * 2 = 8), on reste dessus
-          if (prev >= 8) return 8;
-          return prev + 1;
-        });
+        setFakeStatusIndex((prev) => (prev >= 8 ? 8 : prev + 1));
       }, 2000);
     }
     return () => clearInterval(interval);
@@ -95,6 +122,11 @@ export const OnboardingWizard: React.FC = () => {
     setStartError(null);
     try {
       const res = await startOnboarding.mutateAsync(undefined);
+      if (isStudioEnabled()) {
+        toast.success(`Projet prêt — décrivez votre site à ${AI_ASSISTANT_NAME}`);
+        router.push(getProjectStudioPath(res.project_id));
+        return;
+      }
       const { pagesApi } = await import("@/features/pages/services/pagesApi");
       await pagesApi.create(res.project_id, {
         title: "Accueil",
@@ -105,23 +137,18 @@ export const OnboardingWizard: React.FC = () => {
       router.push(`/projects/${res.project_id}/editor?hermes=1`);
     } catch (err) {
       const message =
-        err instanceof ApiError
-          ? err.message
-          : "Impossible de créer le projet. Réessayez.";
+        err instanceof ApiError ? err.message : "Impossible de créer le projet. Réessayez.";
       setStartError(message);
       console.error(err);
     }
   };
 
-  const currentQuestionsList =
-    phase === "base" ? baseQuestions : dynamicQuestions;
+  const currentQuestionsList = phase === "base" ? baseQuestions : dynamicQuestions;
   const currentQuestion = currentQuestionsList[currentStep];
 
-  // Helper to check if the current question is answered validly
-  const isCurrentStepValid = () => {
+  const isCurrentStepValid = (): boolean => {
     if (!currentQuestion) return false;
     if (!currentQuestion.required) return true;
-
     const val = answers[currentQuestion.id];
     if (val === undefined || val === null || val === "") return false;
     if (currentQuestion.type === "multiselect" && Array.isArray(val)) {
@@ -130,11 +157,9 @@ export const OnboardingWizard: React.FC = () => {
     return true;
   };
 
-  const handleValueChange = (val: any) => {
-    setAnswers((prev) => ({
-      ...prev,
-      [currentQuestion.id]: val,
-    }));
+  const handleValueChange = (val: unknown) => {
+    if (!currentQuestion) return;
+    setAnswers((prev) => ({ ...prev, [currentQuestion.id]: val }));
   };
 
   const handleNext = async () => {
@@ -145,54 +170,41 @@ export const OnboardingWizard: React.FC = () => {
     }
 
     if (currentStep < currentQuestionsList.length - 1) {
-      // Advance to next question in this phase
       setCurrentStep((prev) => prev + 1);
-    } else {
-      // Current phase completed
-      if (phase === "base") {
-        try {
-          setPhase("thinking");
-          const res = await submitBase.mutateAsync({
-            sessionId,
-            answers,
-          });
+      return;
+    }
 
-          if (res.dynamic_questions && res.dynamic_questions.length > 0) {
-            setDynamicQuestions(res.dynamic_questions);
-            setCurrentStep(0);
-            setPhase("dynamic");
-          } else {
-            // No dynamic questions, go straight to generating
-            handleFinalize(answers);
-          }
-        } catch (err) {
-          setPhase("base");
-          const message =
-            err instanceof ApiError
-              ? err.message
-              : "Impossible d'enregistrer vos réponses. Réessayez.";
-          setStepError(message);
-          toast.error(message);
-          console.error(err);
+    if (phase === "base") {
+      try {
+        setPhase("thinking");
+        const res = await submitBase.mutateAsync({ sessionId, answers });
+
+        if (res.dynamic_questions && res.dynamic_questions.length > 0) {
+          setDynamicQuestions(res.dynamic_questions);
+          setCurrentStep(0);
+          setPhase("dynamic");
+        } else {
+          void handleFinalize(answers);
         }
-      } else if (phase === "dynamic") {
-        handleFinalize(answers);
+      } catch (err) {
+        setPhase("base");
+        const message =
+          err instanceof ApiError
+            ? err.message
+            : "Impossible d'enregistrer vos réponses. Réessayez.";
+        setStepError(message);
+        toast.error(message);
+        console.error(err);
       }
+    } else if (phase === "dynamic") {
+      void handleFinalize(answers);
     }
   };
 
-  const handleFinalize = async (allAnswers: Record<string, any>) => {
+  const handleFinalize = async (allAnswers: Record<string, unknown>) => {
     try {
       setPhase("generating");
-      // Separate base and dynamic answers
-      const basePayload: Record<string, any> = {};
-      const dynamicPayload: Record<string, any> = {};
-
-      baseQuestions.forEach((q) => {
-        if (allAnswers[q.id] !== undefined) {
-          basePayload[q.id] = allAnswers[q.id];
-        }
-      });
+      const dynamicPayload: Record<string, unknown> = {};
 
       dynamicQuestions.forEach((q) => {
         if (allAnswers[q.id] !== undefined) {
@@ -200,32 +212,24 @@ export const OnboardingWizard: React.FC = () => {
         }
       });
 
-      // Submit dynamic answers to finish onboarding session
-      await submitDynamic.mutateAsync({
-        sessionId,
-        answers: dynamicPayload,
-      });
+      await submitDynamic.mutateAsync({ sessionId, answers: dynamicPayload });
 
-      // Trigger the AI site generation (pages + real blocks)
-      const result = await generateSite.mutateAsync({
-        sessionId,
-        projectId,
-      });
+      if (isStudioEnabled()) {
+        toast.success(`Brief enregistré — ${AI_ASSISTANT_NAME} génère votre site`);
+        router.push(getProjectStudioGeneratePath(projectId));
+        return;
+      }
 
+      const result = await generateSite.mutateAsync({ sessionId, projectId });
       const blocksCreated = result.blocks_created ?? 0;
       if (blocksCreated > 0) {
         toast.success("Site internet généré avec succès !");
         router.push(`/projects/${projectId}/editor`);
       } else {
-        // Aucun bloc généré (modèle indisponible ou backend non à jour) :
-        // on ouvre directement le chat pour que l'utilisateur construise avec l'IA.
-        toast.success(
-          `Pages créées — terminez votre site avec ${AI_ASSISTANT_NAME}`,
-        );
+        toast.success(`Pages créées — terminez votre site avec ${AI_ASSISTANT_NAME}`);
         router.push(`/projects/${projectId}/editor?hermes=1`);
       }
     } catch (err) {
-      // Revert to current step if failed
       setPhase(dynamicQuestions.length > 0 ? "dynamic" : "base");
       console.error(err);
     }
@@ -235,13 +239,11 @@ export const OnboardingWizard: React.FC = () => {
     if (currentStep > 0) {
       setCurrentStep((prev) => prev - 1);
     } else if (phase === "dynamic") {
-      // Allow going back to base answers
       setPhase("base");
       setCurrentStep(baseQuestions.length - 1);
     }
   };
 
-  // Render question inputs based on type
   const renderQuestionInput = () => {
     if (!currentQuestion) return null;
 
@@ -273,11 +275,11 @@ export const OnboardingWizard: React.FC = () => {
         return (
           <div className={styles.chipsContainer}>
             {currentQuestion.options?.map((opt) => {
-              const currentVal = answers[currentQuestion.id] || [];
+              const currentVal = (answers[currentQuestion.id] as string[]) || [];
               const active = currentVal.includes(opt.value);
               const toggleOption = () => {
                 if (active) {
-                  handleValueChange(currentVal.filter((v: string) => v !== opt.value));
+                  handleValueChange(currentVal.filter((v) => v !== opt.value));
                 } else {
                   handleValueChange([...currentVal, opt.value]);
                 }
@@ -301,7 +303,7 @@ export const OnboardingWizard: React.FC = () => {
         return (
           <textarea
             className={styles.textarea}
-            value={answers[currentQuestion.id] || ""}
+            value={(answers[currentQuestion.id] as string) || ""}
             onChange={(e) => handleValueChange(e.target.value)}
             placeholder={currentQuestion.placeholder || "Saisissez votre réponse ici..."}
             maxLength={currentQuestion.max_length}
@@ -340,7 +342,7 @@ export const OnboardingWizard: React.FC = () => {
                   ? "color"
                   : "text"
             }
-            value={answers[currentQuestion.id] || ""}
+            value={(answers[currentQuestion.id] as string) || ""}
             onChange={(e) => handleValueChange(e.target.value)}
             placeholder={currentQuestion.placeholder || "Réponse..."}
           />
@@ -348,125 +350,154 @@ export const OnboardingWizard: React.FC = () => {
     }
   };
 
+  const phaseBadge =
+    phase === "base"
+      ? "Étape 1 · Brief"
+      : phase === "dynamic"
+        ? "Étape 2 · Approfondissement"
+        : undefined;
+
   if (phase === "welcome") {
     return (
-      <div className={styles.container}>
-        <div className={styles.wizardCard}>
-          <div className={styles.welcomeCard}>
-            <span className={styles.welcomeIcon}>✨</span>
-            <h1 className={styles.title}>Créons votre site internet idéal</h1>
-            <p className={styles.subtitle} style={{ marginBottom: "var(--space-2xl)" }}>
-              Notre IA {AI_ASSISTANT_NAME} va vous guider à travers quelques questions simples pour
-              concevoir un site ultra-performant et personnalisé pour votre activité.
+      <OnboardingShell badge="Nouveau projet">
+        <div className={styles.welcomeLayout}>
+          <aside className={styles.welcomeAside}>
+            <div className={styles.welcomeEyebrow}>
+              <span className={styles.welcomeEyebrowDot} />
+              Assistant {AI_ASSISTANT_NAME}
+            </div>
+            <h1 className={styles.welcomeHeading}>
+              Construisons
+              <span className={styles.welcomeAccent}> votre site idéal</span>
+            </h1>
+            <p className={styles.welcomeLead}>
+              Un parcours guidé en quelques minutes — de vos réponses à un site
+              généré en code libre, prêt à personnaliser dans le Studio.
             </p>
-            {startError && (
-              <div className={styles.errorBanner} role="alert">
-                <strong>Erreur</strong>
-                <p>{startError}</p>
-              </div>
-            )}
-            <Button
-              onClick={handleStart}
-              isLoading={startOnboarding.isPending}
-              fullWidth
-            >
-              C&apos;est parti !
-            </Button>
-            <button
-              type="button"
-              className={styles.skipLink}
-              onClick={handleSkipToHermes}
-              disabled={startOnboarding.isPending}
-            >
-              Ignorer et construire avec l&apos;IA →
-            </button>
+            <ol className={styles.welcomeSteps}>
+              {WELCOME_STEPS.map((step) => (
+                <li key={step.num} className={styles.welcomeStep}>
+                  <span className={styles.welcomeStepNum}>{step.num}</span>
+                  <p className={styles.welcomeStepText}>
+                    <strong>{step.title}</strong>
+                    {step.desc}
+                  </p>
+                </li>
+              ))}
+            </ol>
+          </aside>
+
+          <div className={styles.wizardCard}>
+            <div className={styles.welcomeCard}>
+              <div className={styles.welcomeIconWrap}>✨</div>
+              <h2 className={styles.title}>Prêt à commencer ?</h2>
+              <p className={styles.subtitleSpaced}>
+                {AI_ASSISTANT_NAME} vous pose quelques questions pour créer un
+                site sur mesure, adapté à votre activité.
+              </p>
+              {startError && (
+                <div className={styles.errorBanner} role="alert">
+                  <strong>Erreur</strong>
+                  <p>{startError}</p>
+                </div>
+              )}
+              <Button onClick={handleStart} isLoading={startOnboarding.isPending} fullWidth>
+                C&apos;est parti !
+              </Button>
+              <button
+                type="button"
+                className={styles.skipLink}
+                onClick={handleSkipToHermes}
+                disabled={startOnboarding.isPending}
+              >
+                Ignorer le brief — ouvrir le Studio directement →
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      </OnboardingShell>
     );
   }
 
   if (phase === "thinking") {
     return (
-      <div className={styles.container}>
-        <div className={styles.wizardCard} style={{ alignItems: "center", padding: "var(--space-3xl)" }}>
+      <OnboardingShell badge="Analyse en cours">
+        <div className={styles.thinkingCard}>
           <Spinner size="lg" />
-          <h2 className={styles.title} style={{ marginTop: "var(--space-xl)", textAlign: "center" }}>
-            Réponses enregistrées !
-          </h2>
-          <p className={styles.subtitle} style={{ textAlign: "center", maxWidth: "400px" }}>
-            {AI_ASSISTANT_NAME} est en train d'analyser vos objectifs pour générer des questions d'approfondissement sur mesure...
+          <h2 className={styles.thinkingTitle}>Réponses enregistrées</h2>
+          <p className={styles.thinkingSubtitle}>
+            {AI_ASSISTANT_NAME} analyse vos objectifs pour préparer des questions
+            d&apos;approfondissement sur mesure…
           </p>
         </div>
-      </div>
+      </OnboardingShell>
     );
   }
 
   if (phase === "generating") {
     return (
-      <div className={styles.overlay}>
-        <div className={styles.overlayGlow} />
-        <div className={styles.overlayContent}>
-          <Spinner size="lg" />
-          <div className={styles.aiStatus}>
-            <h2 className={styles.aiTitle}>Création de votre site web</h2>
-            <p className={styles.aiSub}>{statusMessages[fakeStatusIndex]}</p>
-          </div>
-          <div className={styles.generationSteps}>
-            {[
-              "Analyse de vos réponses et objectifs",
-              "Création de l'architecture du site",
-              "Rédaction du contenu percutant",
-              "Application du design premium"
-            ].map((step, idx) => {
-              // 8 status messages total. Let's divide by 2 to map to 4 steps.
-              const isCompleted = fakeStatusIndex >= (idx + 1) * 2;
-              const isActive = !isCompleted && fakeStatusIndex >= idx * 2;
-              
-              return (
-                <div key={idx} className={`${styles.generationStep} ${isCompleted ? styles.stepCompleted : isActive ? styles.stepActive : ""}`}>
-                  <div className={styles.stepIcon}>
-                    {isCompleted ? (
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="20 6 9 17 4 12"></polyline>
-                      </svg>
-                    ) : isActive ? (
-                      <div className={styles.stepSpinner} />
-                    ) : (
-                      <div className={styles.stepDot} />
-                    )}
+      <OnboardingShell showBack={false}>
+        <div className={styles.overlay}>
+          <div className={styles.overlayGlow} aria-hidden />
+          <div className={styles.overlayContent}>
+            <Spinner size="lg" />
+            <div className={styles.aiStatus}>
+              <h2 className={styles.aiTitle}>
+                {isStudioEnabled() ? "Préparation de votre Studio" : "Création de votre site"}
+              </h2>
+              <p className={styles.aiSub}>{statusMessages[fakeStatusIndex]}</p>
+            </div>
+            <div className={styles.generationSteps}>
+              {generationSteps.map((step, idx) => {
+                const isCompleted = fakeStatusIndex >= (idx + 1) * 2;
+                const isActive = !isCompleted && fakeStatusIndex >= idx * 2;
+                return (
+                  <div
+                    key={step}
+                    className={`${styles.generationStep} ${isCompleted ? styles.stepCompleted : isActive ? styles.stepActive : ""}`}
+                  >
+                    <div className={styles.stepIcon}>
+                      {isCompleted ? (
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                      ) : isActive ? (
+                        <div className={styles.stepSpinner} />
+                      ) : (
+                        <div className={styles.stepDot} />
+                      )}
+                    </div>
+                    <span className={styles.stepText}>{step}</span>
                   </div>
-                  <span className={styles.stepText}>{step}</span>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
         </div>
-      </div>
+      </OnboardingShell>
     );
   }
 
-  // Active question progress calculation
   const totalQuestions = currentQuestionsList.length;
   const progressPercent = ((currentStep + 1) / totalQuestions) * 100;
+  const backDisabled = currentStep === 0 && phase === "base";
 
   return (
-    <div className={styles.container}>
-      <div className={styles.wizardCard}>
+    <OnboardingShell badge={phaseBadge}>
+      <div className={`${styles.wizardCard} ${styles.wizardCardWide}`}>
         <div className={styles.header}>
           <div className={styles.progressBarContainer}>
-            <div
-              className={styles.progressBar}
-              style={{ width: `${progressPercent}%` }}
-            />
+            <div className={styles.progressBar} style={{ width: `${progressPercent}%` }} />
           </div>
           <span className={styles.stepNumber}>
-            {phase === "dynamic" ? "AI Follow-up: " : ""}
             {currentStep + 1} / {totalQuestions}
           </span>
         </div>
 
         <div className={styles.titleArea}>
+          {phase === "dynamic" && (
+            <span className={styles.phaseTag}>Question personnalisée</span>
+          )}
           <h2 className={styles.title}>{currentQuestion?.question}</h2>
           {currentQuestion?.subtitle && (
             <p className={styles.subtitle}>{currentQuestion.subtitle}</p>
@@ -487,30 +518,10 @@ export const OnboardingWizard: React.FC = () => {
           <button
             type="button"
             onClick={handleBack}
-            disabled={currentStep === 0 && phase === "base"}
-            className={styles.navBtn}
-            style={{
-              background: "transparent",
-              border: "none",
-              color: currentStep === 0 && phase === "base" ? "var(--color-text-muted)" : "var(--color-text-secondary)",
-              cursor: currentStep === 0 && phase === "base" ? "not-allowed" : "pointer",
-              fontWeight: 500,
-              fontSize: "0.95rem",
-              display: "flex",
-              alignItems: "center",
-            }}
+            disabled={backDisabled}
+            className={`${styles.navBtn} ${backDisabled ? styles.navBtnDisabled : ""}`}
           >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              style={{ marginRight: "var(--space-xs)" }}
-            >
+            <svg className={styles.navBtnIcon} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <polyline points="15 18 9 12 15 6" />
             </svg>
             Retour
@@ -524,26 +535,16 @@ export const OnboardingWizard: React.FC = () => {
             {currentStep === totalQuestions - 1
               ? phase === "base"
                 ? "Continuer"
-                : "Créer mon site web"
+                : "Créer mon site"
               : "Suivant"}
             {currentStep < totalQuestions - 1 && (
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                style={{ marginLeft: "var(--space-xs)", display: "inline-block", verticalAlign: "middle" }}
-              >
+              <svg className={styles.btnIconRight} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <polyline points="9 18 15 12 9 6" />
               </svg>
             )}
           </Button>
         </div>
       </div>
-    </div>
+    </OnboardingShell>
   );
 };

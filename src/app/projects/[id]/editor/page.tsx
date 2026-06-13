@@ -1,8 +1,10 @@
 "use client";
 
 import React, { use, useEffect, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { AuthGuard } from "@/shared/components/AuthGuard";
+import { isBlockEditorEnabled } from "@/lib/features";
+import { getProjectStudioPath } from "@/lib/projectRoutes";
 import { EditorLayout } from "@/features/editor/components/EditorLayout";
 import { EditorToolbar } from "@/features/editor/components/EditorToolbar";
 import { PageTree } from "@/features/pages/components/PageTree";
@@ -40,6 +42,17 @@ const EditorContent: React.FC<{ projectId: string }> = ({ projectId }) => {
 const EditorPage: React.FC<EditorPageProps> = ({ params }) => {
   const resolvedParams = use(params);
   const projectId = resolvedParams.id;
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isBlockEditorEnabled()) {
+      router.replace(getProjectStudioPath(projectId));
+    }
+  }, [projectId, router]);
+
+  if (!isBlockEditorEnabled()) {
+    return null;
+  }
 
   return (
     <AuthGuard>

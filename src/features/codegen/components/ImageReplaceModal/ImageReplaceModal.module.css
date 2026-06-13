@@ -1,0 +1,63 @@
+@reference "#tailwind-reference";
+
+.body {
+  @apply flex flex-col gap-4;
+}
+
+.dropzone {
+  @apply flex w-full cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 p-6 text-center transition-colors hover:border-indigo-400 hover:bg-indigo-50;
+}
+
+.dropIcon {
+  @apply flex h-10 w-10 items-center justify-center rounded-full bg-indigo-100 text-xl font-bold text-indigo-600;
+}
+
+.dropText {
+  @apply text-sm font-semibold text-slate-700;
+}
+
+.dropHint {
+  @apply text-xs text-slate-400;
+}
+
+.previewImg {
+  @apply max-h-40 w-auto rounded-lg object-contain;
+}
+
+.hiddenInput {
+  @apply hidden;
+}
+
+.divider {
+  @apply relative text-center text-xs uppercase tracking-wider text-slate-400;
+}
+
+.divider::before {
+  content: "";
+  @apply absolute left-0 top-1/2 h-px w-[42%] bg-slate-200;
+}
+
+.divider::after {
+  content: "";
+  @apply absolute right-0 top-1/2 h-px w-[42%] bg-slate-200;
+}
+
+.field {
+  @apply flex flex-col gap-1;
+}
+
+.fieldLabel {
+  @apply text-xs font-semibold text-slate-600;
+}
+
+.input {
+  @apply w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-800 outline-none transition-colors focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100;
+}
+
+.error {
+  @apply rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600;
+}
+
+.actions {
+  @apply mt-1 flex justify-end gap-2;
+}

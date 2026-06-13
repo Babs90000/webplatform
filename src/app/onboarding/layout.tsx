@@ -1,15 +1,13 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Onboarding Wizard | WebPlatform",
+  title: "Créer un projet | WebPlatform",
   description:
-    "Configure your new project and let Koala Codeur generate a beautiful, custom layout for you.",
+    "Brief guidé par Koala Codeur — de vos réponses à un site généré en code libre.",
 };
 
 const OnboardingLayout: React.FC<{ children: React.ReactNode }> = ({
   children,
-}) => {
-  return children;
-};
+}) => children;
 
 export default OnboardingLayout;

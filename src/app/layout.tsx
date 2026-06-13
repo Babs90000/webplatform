@@ -18,10 +18,10 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "WebPlatform — Build Beautiful Websites",
+  title: "WebPlatform — Créez votre site avec l'IA",
   description:
-    "Create stunning websites visually with our drag-and-drop editor. No coding required.",
-  keywords: ["website builder", "visual editor", "drag and drop", "no-code"],
+    "Brief guidé, génération HTML/CSS/JS en streaming et export ZIP — propulsé par Koala Codeur.",
+  keywords: ["website builder", "IA", "génération de code", "no-code", "Koala Codeur"],
 };
 
 const RootLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {

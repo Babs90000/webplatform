@@ -1,0 +1,275 @@
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 3.5rem;
+  padding: 0 var(--space-md);
+  background: var(--color-bg-secondary);
+  border-bottom: 1px solid var(--color-border-subtle);
+  color: var(--color-text-primary);
+}
+
+.left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.backLink {
+  display: flex;
+  padding: var(--space-sm);
+  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.backLink:hover {
+  background: var(--color-bg-elevated);
+  color: var(--color-text-primary);
+}
+
+.sidebarToggle {
+  display: none;
+  padding: var(--space-sm);
+  border-radius: var(--radius-md);
+  border: none;
+  background: transparent;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.sidebarToggle:hover {
+  background: var(--color-bg-elevated);
+  color: var(--color-text-primary);
+}
+
+.sidebarToggleActive {
+  background: var(--color-bg-elevated);
+  color: var(--color-text-primary);
+}
+
+@media (min-width: 1024px) {
+  .sidebarToggle {
+    display: flex;
+  }
+}
+
+.projectBlock {
+  display: flex;
+  align-items: center;
+  margin-left: var(--space-sm);
+  border-left: 1px solid var(--color-border-subtle);
+  padding-left: var(--space-md);
+  height: 1.5rem;
+}
+
+.projectName {
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: var(--color-text-primary);
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (min-width: 640px) {
+  .projectName {
+    max-width: 20rem;
+  }
+}
+
+.saveBadge {
+  display: none;
+  align-items: center;
+  margin-left: var(--space-md);
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border-subtle);
+}
+
+@media (min-width: 640px) {
+  .saveBadge {
+    display: flex;
+  }
+}
+
+.saveDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.saveDotSaving {
+  background: #fbbf24;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.saveDotError {
+  background: #ef4444;
+}
+
+.saveDotSaved {
+  background: #10b981;
+}
+
+.saveLabel {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--color-text-tertiary);
+}
+
+.right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.aiToggle {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.aiToggle:hover {
+  background: var(--color-bg-elevated);
+}
+
+.aiToggleActive {
+  background: rgba(99, 102, 241, 0.08);
+  color: #4f46e5;
+  border-color: rgba(99, 102, 241, 0.15);
+}
+
+@media (min-width: 1024px) {
+  .aiToggle {
+    display: flex;
+  }
+}
+
+.divider {
+  display: none;
+  width: 1px;
+  height: 1.5rem;
+  background: var(--color-border-subtle);
+  margin: 0 var(--space-xs);
+}
+
+@media (min-width: 1024px) {
+  .divider {
+    display: block;
+  }
+}
+
+.previewLink {
+  display: none;
+  align-items: center;
+  gap: var(--space-sm);
+  height: 2.25rem;
+  padding: 0 var(--space-md);
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: var(--radius-md);
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-subtle);
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  transition: all var(--transition-fast);
+  box-shadow: var(--shadow-sm);
+}
+
+.previewLink:hover {
+  background: var(--color-bg-elevated);
+  color: var(--color-text-primary);
+}
+
+@media (min-width: 640px) {
+  .previewLink {
+    display: flex;
+  }
+}
+
+.publishBtn {
+  height: 2.25rem;
+  padding: 0 var(--space-md);
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  border: none;
+  background: var(--color-text-primary);
+  color: var(--color-bg-primary);
+  cursor: pointer;
+  transition: opacity var(--transition-fast);
+  box-shadow: var(--shadow-sm);
+}
+
+.publishBtn:hover {
+  opacity: 0.9;
+}
+
+.propsToggle {
+  display: none;
+  padding: var(--space-sm);
+  border-radius: var(--radius-md);
+  border: none;
+  background: transparent;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  margin-left: var(--space-xs);
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.propsToggle:hover {
+  background: var(--color-bg-elevated);
+  color: var(--color-text-primary);
+}
+
+.propsToggleActive {
+  background: var(--color-bg-elevated);
+  color: var(--color-text-primary);
+}
+
+@media (min-width: 1024px) {
+  .propsToggle {
+    display: flex;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.legacyBanner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: 4px 10px;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--color-text-tertiary);
+  background: var(--color-bg-elevated);
+  border-radius: var(--radius-sm);
+  border: 1px dashed var(--color-border-subtle);
+}
+
+.legacyBanner a {
+  color: #4f46e5;
+  text-decoration: none;
+}
+
+.legacyBanner a:hover {
+  text-decoration: underline;
+}
