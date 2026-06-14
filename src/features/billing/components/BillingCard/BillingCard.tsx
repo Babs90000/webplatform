@@ -44,6 +44,9 @@ export const BillingCard: React.FC = () => {
   const status = subscription?.status ?? null;
   const isSubscribed = status === "active" || status === "trialing";
   const periodEnd = formatDate(subscription?.current_period_end ?? null);
+  const commitmentEnd = formatDate(subscription?.commitment_ends_at ?? null);
+  const minMonths = data?.min_commitment_months ?? 2;
+  const canCancel = subscription?.can_cancel ?? false;
   const isBusy = checkout.isPending || portal.isPending;
 
   return (
@@ -54,7 +57,8 @@ export const BillingCard: React.FC = () => {
             Abonnement — 12 €/mois
           </h2>
           <p className={styles.subtitle}>
-            Nom de domaine, hébergement et support inclus. Essai gratuit 7 jours.
+            Nom de domaine, hébergement et support inclus. Engagement minimum{" "}
+            {minMonths} mois — facturation dès le premier mois.
           </p>
         </div>
         {status && (
@@ -108,7 +112,7 @@ export const BillingCard: React.FC = () => {
               {checkout.isPending ? "Redirection…" : "S'abonner — 12 €/mois"}
             </Button>
           )}
-          {isSubscribed && subscription?.has_customer && (
+          {isSubscribed && subscription?.has_customer && canCancel && (
             <Button
               variant="secondary"
               onClick={() => portal.mutate()}
@@ -116,6 +120,12 @@ export const BillingCard: React.FC = () => {
             >
               {portal.isPending ? "Ouverture…" : "Gérer mon abonnement"}
             </Button>
+          )}
+          {isSubscribed && subscription?.has_customer && !canCancel && (
+            <p className={styles.meta}>
+              Résiliation possible à partir du {commitmentEnd ?? "—"} (engagement{" "}
+              {minMonths} mois).
+            </p>
           )}
           {status === "past_due" && (
             <Button onClick={() => portal.mutate()} disabled={isBusy}>
@@ -127,8 +137,10 @@ export const BillingCard: React.FC = () => {
 
       {periodEnd && isSubscribed && (
         <p className={styles.meta}>
-          {status === "trialing" ? "Fin de l'essai" : "Prochaine échéance"} :{" "}
-          {periodEnd}
+          Prochaine échéance : {periodEnd}
+          {commitmentEnd && !canCancel && (
+            <> · Engagement jusqu&apos;au {commitmentEnd}</>
+          )}
         </p>
       )}
     </section>

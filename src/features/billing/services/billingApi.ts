@@ -9,10 +9,13 @@ export type BillingSubscriptionStatus =
 
 export interface BillingStatusResponse {
   provider: string;
+  min_commitment_months: number;
   subscription: {
     plan: string;
     status: BillingSubscriptionStatus;
     current_period_end: string | null;
+    commitment_ends_at: string | null;
+    can_cancel: boolean;
     has_customer: boolean;
   } | null;
 }
