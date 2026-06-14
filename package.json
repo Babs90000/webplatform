@@ -47,5 +47,13 @@
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^1.2.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "sharp",
+      "unrs-resolver",
+      "msw"
+    ]
   }
 }

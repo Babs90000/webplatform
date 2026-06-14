@@ -2,7 +2,8 @@
 FROM node:22-alpine AS base
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
-RUN corepack enable && corepack prepare pnpm@latest --activate
+# pnpm 10 bloque les postinstall (sharp, esbuild) sans approbation — on reste en v9 pour CI/Docker
+RUN corepack enable && corepack prepare pnpm@9.15.9 --activate
 
 FROM base AS deps
 COPY package.json pnpm-lock.yaml ./
