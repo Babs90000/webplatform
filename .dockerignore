@@ -1,0 +1,15 @@
+node_modules
+.next
+out
+build
+coverage
+.git
+.env
+.env.*
+!.env.example
+*.md
+.agents
+.claude
+.vibe
+skills-lock.json
+tsconfig.tsbuildinfo

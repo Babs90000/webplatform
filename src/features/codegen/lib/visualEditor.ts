@@ -19,6 +19,7 @@ export interface VisualEditMessage {
   type: "wp-edit-text" | "wp-edit-image-request" | "wp-edit-bg-request";
   path: string;
   value?: string;
+  current?: string;
 }
 
 const EDITOR_STYLE = `
@@ -143,7 +144,7 @@ const EDITOR_SCRIPT = `
     if(a) e.preventDefault(); // jamais de navigation en mode édition
     if(e.target.closest && e.target.closest('[data-wp-text]')) return; // texte = contenteditable
     var img=e.target.closest && e.target.closest('[data-wp-img]');
-    if(img){e.preventDefault();e.stopPropagation();send({type:'wp-edit-image-request',path:pathOf(img)});return;}
+    if(img){e.preventDefault();e.stopPropagation();send({type:'wp-edit-image-request',path:pathOf(img),current:img.getAttribute('src')||''});return;}
     var bg=e.target.closest && e.target.closest('[data-wp-bg]');
     if(bg){e.preventDefault();e.stopPropagation();send({type:'wp-edit-bg-request',path:pathOf(bg)});return;}
   },true);
@@ -194,16 +195,38 @@ const resolvePath = (body: Element, path: string): Element | null => {
  * Applique une modification au HTML source d'une page et renvoie le HTML mis
  * à jour. Renvoie null si le chemin ne correspond à rien.
  */
+/** Échappe une valeur pour un sélecteur d'attribut CSS. */
+const cssAttrEscape = (value: string): string =>
+  value.replace(/["\\]/g, "\\$&");
+
 export const applyVisualEdit = (
   sourceHtml: string,
-  edit: { kind: VisualEditKind; path: string; value: string; alt?: string },
+  edit: {
+    kind: VisualEditKind;
+    path: string;
+    value: string;
+    alt?: string;
+    current?: string;
+  },
 ): string | null => {
   if (typeof window === "undefined") return null;
   const parser = new DOMParser();
   const doc = parser.parseFromString(sourceHtml, "text/html");
   if (!doc.body) return null;
 
-  const target = resolvePath(doc.body, edit.path);
+  let target = resolvePath(doc.body, edit.path);
+
+  // Repli image : si le chemin ne résout pas (DOM modifié par Alpine, etc.)
+  // ou ne pointe pas sur une <img>, on localise par le src actuel.
+  if (
+    edit.kind === "image" &&
+    (!target || target.tagName.toLowerCase() !== "img") &&
+    edit.current
+  ) {
+    target =
+      doc.querySelector(`img[src="${cssAttrEscape(edit.current)}"]`) ?? target;
+  }
+
   if (!target) return null;
 
   if (edit.kind === "text") {

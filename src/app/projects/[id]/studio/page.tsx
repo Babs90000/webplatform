@@ -56,6 +56,7 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
   const [pendingImage, setPendingImage] = useState<{
     path: string;
     mode: "image" | "background";
+    current?: string;
   } | null>(null);
 
   useEffect(() => {
@@ -128,6 +129,7 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
       path: string,
       value: string,
       alt?: string,
+      current?: string,
     ) => {
       const pageFile = files.find((f) => f.path === previewPage) ?? null;
       if (!pageFile) {
@@ -140,6 +142,7 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
         path,
         value,
         alt,
+        current,
       });
       if (!updated) {
         toast.error("Élément introuvable — actualisez l'aperçu");
@@ -170,9 +173,9 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
   const handleImageConfirm = useCallback(
     async (url: string, alt?: string) => {
       if (!pendingImage) return;
-      const { path, mode } = pendingImage;
+      const { path, mode, current } = pendingImage;
       setPendingImage(null);
-      await persistPageEdit(mode, path, url, alt);
+      await persistPageEdit(mode, path, url, alt, current);
     },
     [pendingImage, persistPageEdit],
   );
@@ -224,7 +227,9 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
           editable={visualEditMode}
           onNavigate={(path) => void handlePreviewNavigate(path)}
           onEditText={handleEditText}
-          onEditImageRequest={(path) => setPendingImage({ path, mode: "image" })}
+          onEditImageRequest={(path, current) =>
+            setPendingImage({ path, mode: "image", current })
+          }
           onEditBgRequest={(path) => setPendingImage({ path, mode: "background" })}
         />
       }

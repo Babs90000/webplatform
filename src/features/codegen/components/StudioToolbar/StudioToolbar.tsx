@@ -7,6 +7,7 @@ import { Button } from "@/shared/components/Button";
 import { AI_ASSISTANT_NAME } from "@/lib/branding";
 import { getExportZipUrl } from "../../services/codegenApi";
 import { getAuthToken } from "@/lib/authToken";
+import { useExportCheckout } from "@/features/billing/hooks/useBilling";
 
 interface StudioToolbarProps {
   projectId: string;
@@ -35,6 +36,8 @@ export const StudioToolbar: React.FC<StudioToolbarProps> = ({
   codeVisible,
   onToggleCode,
 }) => {
+  const exportCheckout = useExportCheckout(projectId);
+
   const handleExport = async () => {
     const token = getAuthToken();
     const res = await fetch(getExportZipUrl(projectId), {
@@ -82,8 +85,16 @@ export const StudioToolbar: React.FC<StudioToolbarProps> = ({
         <Button variant="secondary" size="sm" onClick={onRefreshPreview} disabled={!hasFiles}>
           Actualiser l&apos;aperçu
         </Button>
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={() => exportCheckout.mutate()}
+          disabled={!hasFiles || exportCheckout.isPending}
+        >
+          {exportCheckout.isPending ? "Redirection…" : "Acheter l'export"}
+        </Button>
         <Button variant="secondary" size="sm" onClick={handleExport} disabled={!hasFiles}>
-          Export ZIP
+          Export ZIP (dev)
         </Button>
         <Button variant="primary" size="sm" onClick={onGenerate} disabled={isBusy}>
           {hasFiles ? "Régénérer" : `Générer avec ${AI_ASSISTANT_NAME}`}

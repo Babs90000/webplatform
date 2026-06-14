@@ -10,7 +10,7 @@ interface LivePreviewProps {
   editable?: boolean;
   onNavigate?: (path: string) => void;
   onEditText?: (path: string, value: string) => void;
-  onEditImageRequest?: (path: string) => void;
+  onEditImageRequest?: (path: string, current?: string) => void;
   onEditBgRequest?: (path: string) => void;
 }
 
@@ -64,7 +64,10 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
         data.type === "wp-edit-image-request" &&
         typeof data.path === "string"
       ) {
-        onEditImageRequest?.(data.path);
+        onEditImageRequest?.(
+          data.path,
+          typeof data.current === "string" ? data.current : undefined,
+        );
       } else if (
         data.type === "wp-edit-bg-request" &&
         typeof data.path === "string"
