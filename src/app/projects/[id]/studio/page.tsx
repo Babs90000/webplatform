@@ -11,6 +11,8 @@ import { CodeView } from "@/features/codegen/components/CodeView";
 import { LivePreview } from "@/features/codegen/components/LivePreview";
 import { BuilderChat } from "@/features/codegen/components/BuilderChat";
 import { ImageReplaceModal } from "@/features/codegen/components/ImageReplaceModal";
+import { SiteSettingsModal } from "@/features/codegen/components/SiteSettingsModal";
+import { PublishModal } from "@/features/projects/components/PublishModal";
 import { useProjectFiles } from "@/features/codegen/hooks/useProjectFiles";
 import { useCodegenStream } from "@/features/codegen/hooks/useCodegenStream";
 import { useStudioStore } from "@/features/codegen/store/studioStore";
@@ -28,7 +30,7 @@ interface StudioPageProps {
 
 const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
   const searchParams = useSearchParams();
-  const { data: project } = useProject(projectId);
+  const { data: project, refetch: refetchProject } = useProject(projectId);
   const { data: serverFiles, refetch } = useProjectFiles(projectId);
   const { generate, edit, isBusy, refreshPreview } = useCodegenStream(projectId);
   const [isSaving, setIsSaving] = useState(false);
@@ -58,6 +60,8 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
     mode: "image" | "background";
     current?: string;
   } | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [publishOpen, setPublishOpen] = useState(false);
 
   useEffect(() => {
     if (serverFiles) {
@@ -197,6 +201,8 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
           onToggleVisualEdit={() => setVisualEditMode(!visualEditMode)}
           codeVisible={codeVisible}
           onToggleCode={() => setCodeVisible(!codeVisible)}
+          onOpenSettings={() => setSettingsOpen(true)}
+          onOpenPublish={() => setPublishOpen(true)}
         />
       }
       fileTree={
@@ -249,6 +255,20 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
       onConfirm={(url, alt) => void handleImageConfirm(url, alt)}
       onUpload={(file) => uploadProjectAsset(projectId, file)}
       title={pendingImage?.mode === "background" ? "Changer le fond" : "Remplacer l'image"}
+    />
+    <SiteSettingsModal
+      isOpen={settingsOpen}
+      onClose={() => setSettingsOpen(false)}
+      projectId={projectId}
+      initialContactEmail={project?.settings?.contact_email ?? ""}
+      onSaved={() => void refetchProject()}
+    />
+    <PublishModal
+      isOpen={publishOpen}
+      onClose={() => setPublishOpen(false)}
+      projectId={projectId}
+      initialSubdomain={project?.subdomain ?? project?.slug ?? ""}
+      initialCustomDomain={project?.custom_domain ?? ""}
     />
     </>
   );

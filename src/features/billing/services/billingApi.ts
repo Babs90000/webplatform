@@ -10,11 +10,15 @@ export type BillingSubscriptionStatus =
 export interface BillingStatusResponse {
   provider: string;
   min_commitment_months: number;
+  trial_days: number;
   subscription: {
     plan: string;
     status: BillingSubscriptionStatus;
     current_period_end: string | null;
     commitment_ends_at: string | null;
+    early_commitment_at: string | null;
+    domain_eligible: boolean;
+    can_early_commit: boolean;
     can_cancel: boolean;
     has_customer: boolean;
   } | null;
@@ -62,6 +66,9 @@ export const billingApi = {
 
   createCustomerPortal: (): Promise<{ portal_url: string }> =>
     api.post<{ portal_url: string }>("/billing/portal", {}, token()),
+
+  applyEarlyCommitment: (): Promise<BillingStatusResponse> =>
+    api.post<BillingStatusResponse>("/billing/early-commitment", {}, token()),
 
   estimateExport: (projectId: string): Promise<ExportEstimateResponse> =>
     api.post<ExportEstimateResponse>(

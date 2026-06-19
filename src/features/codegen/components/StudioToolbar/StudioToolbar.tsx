@@ -21,6 +21,8 @@ interface StudioToolbarProps {
   onToggleVisualEdit: () => void;
   codeVisible: boolean;
   onToggleCode: () => void;
+  onOpenSettings: () => void;
+  onOpenPublish: () => void;
 }
 
 export const StudioToolbar: React.FC<StudioToolbarProps> = ({
@@ -35,6 +37,8 @@ export const StudioToolbar: React.FC<StudioToolbarProps> = ({
   onToggleVisualEdit,
   codeVisible,
   onToggleCode,
+  onOpenSettings,
+  onOpenPublish,
 }) => {
   const exportCheckout = useExportCheckout(projectId);
 
@@ -84,6 +88,22 @@ export const StudioToolbar: React.FC<StudioToolbarProps> = ({
         </Button>
         <Button variant="secondary" size="sm" onClick={onRefreshPreview} disabled={!hasFiles}>
           Actualiser l&apos;aperçu
+        </Button>
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={onOpenSettings}
+          disabled={!hasFiles}
+        >
+          Paramètres
+        </Button>
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={onOpenPublish}
+          disabled={!hasFiles || isBusy}
+        >
+          Publier
         </Button>
         <Button
           variant="secondary"

@@ -369,6 +369,10 @@ export interface ProjectBrief {
   [key: string]: unknown;
 }
 
+export interface ProjectSettings {
+  contact_email?: string;
+}
+
 /** Row shape for webplatform.projects */
 export interface Project {
   id: string;
@@ -380,6 +384,8 @@ export interface Project {
   status: "draft" | "published" | "archived";
   brief?: ProjectBrief | null;
   meta?: SeoMeta | null;
+  settings?: ProjectSettings | null;
+  published_url?: string | null;
   created_at: string;
   updated_at: string;
 }

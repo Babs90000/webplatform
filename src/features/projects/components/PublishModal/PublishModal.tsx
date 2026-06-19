@@ -43,9 +43,11 @@ export const PublishModal: React.FC<PublishModalProps> = ({
       const res = await projectsApi.publish(projectId, payload);
       toast.success("Votre projet est en ligne !");
 
-      const url = res.custom_domain
-        ? `https://${res.custom_domain}`
-        : `https://${res.subdomain}.webplatform.live`;
+      const url =
+        res.published_url ??
+        (res.project.custom_domain
+          ? `https://${res.project.custom_domain}`
+          : `https://${res.project.subdomain}.kdevs.io`);
 
       setPublishedUrl(url);
     } catch (err) {
@@ -139,7 +141,7 @@ export const PublishModal: React.FC<PublishModalProps> = ({
                       value={subdomain}
                       onChange={(e) => setSubdomain(e.target.value)}
                     />
-                    <span className={styles.inputSuffix}>.webplatform.live</span>
+                    <span className={styles.inputSuffix}>.kdevs.io</span>
                   </div>
                 </div>
               ) : (
@@ -182,7 +184,7 @@ export const PublishModal: React.FC<PublishModalProps> = ({
                             <code>www</code>
                           </td>
                           <td>
-                            <code>cname.webplatform.live</code>
+                            <code>cname.kdevs.io</code>
                           </td>
                         </tr>
                       </tbody>

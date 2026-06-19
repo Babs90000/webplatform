@@ -48,6 +48,10 @@
   @apply text-emerald-400;
 }
 
+.featureNote {
+  @apply text-zinc-500;
+}
+
 .actions {
   @apply flex flex-wrap gap-3;
 }

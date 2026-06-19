@@ -42,6 +42,22 @@ export const useCustomerPortal = () =>
       handleBillingError(error, "Impossible d'ouvrir le portail client"),
   });
 
+export const useEarlyCommitment = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: billingApi.applyEarlyCommitment,
+    onSuccess: (data) => {
+      queryClient.setQueryData(BILLING_QUERY_KEY, data);
+      toast.success(
+        "Domaine activé — votre essai gratuit continue jusqu'à la date indiquée.",
+      );
+    },
+    onError: (error) =>
+      handleBillingError(error, "Impossible d'activer l'engagement"),
+  });
+};
+
 export const useExportCheckout = (projectId: string) => {
   return useMutation({
     mutationFn: async () => {

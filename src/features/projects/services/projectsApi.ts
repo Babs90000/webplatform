@@ -40,8 +40,23 @@ export const projectsApi = {
   publish: async (
     id: string,
     data: { custom_domain?: string; subdomain?: string },
+  ): Promise<{ project: Project; published_url: string }> => {
+    return api.post<{ project: Project; published_url: string }>(
+      `/projects/${id}/publish`,
+      data,
+      getToken(),
+    );
+  },
+
+  updateSettings: async (
+    id: string,
+    data: { contact_email?: string },
   ): Promise<Project> => {
-    const res = await api.post<ProjectResponse>(`/projects/${id}/publish`, data, getToken());
+    const res = await api.put<ProjectResponse>(
+      `/projects/${id}/settings`,
+      data,
+      getToken(),
+    );
     return res.project;
   },
 };
