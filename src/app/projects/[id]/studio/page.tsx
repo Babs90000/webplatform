@@ -18,9 +18,9 @@ import { useCodegenStream } from "@/features/codegen/hooks/useCodegenStream";
 import { useStudioStore } from "@/features/codegen/store/studioStore";
 import {
   saveProjectFile,
-  fetchPreviewHtml,
   uploadProjectAsset,
 } from "@/features/codegen/services/codegenApi";
+import { bundlePreviewHtml } from "@/features/codegen/lib/previewBundler";
 import { applyVisualEdit } from "@/features/codegen/lib/visualEditor";
 import { toast } from "@/store/toast";
 
@@ -64,26 +64,25 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
   const [publishOpen, setPublishOpen] = useState(false);
 
   useEffect(() => {
-    if (serverFiles) {
+    if (serverFiles && serverFiles.length > 0) {
       setFiles(serverFiles);
-      if (!selectedPath && serverFiles.length > 0) {
+      if (!selectedPath) {
         selectPath(serverFiles[0].path);
       }
     }
   }, [serverFiles, setFiles, selectPath, selectedPath]);
 
   useEffect(() => {
-    const loadPreview = async () => {
-      if (files.length === 0) return;
-      try {
-        const html = await fetchPreviewHtml(projectId, previewPage);
-        setPreviewHtml(html);
-      } catch {
-        // ignore
-      }
-    };
-    void loadPreview();
-  }, [files.length, projectId, previewPage, setPreviewHtml]);
+    if (files.length === 0) return;
+    const html = bundlePreviewHtml(
+      files.map((f) => ({ path: f.path, content: f.content })),
+      previewPage,
+      projectId,
+    );
+    if (html) {
+      setPreviewHtml(html);
+    }
+  }, [files, previewPage, projectId, setPreviewHtml]);
 
   useEffect(() => {
     if (
@@ -115,12 +114,17 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
   }, [selectedPath, selectedFile, projectId, refetch, refreshPreview]);
 
   const handlePreviewNavigate = useCallback(
-    async (path: string) => {
+    (path: string) => {
       setPreviewPage(path);
-      try {
-        const html = await fetchPreviewHtml(projectId, path);
+      const state = useStudioStore.getState();
+      const html = bundlePreviewHtml(
+        state.files.map((f) => ({ path: f.path, content: f.content })),
+        path,
+        projectId,
+      );
+      if (html) {
         setPreviewHtml(html);
-      } catch {
+      } else {
         toast.error("Page introuvable dans l'aperçu");
       }
     },

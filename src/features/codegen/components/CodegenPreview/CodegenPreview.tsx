@@ -6,7 +6,9 @@ import styles from "./CodegenPreview.module.css";
 import {
   fetchCodegenPages,
   fetchPreviewHtml,
+  fetchProjectFiles,
 } from "@/features/codegen/services/codegenApi";
+import { bundlePreviewHtml, listHtmlPages } from "@/features/codegen/lib/previewBundler";
 import { getProjectEditorPath } from "@/lib/projectRoutes";
 
 interface CodegenPreviewProps {
@@ -21,6 +23,18 @@ export const CodegenPreview: React.FC<CodegenPreviewProps> = ({ projectId }) => 
 
   useEffect(() => {
     const loadPages = async () => {
+      try {
+        const projectFiles = await fetchProjectFiles(projectId);
+        const localPages = listHtmlPages(
+          projectFiles.map((f) => ({ path: f.path, content: f.content })),
+        );
+        if (localPages.length > 0) {
+          setPages(localPages);
+          return;
+        }
+      } catch {
+        // fallback API
+      }
       const list = await fetchCodegenPages(projectId);
       setPages(list.length > 0 ? list : ["index.html"]);
     };
@@ -30,8 +44,24 @@ export const CodegenPreview: React.FC<CodegenPreviewProps> = ({ projectId }) => 
   const loadPreview = useCallback(async (page: string) => {
     setIsLoading(true);
     try {
+      const projectFiles = await fetchProjectFiles(projectId);
+      const localHtml = bundlePreviewHtml(
+        projectFiles.map((f) => ({ path: f.path, content: f.content })),
+        page,
+        projectId,
+      );
+
+      if (localHtml) {
+        setHtml(localHtml);
+        return;
+      }
+
       const content = await fetchPreviewHtml(projectId, page);
-      setHtml(content);
+      if (!content.includes("Aucune page HTML")) {
+        setHtml(content);
+      } else {
+        setHtml("");
+      }
     } catch {
       setHtml("");
     } finally {

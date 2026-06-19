@@ -6,6 +6,7 @@ import {
   streamGenerateSite,
   type CodegenSseEvent,
 } from "../services/codegenApi";
+import { bundlePreviewHtml } from "../lib/previewBundler";
 import { useStudioStore } from "../store/studioStore";
 import { toast } from "@/store/toast";
 
@@ -25,13 +26,32 @@ export const useCodegenStream = (projectId: string) => {
   } = useStudioStore();
 
   const refreshPreview = useCallback(async () => {
+    const state = useStudioStore.getState();
+    const localFiles = state.files.map((f) => ({
+      path: f.path,
+      content: f.content,
+    }));
+
+    const localHtml = bundlePreviewHtml(
+      localFiles,
+      state.previewPage,
+      projectId,
+    );
+
+    if (localHtml) {
+      setPreviewHtml(localHtml);
+      return;
+    }
+
     try {
-      const html = await fetchPreviewHtml(projectId, previewPage);
-      setPreviewHtml(html);
+      const html = await fetchPreviewHtml(projectId, state.previewPage);
+      if (!html.includes("Aucune page HTML")) {
+        setPreviewHtml(html);
+      }
     } catch {
       // preview pas encore prête
     }
-  }, [projectId, previewPage, setPreviewHtml]);
+  }, [projectId, setPreviewHtml]);
 
   const handleEvent = useCallback(
     async (event: CodegenSseEvent) => {
@@ -55,9 +75,16 @@ export const useCodegenStream = (projectId: string) => {
         case "file_chunk":
           appendFileChunk(event.path, event.chunk);
           break;
-        case "file_saved":
-          upsertFile(event.path, useStudioStore.getState().streamingPaths[event.path] ?? "");
+        case "file_saved": {
+          const streamed =
+            useStudioStore.getState().streamingPaths[event.path] ??
+            useStudioStore.getState().files.find((f) => f.path === event.path)
+              ?.content ??
+            "";
+          upsertFile(event.path, streamed);
+          void refreshPreview();
           break;
+        }
         case "done":
           setPhase("ready");
           setStatusMessage(`${event.files_created} fichier(s) enregistré(s)`);
