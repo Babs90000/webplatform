@@ -16,8 +16,22 @@ const GENERATION_TASKS = [
   "Feuille de styles CSS",
   "Scripts interactifs",
   "Pages HTML",
+  "Revue créative (6 experts)",
+  "Finitions premium",
   "Finalisation",
 ] as const;
+
+type ReviewExpertScores = {
+  directeur_artistique: number;
+  designer_ux: number;
+  redacteur: number;
+  seo: number;
+  cro: number;
+  accessibilite: number;
+};
+
+const formatExpertScores = (e: ReviewExpertScores): string =>
+  `DA ${e.directeur_artistique} · UX ${e.designer_ux} · Réd ${e.redacteur} · SEO ${e.seo} · CRO ${e.cro} · A11y ${e.accessibilite}`;
 
 const taskProgress = (
   doneCount: number,
@@ -134,13 +148,79 @@ export const useCodegenStream = (projectId: string) => {
           void refreshPreview();
           break;
         }
+        case "review_start": {
+          setPhase("generating");
+          setStatusMessage(
+            event.round > 1
+              ? "Re-contrôle qualité après finitions…"
+              : "Comité créatif : 6 experts (DA, UX, rédaction, SEO, CRO, a11y)…",
+          );
+          const p = taskProgress(5, GENERATION_TASKS[5]);
+          setProgress(p.percent, p.done, p.pending);
+          break;
+        }
+        case "review_done": {
+          setStatusMessage(
+            event.pass
+              ? `Qualité validée — ${event.score}/100 (${formatExpertScores(event.expert_scores)})`
+              : `Score ${event.score}/100 — ${event.issues_count} point(s) à peaufiner`,
+          );
+          const p = taskProgress(
+            event.pass ? 7 : 5,
+            event.pass ? GENERATION_TASKS[7] : GENERATION_TASKS[6],
+          );
+          setProgress(p.percent, p.done, p.pending);
+          break;
+        }
+        case "polish_start": {
+          setPhase("generating");
+          setStatusMessage(
+            `Finitions ${event.pass}/${event.max_passes} — score ${event.score}/100, ${event.issues_count} point(s) à corriger…`,
+          );
+          const p = taskProgress(6, GENERATION_TASKS[6]);
+          setProgress(p.percent, p.done, p.pending);
+          break;
+        }
+        case "polish_done": {
+          setStatusMessage(
+            `Finitions ${event.pass}/${event.max_passes} appliquées — re-contrôle qualité…`,
+          );
+          break;
+        }
+        case "review_quality_warning": {
+          setStatusMessage(
+            `Qualité ${event.score}/100 après ${3} passes — relecture manuelle conseillée`,
+          );
+          toast.error(
+            `Score qualité ${event.score}/100 — vérifiez le site dans le studio`,
+          );
+          break;
+        }
         case "done": {
           setPhase("ready");
-          setStatusMessage(`${event.files_created} fichier(s) enregistré(s)`);
+          const scoreLabel =
+            typeof event.review_score === "number"
+              ? ` · Qualité ${event.review_score}/100`
+              : "";
+          setStatusMessage(
+            `${event.files_created} fichier(s) enregistré(s)${scoreLabel}`,
+          );
           setProgress(100, [...GENERATION_TASKS], []);
           await queryClient.invalidateQueries({ queryKey: ["project-files", projectId] });
           await refreshPreview();
-          toast.success("Site mis à jour");
+          if (event.client_ready === false) {
+            toast.error(
+              typeof event.review_score === "number"
+                ? `Site généré — qualité ${event.review_score}/100, relecture recommandée`
+                : "Site généré — relecture qualité recommandée",
+            );
+          } else {
+            toast.success(
+              typeof event.review_score === "number"
+                ? `Site prêt client — qualité ${event.review_score}/100`
+                : "Site mis à jour",
+            );
+          }
           break;
         }
         case "error":

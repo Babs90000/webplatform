@@ -28,7 +28,43 @@ export type CodegenSseEvent =
   | { type: "file_start"; path: string }
   | { type: "file_chunk"; path: string; chunk: string }
   | { type: "file_saved"; path: string }
-  | { type: "done"; files_created: number }
+  | { type: "review_start"; round: number }
+  | {
+      type: "review_done";
+      round: number;
+      score: number;
+      pass: boolean;
+      summary: string;
+      expert_scores: {
+        directeur_artistique: number;
+        designer_ux: number;
+        redacteur: number;
+        seo: number;
+        cro: number;
+        accessibilite: number;
+      };
+      issues_count: number;
+    }
+  | {
+      type: "polish_start";
+      pass: number;
+      max_passes: number;
+      score: number;
+      issues_count: number;
+      high_count: number;
+    }
+  | { type: "polish_done"; pass: number; max_passes: number }
+  | {
+      type: "review_quality_warning";
+      score: number;
+      summary: string;
+    }
+  | {
+      type: "done";
+      files_created: number;
+      review_score?: number;
+      client_ready?: boolean;
+    }
   | { type: "error"; message: string };
 
 const authHeaders = (): Record<string, string> => {
