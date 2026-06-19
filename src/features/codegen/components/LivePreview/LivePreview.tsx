@@ -10,6 +10,9 @@ interface LivePreviewProps {
   html: string;
   isLoading?: boolean;
   loadingMessage?: string;
+  progressPercent?: number;
+  progressDone?: string[];
+  progressPending?: string[];
   editable?: boolean;
   onNavigate?: (path: string) => void;
   onEditText?: (path: string, value: string) => void;
@@ -21,6 +24,9 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
   html,
   isLoading = false,
   loadingMessage = "Génération en cours…",
+  progressPercent = 0,
+  progressDone = [],
+  progressPending = [],
   editable = false,
   onNavigate,
   onEditText,
@@ -88,6 +94,7 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
   }, [handleMessage]);
 
   const showPlaceholder = !throttledHtml && !isLoading;
+  const displayPercent = isLoading ? Math.max(progressPercent, 8) : 0;
 
   return (
     <div className={styles.container}>
@@ -99,7 +106,7 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
         {isLoading && (
           <span className={styles.loadingBadge}>
             <LoadingDots size="sm" label={loadingMessage} />
-            <span>{loadingMessage}</span>
+            <span>{displayPercent}% — {loadingMessage}</span>
           </span>
         )}
       </div>
@@ -121,7 +128,13 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
             )}
             {isLoading && (
               <div className={styles.overlay}>
-                <LoadingPanel variant="preview" message={loadingMessage} />
+                <LoadingPanel
+                  variant="preview"
+                  message={loadingMessage}
+                  percent={displayPercent}
+                  completedSteps={progressDone}
+                  remainingSteps={progressPending}
+                />
               </div>
             )}
           </>

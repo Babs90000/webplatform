@@ -10,18 +10,47 @@ import { bundlePreviewHtml } from "../lib/previewBundler";
 import { useStudioStore } from "../store/studioStore";
 import { toast } from "@/store/toast";
 
+const GENERATION_TASKS = [
+  "Analyse du brief",
+  "Architecture & design system",
+  "Feuille de styles CSS",
+  "Scripts interactifs",
+  "Pages HTML",
+  "Finalisation",
+] as const;
+
+const taskProgress = (
+  doneCount: number,
+  currentLabel?: string,
+): { percent: number; done: string[]; pending: string[] } => {
+  const total = GENERATION_TASKS.length;
+  const done = GENERATION_TASKS.slice(0, doneCount).map(String);
+  const pending = GENERATION_TASKS.slice(doneCount).map(String);
+  if (currentLabel && pending[0]) {
+    pending[0] = currentLabel;
+  }
+  const percent = Math.min(
+    98,
+    Math.round((doneCount / total) * 100 + (currentLabel ? 8 : 0)),
+  );
+  return { percent, done, pending };
+};
+
 export const useCodegenStream = (projectId: string) => {
   const queryClient = useQueryClient();
   const [isBusy, setIsBusy] = useState(false);
   const {
     setPhase,
     setStatusMessage,
+    setProgress,
     setPlan,
     appendFileChunk,
     resetStreaming,
     addChatMessage,
     setPreviewHtml,
-    previewPage,
+    progressPercent,
+    progressDone,
+    progressPending,
     upsertFile,
   } = useStudioStore();
 
@@ -56,22 +85,42 @@ export const useCodegenStream = (projectId: string) => {
   const handleEvent = useCallback(
     async (event: CodegenSseEvent) => {
       switch (event.type) {
-        case "architect_start":
+        case "architect_start": {
           setPhase("architect");
           setStatusMessage("Koala Codeur conçoit l'architecture…");
+          const p = taskProgress(0, GENERATION_TASKS[0]);
+          setProgress(p.percent, p.done, p.pending);
           break;
-        case "architect_done":
+        }
+        case "architect_done": {
           setPlan(event.plan);
           setStatusMessage(`${event.plan.pages.length} page(s) planifiée(s)`);
+          const p = taskProgress(2, GENERATION_TASKS[2]);
+          setProgress(p.percent, p.done, p.pending);
           break;
-        case "codegen_start":
+        }
+        case "codegen_start": {
           setPhase("generating");
           setStatusMessage("Génération des fichiers…");
           resetStreaming();
+          const p = taskProgress(2, GENERATION_TASKS[2]);
+          setProgress(p.percent, p.done, p.pending);
           break;
-        case "file_start":
+        }
+        case "file_start": {
           setStatusMessage(`Écriture de ${event.path}…`);
+          if (event.path.endsWith(".css")) {
+            const p = taskProgress(2, "Feuille de styles CSS");
+            setProgress(p.percent, p.done, p.pending);
+          } else if (event.path.endsWith(".js")) {
+            const p = taskProgress(3, "Scripts interactifs");
+            setProgress(p.percent, p.done, p.pending);
+          } else if (event.path.endsWith(".html")) {
+            const p = taskProgress(4, `Page ${event.path}`);
+            setProgress(p.percent, p.done, p.pending);
+          }
           break;
+        }
         case "file_chunk":
           appendFileChunk(event.path, event.chunk);
           break;
@@ -85,13 +134,15 @@ export const useCodegenStream = (projectId: string) => {
           void refreshPreview();
           break;
         }
-        case "done":
+        case "done": {
           setPhase("ready");
           setStatusMessage(`${event.files_created} fichier(s) enregistré(s)`);
+          setProgress(100, [...GENERATION_TASKS], []);
           await queryClient.invalidateQueries({ queryKey: ["project-files", projectId] });
           await refreshPreview();
           toast.success("Site mis à jour");
           break;
+        }
         case "error":
           setPhase("error");
           setStatusMessage(event.message);
@@ -107,6 +158,7 @@ export const useCodegenStream = (projectId: string) => {
       resetStreaming,
       setPhase,
       setPlan,
+      setProgress,
       setStatusMessage,
       upsertFile,
     ],
@@ -114,6 +166,7 @@ export const useCodegenStream = (projectId: string) => {
 
   const generate = useCallback(async () => {
     setIsBusy(true);
+    setProgress(5, [], [...GENERATION_TASKS]);
     try {
       await streamGenerateSite(projectId, handleEvent);
     } catch (err) {
@@ -124,7 +177,7 @@ export const useCodegenStream = (projectId: string) => {
     } finally {
       setIsBusy(false);
     }
-  }, [projectId, handleEvent, setPhase, setStatusMessage]);
+  }, [projectId, handleEvent, setPhase, setProgress, setStatusMessage]);
 
   const edit = useCallback(
     async (instruction: string) => {
@@ -132,6 +185,7 @@ export const useCodegenStream = (projectId: string) => {
       addChatMessage("user", instruction);
       setPhase("editing");
       setStatusMessage("Modification en cours…");
+      setProgress(20, ["Analyse de la demande"], ["Application des modifications", "Finalisation"]);
       resetStreaming();
 
       try {
@@ -152,10 +206,19 @@ export const useCodegenStream = (projectId: string) => {
       handleEvent,
       addChatMessage,
       setPhase,
+      setProgress,
       setStatusMessage,
       resetStreaming,
     ],
   );
 
-  return { generate, edit, isBusy, refreshPreview };
+  return {
+    generate,
+    edit,
+    isBusy,
+    refreshPreview,
+    progressPercent,
+    progressDone,
+    progressPending,
+  };
 };

@@ -12,7 +12,7 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({
   showBrand = true,
 }) => {
   return (
-    <div className={styles.screen} role="status" aria-live="polite">
+    <div className={`${styles.screen} wp-loading-animate`} role="status" aria-live="polite">
       <div className={styles.glow} aria-hidden="true" />
       <div className={styles.content}>
         {showBrand && <span className={styles.brand}>WebPlatform</span>}

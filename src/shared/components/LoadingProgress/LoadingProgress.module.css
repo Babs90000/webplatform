@@ -1,0 +1,99 @@
+@reference "#tailwind-reference";
+
+.root {
+  @apply flex flex-col gap-5 w-full max-w-md;
+}
+
+.percentRow {
+  @apply flex items-end justify-between gap-4;
+}
+
+.percentValue {
+  @apply text-3xl font-bold tabular-nums leading-none;
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.percentLabel {
+  @apply text-xs font-semibold uppercase tracking-wider;
+  color: var(--color-text-tertiary);
+}
+
+.barTrack {
+  @apply relative h-2 w-full overflow-hidden rounded-full;
+  background: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border-subtle);
+}
+
+.barFill {
+  @apply h-full rounded-full transition-all duration-500 ease-out;
+  background: var(--gradient-primary);
+  box-shadow: var(--shadow-glow);
+}
+
+.barGlow {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.35) 50%,
+    transparent 100%
+  );
+  animation: wpShimmerSlide 1.8s ease-in-out infinite;
+}
+
+.message {
+  @apply text-sm font-medium text-center;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+.steps {
+  @apply flex flex-col gap-2;
+}
+
+.stepRow {
+  @apply flex items-center gap-3 text-sm;
+}
+
+.stepDone {
+  color: var(--color-accent-success);
+}
+
+.stepCurrent {
+  color: var(--color-text-accent);
+  font-weight: 600;
+}
+
+.stepPending {
+  color: var(--color-text-muted);
+}
+
+.stepIcon {
+  @apply flex shrink-0 items-center justify-center;
+  width: 18px;
+}
+
+.stepCheck {
+  color: var(--color-accent-success);
+}
+
+.stepDot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: var(--color-text-muted);
+}
+
+.summary {
+  @apply flex justify-between gap-4 pt-1 text-xs;
+  color: var(--color-text-tertiary);
+}
+
+.summaryCount {
+  @apply font-semibold tabular-nums;
+  color: var(--color-text-secondary);
+}

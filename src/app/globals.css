@@ -300,6 +300,37 @@ video {
   display: block;
 }
 
+/* --- Animations chargement (conservées même avec prefers-reduced-motion) --- */
+@keyframes wpDotPulse {
+  0%,
+  70%,
+  100% {
+    transform: translateY(0) scale(0.85);
+    opacity: 0.35;
+  }
+
+  35% {
+    transform: translateY(-4px) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes wpShimmerSlide {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.wp-loading-animate .dot,
+.wp-loading-animate [class*="dot"] {
+  animation: wpDotPulse 1.4s ease-in-out infinite !important;
+}
+
+.wp-loading-animate [class*="shimmerBlock"]::after,
+.wp-loading-animate [class*="barGlow"] {
+  animation: wpShimmerSlide 1.6s ease-in-out infinite !important;
+}
+
 /* --- Accessibilité : respecter la préférence de mouvement réduit --- */
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -309,5 +340,14 @@ video {
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
     scroll-behavior: auto !important;
+  }
+
+  .wp-loading-animate,
+  .wp-loading-animate *,
+  .wp-loading-animate *::before,
+  .wp-loading-animate *::after {
+    animation-duration: revert !important;
+    animation-iteration-count: revert !important;
+    transition-duration: revert !important;
   }
 }

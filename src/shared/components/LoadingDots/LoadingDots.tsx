@@ -14,7 +14,7 @@ export const LoadingDots: React.FC<LoadingDotsProps> = ({
 }) => {
   return (
     <span
-      className={`${styles.dots} ${styles[size]} ${className}`}
+      className={`${styles.dots} ${styles[size]} wp-loading-animate ${className}`}
       role="status"
       aria-live="polite"
       aria-label={label}

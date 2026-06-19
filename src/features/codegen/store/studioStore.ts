@@ -16,6 +16,9 @@ interface StudioState {
   previewHtml: string;
   phase: StudioPhase;
   statusMessage: string;
+  progressPercent: number;
+  progressDone: string[];
+  progressPending: string[];
   plan: ArchitectPlan | null;
   streamingPaths: Record<string, string>;
   chatMessages: Array<{ role: "user" | "assistant"; content: string }>;
@@ -30,6 +33,7 @@ interface StudioState {
   setPreviewHtml: (html: string) => void;
   setPhase: (phase: StudioPhase) => void;
   setStatusMessage: (msg: string) => void;
+  setProgress: (percent: number, done: string[], pending: string[]) => void;
   setPlan: (plan: ArchitectPlan | null) => void;
   addChatMessage: (role: "user" | "assistant", content: string) => void;
   resetStreaming: () => void;
@@ -44,6 +48,9 @@ export const useStudioStore = create<StudioState>((set, get) => ({
   previewHtml: "",
   phase: "idle",
   statusMessage: "",
+  progressPercent: 0,
+  progressDone: [],
+  progressPending: [],
   plan: null,
   streamingPaths: {},
   chatMessages: [],
@@ -85,6 +92,8 @@ export const useStudioStore = create<StudioState>((set, get) => ({
   setPreviewHtml: (html) => set({ previewHtml: html }),
   setPhase: (phase) => set({ phase }),
   setStatusMessage: (msg) => set({ statusMessage: msg }),
+  setProgress: (percent, done, pending) =>
+    set({ progressPercent: percent, progressDone: done, progressPending: pending }),
   setPlan: (plan) => set({ plan }),
   addChatMessage: (role, content) =>
     set({ chatMessages: [...get().chatMessages, { role, content }] }),

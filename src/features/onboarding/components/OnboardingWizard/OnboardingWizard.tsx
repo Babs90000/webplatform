@@ -6,7 +6,14 @@ import styles from "./OnboardingWizard.module.css";
 import { OnboardingShell } from "../OnboardingShell";
 import { Button } from "@/shared/components/Button";
 import { Input } from "@/shared/components/Input";
-import { LoadingDots } from "@/shared/components/LoadingDots";
+import { LoadingProgress } from "@/shared/components/LoadingProgress";
+import {
+  isQuestionAnswerValid,
+  isOtherSelected,
+  otherFieldKey,
+  resolveAnswersForSubmit,
+  withOtherOption,
+} from "../../lib/questionOther";
 import { toast } from "@/store/toast";
 import { ApiError } from "@/lib/api";
 import { AI_ASSISTANT_NAME } from "@/lib/branding";
@@ -145,21 +152,37 @@ export const OnboardingWizard: React.FC = () => {
 
   const currentQuestionsList = phase === "base" ? baseQuestions : dynamicQuestions;
   const currentQuestion = currentQuestionsList[currentStep];
+  const displayQuestion = currentQuestion
+    ? withOtherOption(currentQuestion)
+    : undefined;
 
   const isCurrentStepValid = (): boolean => {
-    if (!currentQuestion) return false;
-    if (!currentQuestion.required) return true;
-    const val = answers[currentQuestion.id];
-    if (val === undefined || val === null || val === "") return false;
-    if (currentQuestion.type === "multiselect" && Array.isArray(val)) {
-      return val.length > 0;
-    }
-    return true;
+    if (!displayQuestion) return false;
+    return isQuestionAnswerValid(displayQuestion, answers);
   };
 
   const handleValueChange = (val: unknown) => {
-    if (!currentQuestion) return;
-    setAnswers((prev) => ({ ...prev, [currentQuestion.id]: val }));
+    if (!displayQuestion) return;
+    setAnswers((prev) => ({ ...prev, [displayQuestion.id]: val }));
+  };
+
+  const renderOtherInput = () => {
+    if (!displayQuestion || !isOtherSelected(displayQuestion, answers)) {
+      return null;
+    }
+    return (
+      <Input
+        type="text"
+        value={String(answers[otherFieldKey(displayQuestion.id)] ?? "")}
+        onChange={(e) =>
+          setAnswers((prev) => ({
+            ...prev,
+            [otherFieldKey(displayQuestion.id)]: e.target.value,
+          }))
+        }
+        placeholder="Précisez votre réponse…"
+      />
+    );
   };
 
   const handleNext = async () => {
@@ -177,7 +200,11 @@ export const OnboardingWizard: React.FC = () => {
     if (phase === "base") {
       try {
         setPhase("thinking");
-        const res = await submitBase.mutateAsync({ sessionId, answers });
+        const resolvedBase = resolveAnswersForSubmit(
+          answers,
+          baseQuestions.map(withOtherOption),
+        );
+        const res = await submitBase.mutateAsync({ sessionId, answers: resolvedBase });
 
         if (res.dynamic_questions && res.dynamic_questions.length > 0) {
           setDynamicQuestions(res.dynamic_questions);
@@ -205,10 +232,14 @@ export const OnboardingWizard: React.FC = () => {
     try {
       setPhase("generating");
       const dynamicPayload: Record<string, unknown> = {};
+      const resolved = resolveAnswersForSubmit(
+        allAnswers,
+        dynamicQuestions.map(withOtherOption),
+      );
 
       dynamicQuestions.forEach((q) => {
-        if (allAnswers[q.id] !== undefined) {
-          dynamicPayload[q.id] = allAnswers[q.id];
+        if (resolved[q.id] !== undefined) {
+          dynamicPayload[q.id] = resolved[q.id];
         }
       });
 
@@ -245,68 +276,74 @@ export const OnboardingWizard: React.FC = () => {
   };
 
   const renderQuestionInput = () => {
-    if (!currentQuestion) return null;
+    if (!displayQuestion) return null;
 
-    switch (currentQuestion.type) {
+    switch (displayQuestion.type) {
       case "choice":
         return (
-          <div className={styles.choiceGrid}>
-            {currentQuestion.options?.map((opt) => {
-              const active = answers[currentQuestion.id] === opt.value;
-              return (
-                <button
-                  key={opt.value}
-                  type="button"
-                  className={`${styles.choiceCard} ${active ? styles.choiceCardActive : ""}`}
-                  onClick={() => handleValueChange(opt.value)}
-                >
-                  {opt.emoji && <span className={styles.emoji}>{opt.emoji}</span>}
-                  <span className={styles.choiceLabel}>{opt.label}</span>
-                  {opt.description && (
-                    <span className={styles.choiceDesc}>{opt.description}</span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
+          <>
+            <div className={styles.choiceGrid}>
+              {displayQuestion.options?.map((opt) => {
+                const active = answers[displayQuestion.id] === opt.value;
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    className={`${styles.choiceCard} ${active ? styles.choiceCardActive : ""}`}
+                    onClick={() => handleValueChange(opt.value)}
+                  >
+                    {opt.emoji && <span className={styles.emoji}>{opt.emoji}</span>}
+                    <span className={styles.choiceLabel}>{opt.label}</span>
+                    {opt.description && (
+                      <span className={styles.choiceDesc}>{opt.description}</span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+            <div className={styles.otherInputWrap}>{renderOtherInput()}</div>
+          </>
         );
 
       case "multiselect":
         return (
-          <div className={styles.chipsContainer}>
-            {currentQuestion.options?.map((opt) => {
-              const currentVal = (answers[currentQuestion.id] as string[]) || [];
-              const active = currentVal.includes(opt.value);
-              const toggleOption = () => {
-                if (active) {
-                  handleValueChange(currentVal.filter((v) => v !== opt.value));
-                } else {
-                  handleValueChange([...currentVal, opt.value]);
-                }
-              };
-              return (
-                <button
-                  key={opt.value}
-                  type="button"
-                  className={`${styles.chip} ${active ? styles.chipActive : ""}`}
-                  onClick={toggleOption}
-                >
-                  {opt.emoji && <span>{opt.emoji}</span>}
-                  <span>{opt.label}</span>
-                </button>
-              );
-            })}
-          </div>
+          <>
+            <div className={styles.chipsContainer}>
+              {displayQuestion.options?.map((opt) => {
+                const currentVal = (answers[displayQuestion.id] as string[]) || [];
+                const active = currentVal.includes(opt.value);
+                const toggleOption = () => {
+                  if (active) {
+                    handleValueChange(currentVal.filter((v) => v !== opt.value));
+                  } else {
+                    handleValueChange([...currentVal, opt.value]);
+                  }
+                };
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    className={`${styles.chip} ${active ? styles.chipActive : ""}`}
+                    onClick={toggleOption}
+                  >
+                    {opt.emoji && <span>{opt.emoji}</span>}
+                    <span>{opt.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+            <div className={styles.otherInputWrap}>{renderOtherInput()}</div>
+          </>
         );
 
       case "textarea":
         return (
           <textarea
             className={styles.textarea}
-            value={(answers[currentQuestion.id] as string) || ""}
+            value={(answers[displayQuestion.id] as string) || ""}
             onChange={(e) => handleValueChange(e.target.value)}
-            placeholder={currentQuestion.placeholder || "Saisissez votre réponse ici..."}
-            maxLength={currentQuestion.max_length}
+            placeholder={displayQuestion.placeholder || "Saisissez votre réponse ici..."}
+            maxLength={displayQuestion.max_length}
           />
         );
 
@@ -314,7 +351,7 @@ export const OnboardingWizard: React.FC = () => {
         return (
           <div className={styles.scaleContainer}>
             {[1, 2, 3, 4, 5].map((val) => {
-              const active = answers[currentQuestion.id] === val;
+              const active = answers[displayQuestion.id] === val;
               return (
                 <button
                   key={val}
@@ -336,15 +373,15 @@ export const OnboardingWizard: React.FC = () => {
         return (
           <Input
             type={
-              currentQuestion.type === "url"
+              displayQuestion.type === "url"
                 ? "url"
-                : currentQuestion.type === "color"
+                : displayQuestion.type === "color"
                   ? "color"
                   : "text"
             }
-            value={(answers[currentQuestion.id] as string) || ""}
+            value={(answers[displayQuestion.id] as string) || ""}
             onChange={(e) => handleValueChange(e.target.value)}
-            placeholder={currentQuestion.placeholder || "Réponse..."}
+            placeholder={displayQuestion.placeholder || "Réponse..."}
           />
         );
     }
@@ -423,7 +460,15 @@ export const OnboardingWizard: React.FC = () => {
     return (
       <OnboardingShell badge="Analyse en cours">
         <div className={styles.thinkingCard}>
-          <LoadingDots size="lg" label="Analyse des réponses" />
+          <LoadingProgress
+            percent={35}
+            message={`${AI_ASSISTANT_NAME} analyse vos objectifs…`}
+            completedSteps={["Réponses enregistrées"]}
+            remainingSteps={[
+              "Questions personnalisées",
+              "Préparation du brief",
+            ]}
+          />
           <h2 className={styles.thinkingTitle}>Réponses enregistrées</h2>
           <p className={styles.thinkingSubtitle}>
             {AI_ASSISTANT_NAME} analyse vos objectifs pour préparer des questions
@@ -435,42 +480,32 @@ export const OnboardingWizard: React.FC = () => {
   }
 
   if (phase === "generating") {
+    const generatingPercent = Math.min(
+      95,
+      Math.round((fakeStatusIndex / Math.max(statusMessages.length - 1, 1)) * 100),
+    );
+    const completedGenSteps = generationSteps.filter(
+      (_, idx) => fakeStatusIndex >= (idx + 1) * 2,
+    );
+    const remainingGenSteps = generationSteps.filter(
+      (_, idx) => fakeStatusIndex < (idx + 1) * 2,
+    );
+
     return (
       <OnboardingShell showBack={false}>
         <div className={styles.overlay}>
           <div className={styles.overlayGlow} aria-hidden />
           <div className={styles.overlayContent}>
-            <LoadingDots size="lg" label="Analyse des réponses" />
+            <LoadingProgress
+              percent={generatingPercent}
+              message={statusMessages[fakeStatusIndex]}
+              completedSteps={completedGenSteps}
+              remainingSteps={remainingGenSteps}
+            />
             <div className={styles.aiStatus}>
               <h2 className={styles.aiTitle}>
                 {isStudioEnabled() ? "Préparation de votre Studio" : "Création de votre site"}
               </h2>
-              <p className={styles.aiSub}>{statusMessages[fakeStatusIndex]}</p>
-            </div>
-            <div className={styles.generationSteps}>
-              {generationSteps.map((step, idx) => {
-                const isCompleted = fakeStatusIndex >= (idx + 1) * 2;
-                const isActive = !isCompleted && fakeStatusIndex >= idx * 2;
-                return (
-                  <div
-                    key={step}
-                    className={`${styles.generationStep} ${isCompleted ? styles.stepCompleted : isActive ? styles.stepActive : ""}`}
-                  >
-                    <div className={styles.stepIcon}>
-                      {isCompleted ? (
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                          <polyline points="20 6 9 17 4 12" />
-                        </svg>
-                      ) : isActive ? (
-                        <LoadingDots size="sm" label={step} />
-                      ) : (
-                        <div className={styles.stepDot} />
-                      )}
-                    </div>
-                    <span className={styles.stepText}>{step}</span>
-                  </div>
-                );
-              })}
             </div>
           </div>
         </div>
@@ -498,9 +533,9 @@ export const OnboardingWizard: React.FC = () => {
           {phase === "dynamic" && (
             <span className={styles.phaseTag}>Question personnalisée</span>
           )}
-          <h2 className={styles.title}>{currentQuestion?.question}</h2>
-          {currentQuestion?.subtitle && (
-            <p className={styles.subtitle}>{currentQuestion.subtitle}</p>
+          <h2 className={styles.title}>{displayQuestion?.question}</h2>
+          {displayQuestion?.subtitle && (
+            <p className={styles.subtitle}>{displayQuestion.subtitle}</p>
           )}
         </div>
 

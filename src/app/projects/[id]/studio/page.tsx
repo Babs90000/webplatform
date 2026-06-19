@@ -32,7 +32,7 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
   const searchParams = useSearchParams();
   const { data: project, refetch: refetchProject } = useProject(projectId);
   const { data: serverFiles, refetch } = useProjectFiles(projectId);
-  const { generate, edit, isBusy, refreshPreview } = useCodegenStream(projectId);
+  const { generate, edit, isBusy, refreshPreview, progressPercent, progressDone, progressPending } = useCodegenStream(projectId);
   const [isSaving, setIsSaving] = useState(false);
   const [autoGenerateStarted, setAutoGenerateStarted] = useState(false);
 
@@ -235,6 +235,9 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
           html={previewHtml}
           isLoading={phase === "generating" || phase === "architect" || phase === "editing"}
           loadingMessage={statusMessage || "Génération en cours…"}
+          progressPercent={progressPercent}
+          progressDone={progressDone}
+          progressPending={progressPending}
           editable={visualEditMode}
           onNavigate={(path) => void handlePreviewNavigate(path)}
           onEditText={handleEditText}

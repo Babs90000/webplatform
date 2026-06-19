@@ -1,19 +1,26 @@
 import React from "react";
 import { LoadingDots } from "../LoadingDots";
+import { LoadingProgress } from "../LoadingProgress";
 import styles from "./LoadingPanel.module.css";
 
 interface LoadingPanelProps {
   message?: string;
   variant?: "inline" | "preview" | "centered";
+  percent?: number;
+  completedSteps?: string[];
+  remainingSteps?: string[];
 }
 
 export const LoadingPanel: React.FC<LoadingPanelProps> = ({
   message = "Chargement…",
   variant = "centered",
+  percent,
+  completedSteps,
+  remainingSteps,
 }) => {
   if (variant === "inline") {
     return (
-      <div className={styles.inline} role="status" aria-live="polite">
+      <div className={`${styles.inline} wp-loading-animate`} role="status" aria-live="polite">
         <LoadingDots size="sm" label={message} />
         <span className={styles.message}>{message}</span>
       </div>
@@ -21,7 +28,16 @@ export const LoadingPanel: React.FC<LoadingPanelProps> = ({
   }
 
   return (
-    <div className={styles.panel} role="status" aria-live="polite">
+    <div className={`${styles.panel} wp-loading-animate`} role="status" aria-live="polite">
+      {typeof percent === "number" && (
+        <LoadingProgress
+          percent={percent}
+          message={message}
+          completedSteps={completedSteps}
+          remainingSteps={remainingSteps}
+          showStepLists={Boolean(completedSteps?.length || remainingSteps?.length)}
+        />
+      )}
       {variant === "preview" && (
         <div className={styles.previewMock} aria-hidden="true">
           <div className={styles.previewChrome}>
@@ -45,8 +61,12 @@ export const LoadingPanel: React.FC<LoadingPanelProps> = ({
         </div>
       )}
       <div className={styles.message}>
-        <LoadingDots size="md" label={message} />
-        <span>{message}</span>
+        {typeof percent !== "number" && (
+          <>
+            <LoadingDots size="md" label={message} />
+            <span>{message}</span>
+          </>
+        )}
       </div>
     </div>
   );
