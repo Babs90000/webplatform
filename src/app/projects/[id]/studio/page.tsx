@@ -21,7 +21,7 @@ import {
   uploadProjectAsset,
 } from "@/features/codegen/services/codegenApi";
 import { bundlePreviewHtml } from "@/features/codegen/lib/previewBundler";
-import { applyVisualEdit } from "@/features/codegen/lib/visualEditor";
+import { applyVisualEdit, applyVisualMove, type VisualMovePosition } from "@/features/codegen/lib/visualEditor";
 import { toast } from "@/store/toast";
 
 interface StudioPageProps {
@@ -160,10 +160,8 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
       upsertFile(previewPage, updated);
       try {
         await saveProjectFile(projectId, previewPage, updated);
-        // Le texte est déjà visible dans l'iframe (contenteditable) : on évite
-        // de recharger l'aperçu pour ne pas perdre le focus/scroll. Pour une
-        // image, on recharge afin d'afficher la nouvelle source.
-        if (kind === "image") await refreshPreview();
+        // Texte : déjà visible dans l'iframe. Image / fond / logo : recharger l'aperçu.
+        if (kind === "image" || kind === "background") await refreshPreview();
       } catch {
         toast.error("Échec de l'enregistrement de la modification");
       }
@@ -176,6 +174,42 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
       void persistPageEdit("text", path, value);
     },
     [persistPageEdit],
+  );
+
+  const handleMoveElement = useCallback(
+    async (
+      fromPath: string,
+      toPath: string,
+      position: VisualMovePosition,
+    ) => {
+      const pageFile = files.find((f) => f.path === previewPage) ?? null;
+      if (!pageFile) {
+        toast.error("Page introuvable pour le déplacement");
+        return;
+      }
+
+      const updated = applyVisualMove(pageFile.content, {
+        fromPath,
+        toPath,
+        position,
+      });
+      if (!updated) {
+        toast.error(
+          "Déplacement impossible — vérifiez le type de bloc (section vs carte) et évitez nav/footer",
+        );
+        return;
+      }
+
+      upsertFile(previewPage, updated);
+      try {
+        await saveProjectFile(projectId, previewPage, updated);
+        await refreshPreview();
+        toast.success("Bloc déplacé");
+      } catch {
+        toast.error("Échec de l'enregistrement du déplacement");
+      }
+    },
+    [files, previewPage, projectId, upsertFile, refreshPreview],
   );
 
   const handleImageConfirm = useCallback(
@@ -245,6 +279,9 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
             setPendingImage({ path, mode: "image", current })
           }
           onEditBgRequest={(path) => setPendingImage({ path, mode: "background" })}
+          onMoveElement={(fromPath, toPath, position) =>
+            void handleMoveElement(fromPath, toPath, position)
+          }
         />
       }
       chat={
@@ -262,7 +299,11 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
       onClose={() => setPendingImage(null)}
       onConfirm={(url, alt) => void handleImageConfirm(url, alt)}
       onUpload={(file) => uploadProjectAsset(projectId, file)}
-      title={pendingImage?.mode === "background" ? "Changer le fond" : "Remplacer l'image"}
+      title={
+        pendingImage?.mode === "background"
+          ? "Changer le fond"
+          : "Remplacer l'image ou le logo"
+      }
     />
     <SiteSettingsModal
       isOpen={settingsOpen}

@@ -4,7 +4,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import styles from "./LivePreview.module.css";
 import { LoadingDots } from "@/shared/components/LoadingDots";
 import { LoadingPanel } from "@/shared/components/LoadingPanel";
-import { injectVisualEditor } from "../../lib/visualEditor";
+import { injectVisualEditor, type VisualMovePosition } from "../../lib/visualEditor";
 
 interface LivePreviewProps {
   html: string;
@@ -18,6 +18,11 @@ interface LivePreviewProps {
   onEditText?: (path: string, value: string) => void;
   onEditImageRequest?: (path: string, current?: string) => void;
   onEditBgRequest?: (path: string) => void;
+  onMoveElement?: (
+    fromPath: string,
+    toPath: string,
+    position: VisualMovePosition,
+  ) => void;
 }
 
 export const LivePreview: React.FC<LivePreviewProps> = ({
@@ -32,6 +37,7 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
   onEditText,
   onEditImageRequest,
   onEditBgRequest,
+  onMoveElement,
 }) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [throttledHtml, setThrottledHtml] = useState(html);
@@ -83,9 +89,18 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
         typeof data.path === "string"
       ) {
         onEditBgRequest?.(data.path);
+      } else if (
+        data.type === "wp-edit-move" &&
+        typeof data.fromPath === "string" &&
+        typeof data.toPath === "string" &&
+        (data.position === "before" ||
+          data.position === "after" ||
+          data.position === "append")
+      ) {
+        onMoveElement?.(data.fromPath, data.toPath, data.position);
       }
     },
-    [onNavigate, onEditText, onEditImageRequest, onEditBgRequest],
+    [onNavigate, onEditText, onEditImageRequest, onEditBgRequest, onMoveElement],
   );
 
   useEffect(() => {

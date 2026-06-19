@@ -119,6 +119,14 @@ export const bundlePreviewHtml = (
     html = html.replace("</body>", `${NAVIGATION_SCRIPT}</body>`);
   }
 
+  if (!/<meta[^>]+name=["']viewport["']/i.test(html)) {
+    const viewport =
+      '<meta name="viewport" content="width=device-width, initial-scale=1">';
+    html = html.includes("<head>")
+      ? html.replace(/<head([^>]*)>/i, `<head$1>${viewport}`)
+      : `<head>${viewport}</head>${html}`;
+  }
+
   return html;
 };
 
