@@ -26,6 +26,7 @@ interface StudioToolbarProps {
   onToggleCode: () => void;
   onOpenSettings: () => void;
   onOpenPublish: () => void;
+  onAuditQuality: () => void;
 }
 
 export const StudioToolbar: React.FC<StudioToolbarProps> = ({
@@ -42,6 +43,7 @@ export const StudioToolbar: React.FC<StudioToolbarProps> = ({
   onToggleCode,
   onOpenSettings,
   onOpenPublish,
+  onAuditQuality,
 }) => {
   const exportCheckout = useExportCheckout(projectId);
 
@@ -108,6 +110,14 @@ export const StudioToolbar: React.FC<StudioToolbarProps> = ({
           disabled={!hasFiles}
         >
           Paramètres
+        </Button>
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={onAuditQuality}
+          disabled={!hasFiles || isBusy}
+        >
+          Auditer la qualité
         </Button>
         <Button
           variant="secondary"

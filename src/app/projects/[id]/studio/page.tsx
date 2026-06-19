@@ -32,7 +32,7 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
   const searchParams = useSearchParams();
   const { data: project, refetch: refetchProject } = useProject(projectId);
   const { data: serverFiles, refetch } = useProjectFiles(projectId);
-  const { generate, edit, isBusy, refreshPreview, progressPercent, progressDone, progressPending } = useCodegenStream(projectId);
+  const { generate, edit, auditQuality, isBusy, refreshPreview, progressPercent, progressDone, progressPending } = useCodegenStream(projectId);
   const [isSaving, setIsSaving] = useState(false);
   const [autoGenerateStarted, setAutoGenerateStarted] = useState(false);
 
@@ -241,6 +241,7 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
           onToggleCode={() => setCodeVisible(!codeVisible)}
           onOpenSettings={() => setSettingsOpen(true)}
           onOpenPublish={() => setPublishOpen(true)}
+          onAuditQuality={() => void auditQuality()}
         />
       }
       fileTree={

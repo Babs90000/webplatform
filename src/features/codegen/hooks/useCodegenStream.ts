@@ -1,7 +1,8 @@
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   fetchPreviewHtml,
+  streamAuditSite,
   streamEditSite,
   streamGenerateSite,
   type CodegenSseEvent,
@@ -16,6 +17,13 @@ const GENERATION_TASKS = [
   "Feuille de styles CSS",
   "Scripts interactifs",
   "Pages HTML",
+  "Revue créative (6 experts)",
+  "Finitions premium",
+  "Finalisation",
+] as const;
+
+const AUDIT_TASKS = [
+  "Préparation de l'audit",
   "Revue créative (6 experts)",
   "Finitions premium",
   "Finalisation",
@@ -53,6 +61,7 @@ const taskProgress = (
 export const useCodegenStream = (projectId: string) => {
   const queryClient = useQueryClient();
   const [isBusy, setIsBusy] = useState(false);
+  const auditFlowRef = useRef(false);
   const {
     setPhase,
     setStatusMessage,
@@ -148,6 +157,18 @@ export const useCodegenStream = (projectId: string) => {
           void refreshPreview();
           break;
         }
+        case "audit_start": {
+          auditFlowRef.current = true;
+          setPhase("generating");
+          setStatusMessage(
+            event.mode === "auto"
+              ? "Édition substantielle — audit qualité automatique…"
+              : "Audit qualité — comité créatif (6 experts)…",
+          );
+          const p = taskProgress(1, AUDIT_TASKS[1]);
+          setProgress(p.percent, p.done, p.pending);
+          break;
+        }
         case "review_start": {
           setPhase("generating");
           setStatusMessage(
@@ -155,7 +176,9 @@ export const useCodegenStream = (projectId: string) => {
               ? "Re-contrôle qualité après finitions…"
               : "Comité créatif : 6 experts (DA, UX, rédaction, SEO, CRO, a11y)…",
           );
-          const p = taskProgress(5, GENERATION_TASKS[5]);
+          const p = auditFlowRef.current
+            ? taskProgress(1, AUDIT_TASKS[1])
+            : taskProgress(5, GENERATION_TASKS[5]);
           setProgress(p.percent, p.done, p.pending);
           break;
         }
@@ -177,7 +200,9 @@ export const useCodegenStream = (projectId: string) => {
           setStatusMessage(
             `Finitions ${event.pass}/${event.max_passes} — score ${event.score}/100, ${event.issues_count} point(s) à corriger…`,
           );
-          const p = taskProgress(6, GENERATION_TASKS[6]);
+          const p = auditFlowRef.current
+            ? taskProgress(2, AUDIT_TASKS[2])
+            : taskProgress(6, GENERATION_TASKS[6]);
           setProgress(p.percent, p.done, p.pending);
           break;
         }
@@ -197,6 +222,8 @@ export const useCodegenStream = (projectId: string) => {
           break;
         }
         case "done": {
+          const isAudit = auditFlowRef.current;
+          auditFlowRef.current = false;
           setPhase("ready");
           const scoreLabel =
             typeof event.review_score === "number"
@@ -205,7 +232,11 @@ export const useCodegenStream = (projectId: string) => {
           setStatusMessage(
             `${event.files_created} fichier(s) enregistré(s)${scoreLabel}`,
           );
-          setProgress(100, [...GENERATION_TASKS], []);
+          setProgress(
+            100,
+            isAudit ? [...AUDIT_TASKS] : [...GENERATION_TASKS],
+            [],
+          );
           await queryClient.invalidateQueries({ queryKey: ["project-files", projectId] });
           await refreshPreview();
           if (event.client_ready === false) {
@@ -269,8 +300,33 @@ export const useCodegenStream = (projectId: string) => {
       resetStreaming();
 
       try {
-        await streamEditSite(projectId, instruction, handleEvent);
-        addChatMessage("assistant", "Modifications appliquées.");
+        let doneMeta: {
+          review_score?: number;
+          client_ready?: boolean;
+        } = {};
+
+        const onEditEvent = (event: CodegenSseEvent) => {
+          if (event.type === "done") {
+            doneMeta = {
+              review_score: event.review_score,
+              client_ready: event.client_ready,
+            };
+          }
+          void handleEvent(event);
+        };
+
+        await streamEditSite(projectId, instruction, onEditEvent);
+
+        if (typeof doneMeta.review_score === "number") {
+          addChatMessage(
+            "assistant",
+            doneMeta.client_ready === false
+              ? `Modifications appliquées. Audit qualité : ${doneMeta.review_score}/100 — relecture recommandée.`
+              : `Modifications appliquées. Audit qualité : ${doneMeta.review_score}/100.`,
+          );
+        } else {
+          addChatMessage("assistant", "Modifications appliquées.");
+        }
       } catch (err) {
         const msg = err instanceof Error ? err.message : "Erreur d'édition";
         setPhase("error");
@@ -292,9 +348,38 @@ export const useCodegenStream = (projectId: string) => {
     ],
   );
 
+  const auditQuality = useCallback(async () => {
+    setIsBusy(true);
+    auditFlowRef.current = true;
+    setPhase("generating");
+    setStatusMessage("Audit qualité en cours…");
+    setProgress(5, [], [...AUDIT_TASKS]);
+    resetStreaming();
+
+    try {
+      await streamAuditSite(projectId, handleEvent);
+    } catch (err) {
+      auditFlowRef.current = false;
+      const msg = err instanceof Error ? err.message : "Erreur d'audit qualité";
+      setPhase("error");
+      setStatusMessage(msg);
+      toast.error(msg);
+    } finally {
+      setIsBusy(false);
+    }
+  }, [
+    projectId,
+    handleEvent,
+    setPhase,
+    setProgress,
+    setStatusMessage,
+    resetStreaming,
+  ]);
+
   return {
     generate,
     edit,
+    auditQuality,
     isBusy,
     refreshPreview,
     progressPercent,

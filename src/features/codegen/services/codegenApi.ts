@@ -28,6 +28,7 @@ export type CodegenSseEvent =
   | { type: "file_start"; path: string }
   | { type: "file_chunk"; path: string; chunk: string }
   | { type: "file_saved"; path: string }
+  | { type: "audit_start"; mode: "manual" | "auto" }
   | { type: "review_start"; round: number }
   | {
       type: "review_done";
@@ -237,5 +238,16 @@ export const streamEditSite = async (
     `${BASE}/projects/${projectId}/codegen/edit`,
     "POST",
     { instruction },
+    onEvent,
+  );
+
+export const streamAuditSite = async (
+  projectId: string,
+  onEvent: (event: CodegenSseEvent) => void,
+): Promise<void> =>
+  consumeSseStream(
+    `${BASE}/projects/${projectId}/codegen/audit`,
+    "POST",
+    {},
     onEvent,
   );
