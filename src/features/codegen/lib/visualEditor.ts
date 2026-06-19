@@ -36,11 +36,14 @@ const EDITOR_STYLE = `
   body.wp-edit-on [data-wp-text]{
     box-shadow:inset 0 0 0 2px rgba(99,102,241,.5);
     cursor:text;border-radius:3px;transition:box-shadow .15s ease,background .15s ease;
-    white-space:pre-wrap;min-width:0;word-break:break-word;overflow-wrap:anywhere;
+    min-width:0;max-width:100%;word-break:break-word;
   }
-  body.wp-edit-on [data-wp-text]:hover,
   body.wp-edit-on [data-wp-text]:focus{
+    white-space:pre-wrap;overflow-wrap:break-word;
     box-shadow:inset 0 0 0 2px #6366f1;background:rgba(99,102,241,.08);
+  }
+  body.wp-edit-on [data-wp-text]:hover{
+    box-shadow:inset 0 0 0 2px rgba(99,102,241,.65);
   }
   body.wp-edit-on [data-wp-text] [contenteditable="false"]{cursor:default;user-select:none;}
   body.wp-edit-on [data-wp-img]{

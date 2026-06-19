@@ -1,3 +1,8 @@
+import {
+  appendResponsiveBaseline,
+  ensureViewportMeta,
+} from "./responsiveBaseline";
+
 export interface PreviewFile {
   path: string;
   content: string;
@@ -86,7 +91,9 @@ export const bundlePreviewHtml = (
     html = patchHtmlForPreview(html, projectId);
   }
 
-  const cssContent = map.get("css/style.css") ?? map.get("styles.css") ?? "";
+  const cssContent = appendResponsiveBaseline(
+    map.get("css/style.css") ?? map.get("styles.css") ?? "",
+  );
   const jsContent = map.get("js/app.js") ?? map.get("script.js") ?? "";
 
   if (cssContent) {
@@ -120,11 +127,7 @@ export const bundlePreviewHtml = (
   }
 
   if (!/<meta[^>]+name=["']viewport["']/i.test(html)) {
-    const viewport =
-      '<meta name="viewport" content="width=device-width, initial-scale=1">';
-    html = html.includes("<head>")
-      ? html.replace(/<head([^>]*)>/i, `<head$1>${viewport}`)
-      : `<head>${viewport}</head>${html}`;
+    html = ensureViewportMeta(html);
   }
 
   return html;
