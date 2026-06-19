@@ -234,6 +234,7 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
         <LivePreview
           html={previewHtml}
           isLoading={phase === "generating" || phase === "architect" || phase === "editing"}
+          loadingMessage={statusMessage || "Génération en cours…"}
           editable={visualEditMode}
           onNavigate={(path) => void handlePreviewNavigate(path)}
           onEditText={handleEditText}

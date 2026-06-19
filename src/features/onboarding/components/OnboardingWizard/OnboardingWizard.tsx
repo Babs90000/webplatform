@@ -6,7 +6,7 @@ import styles from "./OnboardingWizard.module.css";
 import { OnboardingShell } from "../OnboardingShell";
 import { Button } from "@/shared/components/Button";
 import { Input } from "@/shared/components/Input";
-import { Spinner } from "@/shared/components/Spinner";
+import { LoadingDots } from "@/shared/components/LoadingDots";
 import { toast } from "@/store/toast";
 import { ApiError } from "@/lib/api";
 import { AI_ASSISTANT_NAME } from "@/lib/branding";
@@ -423,7 +423,7 @@ export const OnboardingWizard: React.FC = () => {
     return (
       <OnboardingShell badge="Analyse en cours">
         <div className={styles.thinkingCard}>
-          <Spinner size="lg" />
+          <LoadingDots size="lg" label="Analyse des réponses" />
           <h2 className={styles.thinkingTitle}>Réponses enregistrées</h2>
           <p className={styles.thinkingSubtitle}>
             {AI_ASSISTANT_NAME} analyse vos objectifs pour préparer des questions
@@ -440,7 +440,7 @@ export const OnboardingWizard: React.FC = () => {
         <div className={styles.overlay}>
           <div className={styles.overlayGlow} aria-hidden />
           <div className={styles.overlayContent}>
-            <Spinner size="lg" />
+            <LoadingDots size="lg" label="Analyse des réponses" />
             <div className={styles.aiStatus}>
               <h2 className={styles.aiTitle}>
                 {isStudioEnabled() ? "Préparation de votre Studio" : "Création de votre site"}
@@ -462,7 +462,7 @@ export const OnboardingWizard: React.FC = () => {
                           <polyline points="20 6 9 17 4 12" />
                         </svg>
                       ) : isActive ? (
-                        <div className={styles.stepSpinner} />
+                        <LoadingDots size="sm" label={step} />
                       ) : (
                         <div className={styles.stepDot} />
                       )}

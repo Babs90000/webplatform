@@ -3,7 +3,7 @@
 import React from "react";
 import styles from "./BillingCard.module.css";
 import { Button } from "@/shared/components/Button";
-import { Spinner } from "@/shared/components/Spinner";
+import { LoadingPanel } from "@/shared/components/LoadingPanel";
 import type { BillingSubscriptionStatus } from "../../services/billingApi";
 import {
   useBillingStatus,
@@ -103,9 +103,10 @@ export const BillingCard: React.FC = () => {
       </ul>
 
       {isLoading && (
-        <p className={styles.loading}>
-          <Spinner size="sm" /> Chargement du statut…
-        </p>
+        <LoadingPanel
+          variant="inline"
+          message="Chargement du statut d'abonnement…"
+        />
       )}
 
       {error && (

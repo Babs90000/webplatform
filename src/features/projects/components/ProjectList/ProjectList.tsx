@@ -1,5 +1,6 @@
 import React from "react";
 import styles from "./ProjectList.module.css";
+import { Skeleton } from "@/shared/components/Skeleton";
 import { ProjectCard } from "../ProjectCard";
 import { EmptyState } from "@/shared/components/EmptyState";
 import { ErrorMessage } from "@/shared/components/ErrorMessage";
@@ -35,9 +36,9 @@ export const ProjectList: React.FC<ProjectListProps> = ({
       <div className={styles.grid}>
         {[1, 2, 3].map((i) => (
           <div key={i} className={styles.skeletonCard}>
-            <div className={styles.skeletonTitle} />
-            <div className={styles.skeletonUrl} />
-            <div className={styles.skeletonFooter} />
+            <Skeleton className={styles.skeletonTitle} height={24} />
+            <Skeleton className={styles.skeletonUrl} height={16} />
+            <Skeleton className={styles.skeletonFooter} height={12} />
           </div>
         ))}
       </div>

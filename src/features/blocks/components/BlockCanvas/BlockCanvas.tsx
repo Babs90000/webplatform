@@ -21,6 +21,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { useBlocks, useCreateBlock, useReorderBlocks } from "../../hooks/useBlocks";
 import { useEditorStore } from "@/store/editor";
 import { Button } from "@/shared/components/Button";
+import { LoadingPanel } from "@/shared/components/LoadingPanel";
 import { AI_ASSISTANT_NAME } from "@/lib/branding";
 import { type BlockType, type Block } from "@/types";
 import { BlockRenderer } from "../BlockRenderer";
@@ -189,10 +190,7 @@ export const BlockCanvas: React.FC<BlockCanvasProps> = ({ pageId }) => {
   if (isLoading) {
     return (
       <div className="flex-1 flex items-center justify-center bg-zinc-50/80">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 rounded-full border-2 border-indigo-500 border-t-transparent animate-spin"></div>
-          <div className="text-zinc-500 font-medium">Chargement du canevas...</div>
-        </div>
+        <LoadingPanel variant="centered" message="Chargement du canevas…" />
       </div>
     );
   }

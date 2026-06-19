@@ -3,7 +3,8 @@
 import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/auth";
-import { Spinner } from "@/shared/components/Spinner";
+import { LoadingScreen } from "../LoadingScreen";
+import styles from "./AuthGuard.module.css";
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -16,38 +17,16 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children, fallback }) => {
 
   useEffect(() => {
     if (!isHydrated) return;
-    
+
     if (!token) {
       router.replace("/login");
     }
   }, [token, isHydrated, router]);
 
-  if (!isHydrated) {
+  if (!isHydrated || !token) {
     return (
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          minHeight: "100vh",
-        }}
-      >
-        {fallback || <Spinner size="lg" />}
-      </div>
-    );
-  }
-
-  if (!token) {
-    return (
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          minHeight: "100vh",
-        }}
-      >
-        {fallback || <Spinner size="lg" />}
+      <div className={styles.guard}>
+        {fallback ?? <LoadingScreen message="Vérification de la session…" />}
       </div>
     );
   }

@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { LoadingDots } from "@/shared/components/LoadingDots";
 import Link from "next/link";
 import styles from "./StudioToolbar.module.css";
 import { Button } from "@/shared/components/Button";
@@ -65,7 +66,14 @@ export const StudioToolbar: React.FC<StudioToolbarProps> = ({
         </Link>
         <div className={styles.projectInfo}>
           <span className={styles.projectName}>{projectName}</span>
-          <span className={styles.status}>{statusMessage || "Studio prêt"}</span>
+          <span
+            className={`${styles.statusRow} ${isBusy ? styles.statusActive : ""}`}
+          >
+            {isBusy && <LoadingDots size="sm" label={statusMessage || "En cours"} />}
+            <span className={styles.status}>
+              {statusMessage || (isBusy ? "Traitement en cours…" : "Studio prêt")}
+            </span>
+          </span>
         </div>
       </div>
 

@@ -1,0 +1,48 @@
+.dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.dot {
+  border-radius: var(--radius-full);
+  background: var(--color-accent-primary);
+  animation: dotPulse 1.4s ease-in-out infinite;
+}
+
+.sm .dot {
+  width: 5px;
+  height: 5px;
+}
+
+.md .dot {
+  width: 7px;
+  height: 7px;
+}
+
+.lg .dot {
+  width: 9px;
+  height: 9px;
+}
+
+.dot:nth-child(2) {
+  animation-delay: 0.16s;
+}
+
+.dot:nth-child(3) {
+  animation-delay: 0.32s;
+}
+
+@keyframes dotPulse {
+  0%,
+  70%,
+  100% {
+    transform: translateY(0) scale(0.85);
+    opacity: 0.35;
+  }
+
+  35% {
+    transform: translateY(-4px) scale(1);
+    opacity: 1;
+  }
+}

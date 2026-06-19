@@ -2,15 +2,10 @@
 
 import { AuthGuard } from "@/shared/components/AuthGuard";
 import { ClientOnly } from "@/shared/components/ClientOnly";
-import { Spinner } from "@/shared/components/Spinner";
+import { LoadingScreen } from "@/shared/components/LoadingScreen";
 import { OnboardingWizard } from "@/features/onboarding/components/OnboardingWizard/OnboardingWizard";
-import styles from "@/app/Home.module.css";
 
-const loadingFallback = (
-  <div className={styles.loading}>
-    <Spinner size="lg" />
-  </div>
-);
+const loadingFallback = <LoadingScreen message="Chargement de l'onboarding…" />;
 
 const OnboardingPage: React.FC = () => (
   <ClientOnly fallback={loadingFallback}>

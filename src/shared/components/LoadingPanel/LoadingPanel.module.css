@@ -1,0 +1,91 @@
+@reference "#tailwind-reference";
+
+.panel {
+  @apply flex flex-col items-center justify-center gap-5 w-full h-full min-h-[240px] p-8;
+}
+
+.message {
+  @apply flex items-center gap-3 text-sm font-medium;
+  color: var(--color-text-secondary);
+}
+
+.previewMock {
+  @apply w-full max-w-2xl overflow-hidden;
+  border: 1px solid var(--color-border-primary);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-elevated);
+  box-shadow: var(--shadow-lg);
+}
+
+.previewChrome {
+  @apply flex items-center gap-2 px-4 py-3;
+  border-bottom: 1px solid var(--color-border-subtle);
+  background: var(--color-bg-tertiary);
+}
+
+.previewDot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
+  background: var(--color-border-primary);
+}
+
+.previewUrl {
+  @apply flex-1 h-6 rounded-md;
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-border-subtle);
+}
+
+.previewBody {
+  @apply flex flex-col gap-4 p-6;
+}
+
+.shimmerBlock {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+  background: var(--color-bg-tertiary);
+}
+
+.shimmerBlock::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: var(--gradient-shimmer);
+  animation: shimmerSlide 1.6s ease-in-out infinite;
+}
+
+.heroBlock {
+  height: 120px;
+}
+
+.lineBlock {
+  height: 14px;
+}
+
+.lineBlockShort {
+  width: 62%;
+}
+
+.lineBlockMedium {
+  width: 78%;
+}
+
+.cardRow {
+  @apply grid grid-cols-3 gap-3;
+}
+
+.cardBlock {
+  height: 72px;
+}
+
+.inline {
+  @apply flex items-center gap-3 py-2;
+}
+
+@keyframes shimmerSlide {
+  100% {
+    transform: translateX(100%);
+  }
+}

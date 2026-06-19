@@ -1,0 +1,6 @@
+@reference "#tailwind-reference";
+
+.guard {
+  @apply flex items-center justify-center min-h-screen;
+  background: var(--gradient-hero);
+}

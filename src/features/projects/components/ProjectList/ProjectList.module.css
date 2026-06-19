@@ -16,28 +16,14 @@
 
 .skeletonTitle {
   width: 60%;
-  height: 24px;
-  background: var(--color-bg-tertiary);
-  border-radius: var(--radius-sm);
   margin-bottom: var(--space-sm);
-  animation: pulse 1.5s infinite ease-in-out;
 }
 
 .skeletonUrl {
   width: 40%;
-  height: 16px;
-  background: var(--color-bg-tertiary);
-  border-radius: var(--radius-sm);
-  animation: pulse 1.5s infinite ease-in-out;
-  animation-delay: 0.2s;
 }
 
 .skeletonFooter {
   margin-top: auto;
   width: 30%;
-  height: 12px;
-  background: var(--color-bg-tertiary);
-  border-radius: var(--radius-sm);
-  animation: pulse 1.5s infinite ease-in-out;
-  animation-delay: 0.4s;
 }

@@ -3,9 +3,8 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/auth";
-import { Spinner } from "@/shared/components/Spinner";
+import { LoadingScreen } from "@/shared/components/LoadingScreen";
 import { LandingPage } from "@/features/marketing/components/LandingPage";
-import styles from "./Home.module.css";
 
 const HomePage: React.FC = () => {
   const router = useRouter();
@@ -19,19 +18,11 @@ const HomePage: React.FC = () => {
   }, [token, isHydrated, router]);
 
   if (!isHydrated) {
-    return (
-      <div className={styles.loading}>
-        <Spinner size="lg" />
-      </div>
-    );
+    return <LoadingScreen message="Initialisation…" />;
   }
 
   if (token) {
-    return (
-      <div className={styles.loading}>
-        <Spinner size="lg" />
-      </div>
-    );
+    return <LoadingScreen message="Redirection vers le tableau de bord…" />;
   }
 
   return <LandingPage />;

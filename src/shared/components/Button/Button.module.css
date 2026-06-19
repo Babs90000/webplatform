@@ -110,14 +110,3 @@
   width: 100%;
 }
 
-/* Spinner inside button */
-.spinner {
-  animation: spin 0.6s linear infinite;
-  width: 16px;
-  height: 16px;
-}
-
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}

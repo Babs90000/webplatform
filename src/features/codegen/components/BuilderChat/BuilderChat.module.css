@@ -1,3 +1,5 @@
+@reference "#tailwind-reference";
+
 .container {
   display: flex;
   flex-direction: column;
@@ -20,9 +22,22 @@
   color: var(--color-text-primary);
 }
 
-.status {
+.statusActive {
+  color: var(--color-text-accent);
+}
+
+.statusBadge {
+  @apply flex items-center gap-2;
   font-size: 0.75rem;
   color: var(--color-text-tertiary);
+}
+
+.statusBadgeActive {
+  padding: 0.2rem 0.55rem;
+  border-radius: var(--radius-full);
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  color: var(--color-text-accent);
 }
 
 .messages {

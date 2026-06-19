@@ -1,3 +1,5 @@
+@reference "#tailwind-reference";
+
 .container {
   display: flex;
   flex-direction: column;
@@ -11,6 +13,7 @@
   justify-content: space-between;
   padding: var(--space-sm) var(--space-md);
   border-bottom: 1px solid var(--color-border-subtle);
+  gap: var(--space-md);
 }
 
 .label {
@@ -21,9 +24,15 @@
   color: var(--color-text-secondary);
 }
 
-.loading {
+.loadingBadge {
+  @apply flex items-center gap-2 ml-auto;
+  padding: 0.25rem 0.65rem;
+  border-radius: var(--radius-full);
+  background: rgba(99, 102, 241, 0.12);
+  border: 1px solid rgba(99, 102, 241, 0.22);
   font-size: 0.75rem;
-  color: var(--color-accent-warning);
+  font-weight: 500;
+  color: var(--color-text-accent);
 }
 
 .editBadge {
@@ -36,9 +45,11 @@
 }
 
 .frameWrap {
+  position: relative;
   flex: 1;
   padding: var(--space-md);
   background: #1a1a2e;
+  min-height: 0;
 }
 
 .frame {
@@ -47,6 +58,18 @@
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-md);
   background: white;
+}
+
+.overlay {
+  position: absolute;
+  inset: var(--space-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  background: rgba(10, 14, 26, 0.72);
+  backdrop-filter: blur(6px);
+  z-index: 2;
 }
 
 .placeholder {

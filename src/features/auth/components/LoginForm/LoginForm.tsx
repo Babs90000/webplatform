@@ -8,7 +8,7 @@ import type { FieldErrors } from "react-hook-form";
 import styles from "./LoginForm.module.css";
 import { Input } from "@/shared/components/Input";
 import { Button } from "@/shared/components/Button";
-import { Spinner } from "@/shared/components/Spinner";
+import { LoadingScreen } from "@/shared/components/LoadingScreen";
 import { ClientOnly } from "@/shared/components/ClientOnly";
 import { useZodForm } from "@/shared/hooks/useZodForm";
 import { useAuth } from "../../hooks/useAuth";
@@ -176,11 +176,7 @@ const LoginFormFields: React.FC = () => {
 export const LoginForm: React.FC = () => {
   return (
     <ClientOnly
-      fallback={
-        <div className={styles.loading}>
-          <Spinner size="md" />
-        </div>
-      }
+      fallback={<LoadingScreen message="Chargement du formulaire…" showBrand={false} />}
     >
       <LoginFormFields />
     </ClientOnly>

@@ -2,11 +2,14 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import styles from "./LivePreview.module.css";
+import { LoadingDots } from "@/shared/components/LoadingDots";
+import { LoadingPanel } from "@/shared/components/LoadingPanel";
 import { injectVisualEditor } from "../../lib/visualEditor";
 
 interface LivePreviewProps {
   html: string;
   isLoading?: boolean;
+  loadingMessage?: string;
   editable?: boolean;
   onNavigate?: (path: string) => void;
   onEditText?: (path: string, value: string) => void;
@@ -17,6 +20,7 @@ interface LivePreviewProps {
 export const LivePreview: React.FC<LivePreviewProps> = ({
   html,
   isLoading = false,
+  loadingMessage = "Génération en cours…",
   editable = false,
   onNavigate,
   onEditText,
@@ -83,6 +87,8 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
     return () => window.removeEventListener("message", handleMessage);
   }, [handleMessage]);
 
+  const showPlaceholder = !throttledHtml && !isLoading;
+
   return (
     <div className={styles.container}>
       <div className={styles.toolbar}>
@@ -90,21 +96,35 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
         {editable && (
           <span className={styles.editBadge}>Édition visuelle active</span>
         )}
-        {isLoading && <span className={styles.loading}>Génération…</span>}
+        {isLoading && (
+          <span className={styles.loadingBadge}>
+            <LoadingDots size="sm" label={loadingMessage} />
+            <span>{loadingMessage}</span>
+          </span>
+        )}
       </div>
       <div className={styles.frameWrap}>
-        {throttledHtml ? (
-          <iframe
-            ref={iframeRef}
-            title="Aperçu du site"
-            className={styles.frame}
-            sandbox="allow-scripts allow-same-origin"
-            srcDoc={previewSrc}
-          />
-        ) : (
+        {showPlaceholder ? (
           <div className={styles.placeholder}>
             L&apos;aperçu apparaîtra après la génération
           </div>
+        ) : (
+          <>
+            {throttledHtml && (
+              <iframe
+                ref={iframeRef}
+                title="Aperçu du site"
+                className={styles.frame}
+                sandbox="allow-scripts allow-same-origin"
+                srcDoc={previewSrc}
+              />
+            )}
+            {isLoading && (
+              <div className={styles.overlay}>
+                <LoadingPanel variant="preview" message={loadingMessage} />
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

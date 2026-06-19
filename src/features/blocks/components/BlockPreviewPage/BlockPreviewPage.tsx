@@ -6,13 +6,16 @@ import { usePages } from "@/features/pages/hooks/usePages";
 import { useBlocks } from "@/features/blocks/hooks/useBlocks";
 import { BlockRenderer } from "@/features/blocks/components/BlockRenderer";
 import { getProjectEditorPath } from "@/lib/projectRoutes";
+import { LoadingPanel } from "@/shared/components/LoadingPanel";
 import styles from "./BlockPreviewPage.module.css";
 
 const PagePreview: React.FC<{ pageId: string }> = ({ pageId }) => {
   const { data: blocks, isLoading } = useBlocks(pageId);
 
   if (isLoading) {
-    return <div className={styles.loading}>Chargement du contenu…</div>;
+    return (
+      <LoadingPanel variant="centered" message="Chargement du contenu…" />
+    );
   }
 
   if (!blocks || blocks.length === 0) {
@@ -45,7 +48,9 @@ export const BlockPreviewPage: React.FC<BlockPreviewPageProps> = ({ projectId })
   const effectivePageId = selectedPageId || firstPageId;
 
   if (isLoading) {
-    return <div className={styles.pageLoading}>Chargement de l&apos;aperçu…</div>;
+    return (
+      <LoadingPanel variant="preview" message="Chargement de l'aperçu…" />
+    );
   }
 
   if (!pages || pages.length === 0) {

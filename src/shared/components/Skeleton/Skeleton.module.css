@@ -1,0 +1,21 @@
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-tertiary);
+}
+
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: var(--gradient-shimmer);
+  animation: shimmerSlide 1.6s ease-in-out infinite;
+}
+
+@keyframes shimmerSlide {
+  100% {
+    transform: translateX(100%);
+  }
+}

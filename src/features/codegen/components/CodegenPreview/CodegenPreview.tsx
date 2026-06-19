@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useState } from "react";
+import { LoadingPanel } from "@/shared/components/LoadingPanel";
 import Link from "next/link";
 import styles from "./CodegenPreview.module.css";
 import {
@@ -98,7 +99,10 @@ export const CodegenPreview: React.FC<CodegenPreviewProps> = ({ projectId }) => 
 
       <div className={styles.content}>
         {isLoading ? (
-          <div className={styles.loading}>Chargement de l&apos;aperçu…</div>
+          <LoadingPanel
+            variant="preview"
+            message="Chargement de l'aperçu…"
+          />
         ) : html ? (
           <iframe
             title="Aperçu plein écran"

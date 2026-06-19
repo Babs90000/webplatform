@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useRef, useState } from "react";
+import { LoadingDots } from "@/shared/components/LoadingDots";
 import styles from "./BuilderChat.module.css";
 import { AI_ASSISTANT_NAME } from "@/lib/branding";
 import { toast } from "@/store/toast";
@@ -55,8 +56,13 @@ export const BuilderChat: React.FC<BuilderChatProps> = ({
     <div className={styles.container}>
       <div className={styles.header}>
         <span className={styles.title}>{AI_ASSISTANT_NAME}</span>
-        {statusMessage && (
-          <span className={styles.status}>{statusMessage}</span>
+        {(statusMessage || isBusy) && (
+          <span
+            className={`${styles.statusBadge} ${isBusy ? styles.statusBadgeActive : ""}`}
+          >
+            {isBusy && <LoadingDots size="sm" label={statusMessage || "En cours"} />}
+            {statusMessage || (isBusy ? "Koala Codeur réfléchit…" : "")}
+          </span>
         )}
       </div>
 

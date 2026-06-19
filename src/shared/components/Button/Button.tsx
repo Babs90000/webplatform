@@ -1,6 +1,7 @@
 import React from "react";
 import styles from "./Button.module.css";
 import clsx from "clsx";
+import { LoadingDots } from "../LoadingDots";
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "primary" | "secondary" | "ghost" | "danger" | "cta";
@@ -40,31 +41,7 @@ export const Button: React.FC<ButtonProps> = ({
       aria-busy={isLoading}
       {...rest}
     >
-      {isLoading && (
-        <svg
-          className={styles.spinner}
-          viewBox="0 0 24 24"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          aria-hidden="true"
-        >
-          <circle
-            cx="12"
-            cy="12"
-            r="10"
-            stroke="currentColor"
-            strokeWidth="3"
-            strokeLinecap="round"
-            opacity="0.25"
-          />
-          <path
-            d="M12 2a10 10 0 0 1 10 10"
-            stroke="currentColor"
-            strokeWidth="3"
-            strokeLinecap="round"
-          />
-        </svg>
-      )}
+      {isLoading && <LoadingDots size="sm" label="Action en cours" />}
       <span>{children}</span>
     </button>
   );
