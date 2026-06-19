@@ -1,6 +1,8 @@
 import React, { useEffect, useRef } from "react";
+import { X } from "lucide-react";
 import { createPortal } from "react-dom";
 import styles from "./Modal.module.css";
+import { Icon } from "@/shared/components/Icon";
 
 interface ModalProps {
   isOpen: boolean;
@@ -53,10 +55,8 @@ export const Modal: React.FC<ModalProps> = ({
         {title && (
           <div className={styles.header}>
             <h2 className={styles.title}>{title}</h2>
-            <button onClick={onClose} className={styles.closeButton} aria-label="Close">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
+            <button onClick={onClose} className={styles.closeButton} aria-label="Fermer">
+              <Icon icon={X} size="md" />
             </button>
           </div>
         )}

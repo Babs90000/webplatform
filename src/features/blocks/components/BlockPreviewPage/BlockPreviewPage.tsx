@@ -1,12 +1,14 @@
 "use client";
 
 import React, { useState } from "react";
+import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { usePages } from "@/features/pages/hooks/usePages";
 import { useBlocks } from "@/features/blocks/hooks/useBlocks";
 import { BlockRenderer } from "@/features/blocks/components/BlockRenderer";
 import { getProjectEditorPath } from "@/lib/projectRoutes";
 import { LoadingPanel } from "@/shared/components/LoadingPanel";
+import { Icon } from "@/shared/components/Icon";
 import styles from "./BlockPreviewPage.module.css";
 
 const PagePreview: React.FC<{ pageId: string }> = ({ pageId }) => {
@@ -61,9 +63,7 @@ export const BlockPreviewPage: React.FC<BlockPreviewPageProps> = ({ projectId })
     <div className={styles.root}>
       <header className={styles.toolbar}>
         <Link href={getProjectEditorPath(projectId)} className={styles.backLink}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M19 12H5M12 19l-7-7 7-7" />
-          </svg>
+          <Icon icon={ArrowLeft} size="sm" />
           Retour à l&apos;éditeur
         </Link>
 

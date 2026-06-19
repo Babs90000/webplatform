@@ -1,7 +1,9 @@
 "use client";
 
 import React from "react";
+import { ArrowLeft } from "lucide-react";
 import { LoadingDots } from "@/shared/components/LoadingDots";
+import { Icon } from "@/shared/components/Icon";
 import Link from "next/link";
 import styles from "./StudioToolbar.module.css";
 import { Button } from "@/shared/components/Button";
@@ -62,7 +64,9 @@ export const StudioToolbar: React.FC<StudioToolbarProps> = ({
     <header className={styles.toolbar}>
       <div className={styles.left}>
         <Link href="/dashboard" aria-label="Retour au tableau de bord">
-          <Button variant="ghost" size="sm">←</Button>
+          <Button variant="ghost" size="sm" ariaLabel="Retour au tableau de bord">
+            <Icon icon={ArrowLeft} size="sm" />
+          </Button>
         </Link>
         <div className={styles.projectInfo}>
           <span className={styles.projectName}>{projectName}</span>

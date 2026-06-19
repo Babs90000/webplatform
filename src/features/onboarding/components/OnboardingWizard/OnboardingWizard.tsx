@@ -1,12 +1,14 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
 import styles from "./OnboardingWizard.module.css";
 import { OnboardingShell } from "../OnboardingShell";
 import { Button } from "@/shared/components/Button";
 import { Input } from "@/shared/components/Input";
 import { LoadingProgress } from "@/shared/components/LoadingProgress";
+import { Icon } from "@/shared/components/Icon";
 import {
   isQuestionAnswerValid,
   isOtherSelected,
@@ -426,7 +428,9 @@ export const OnboardingWizard: React.FC = () => {
 
           <div className={styles.wizardCard}>
             <div className={styles.welcomeCard}>
-              <div className={styles.welcomeIconWrap}>✨</div>
+              <div className={styles.welcomeIconWrap}>
+                <Icon icon={Sparkles} size="lg" />
+              </div>
               <h2 className={styles.title}>Prêt à commencer ?</h2>
               <p className={styles.subtitleSpaced}>
                 {AI_ASSISTANT_NAME} vous pose quelques questions pour créer un
@@ -556,9 +560,7 @@ export const OnboardingWizard: React.FC = () => {
             disabled={backDisabled}
             className={`${styles.navBtn} ${backDisabled ? styles.navBtnDisabled : ""}`}
           >
-            <svg className={styles.navBtnIcon} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <polyline points="15 18 9 12 15 6" />
-            </svg>
+            <Icon icon={ChevronLeft} size="sm" className={styles.navBtnIcon} />
             Retour
           </button>
 
@@ -573,9 +575,7 @@ export const OnboardingWizard: React.FC = () => {
                 : "Créer mon site"
               : "Suivant"}
             {currentStep < totalQuestions - 1 && (
-              <svg className={styles.btnIconRight} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <polyline points="9 18 15 12 9 6" />
-              </svg>
+              <Icon icon={ChevronRight} size="sm" className={styles.btnIconRight} />
             )}
           </Button>
         </div>

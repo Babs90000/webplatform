@@ -1,7 +1,9 @@
 "use client";
 
 import React, { useCallback, useEffect, useState } from "react";
+import { ArrowLeft } from "lucide-react";
 import { LoadingPanel } from "@/shared/components/LoadingPanel";
+import { Icon } from "@/shared/components/Icon";
 import Link from "next/link";
 import styles from "./CodegenPreview.module.css";
 import {
@@ -78,9 +80,7 @@ export const CodegenPreview: React.FC<CodegenPreviewProps> = ({ projectId }) => 
     <div className={styles.root}>
       <header className={styles.toolbar}>
         <Link href={getProjectEditorPath(projectId)} className={styles.backLink}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M19 12H5M12 19l-7-7 7-7" />
-          </svg>
+          <Icon icon={ArrowLeft} size="sm" />
           Retour au Studio
         </Link>
 

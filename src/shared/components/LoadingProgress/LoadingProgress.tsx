@@ -1,5 +1,7 @@
 import React from "react";
+import { Check } from "lucide-react";
 import { LoadingDots } from "../LoadingDots";
+import { Icon } from "../Icon";
 import styles from "./LoadingProgress.module.css";
 
 interface LoadingProgressProps {
@@ -51,17 +53,7 @@ export const LoadingProgress: React.FC<LoadingProgressProps> = ({
             {completedSteps.map((step) => (
               <div key={`done-${step}`} className={`${styles.stepRow} ${styles.stepDone}`}>
                 <span className={styles.stepIcon} aria-hidden="true">
-                  <svg
-                    className={styles.stepCheck}
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="3"
-                  >
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
+                  <Icon icon={Check} size="sm" className={styles.stepCheck} />
                 </span>
                 <span>{step}</span>
               </div>

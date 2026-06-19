@@ -1,6 +1,8 @@
 import React from "react";
 import Link from "next/link";
+import { LayoutDashboard } from "lucide-react";
 import styles from "./OnboardingShell.module.css";
+import { Icon } from "@/shared/components/Icon";
 
 interface OnboardingShellProps {
   children: React.ReactNode;
@@ -46,7 +48,8 @@ export const OnboardingShell: React.FC<OnboardingShellProps> = ({
         {badge && <span className={styles.badge}>{badge}</span>}
         {showBack && (
           <Link href="/dashboard" className={styles.backLink}>
-            ← Tableau de bord
+            <Icon icon={LayoutDashboard} size="sm" />
+            Tableau de bord
           </Link>
         )}
       </div>

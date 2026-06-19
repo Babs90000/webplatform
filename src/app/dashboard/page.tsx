@@ -1,6 +1,7 @@
 "use client";
 
 import React, { Suspense } from "react";
+import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import styles from "./Dashboard.module.css";
@@ -10,6 +11,7 @@ import { useAuth } from "@/features/auth/hooks/useAuth";
 import { useProjects } from "@/features/projects/hooks/useProjects";
 import { ProjectList } from "@/features/projects/components/ProjectList";
 import { BillingCard } from "@/features/billing/components/BillingCard";
+import { Icon } from "@/shared/components/Icon";
 import { useCheckoutReturnToast } from "@/features/billing/hooks/useCheckoutReturnToast";
 
 const DashboardContent: React.FC = () => {
@@ -35,23 +37,8 @@ const DashboardContent: React.FC = () => {
           <Button variant="ghost" onClick={logout}>
             Déconnexion
           </Button>
-          <Button onClick={() => router.push("/onboarding")}>
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              style={{ marginRight: "4px" }}
-            >
-              <path
-                d="M12 5V19M5 12H19"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
+          <Button onClick={() => router.push("/onboarding")} className={styles.newProjectBtn}>
+            <Icon icon={Plus} size="sm" />
             New Project
           </Button>
         </div>

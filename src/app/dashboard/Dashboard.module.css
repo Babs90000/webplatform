@@ -46,3 +46,9 @@
   color: var(--color-text-primary);
   border-color: var(--color-accent-primary);
 }
+
+.newProjectBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+}

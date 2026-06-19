@@ -1,7 +1,9 @@
 "use client";
 
 import React, { useRef, useState } from "react";
+import { ImagePlus } from "lucide-react";
 import { LoadingDots } from "@/shared/components/LoadingDots";
+import { Icon } from "@/shared/components/Icon";
 import styles from "./BuilderChat.module.css";
 import { AI_ASSISTANT_NAME } from "@/lib/branding";
 import { toast } from "@/store/toast";
@@ -142,7 +144,8 @@ export const BuilderChat: React.FC<BuilderChatProps> = ({
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isBusy || isUploading}
               >
-                {isUploading ? "Import…" : "🖼 Importer une image"}
+                <Icon icon={ImagePlus} size="sm" />
+                {isUploading ? "Import…" : "Importer une image"}
               </button>
             </>
           )}
