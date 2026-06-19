@@ -2,6 +2,10 @@ import {
   appendResponsiveBaseline,
   ensureViewportMeta,
 } from "./responsiveBaseline";
+import {
+  appendNavMobileFixCss,
+  appendNavMobileFixJs,
+} from "./navMobileBaseline";
 
 export interface PreviewFile {
   path: string;
@@ -91,10 +95,14 @@ export const bundlePreviewHtml = (
     html = patchHtmlForPreview(html, projectId);
   }
 
-  const cssContent = appendResponsiveBaseline(
-    map.get("css/style.css") ?? map.get("styles.css") ?? "",
+  const cssContent = appendNavMobileFixCss(
+    appendResponsiveBaseline(
+      map.get("css/style.css") ?? map.get("styles.css") ?? "",
+    ),
   );
-  const jsContent = map.get("js/app.js") ?? map.get("script.js") ?? "";
+  const jsContent = appendNavMobileFixJs(
+    map.get("js/app.js") ?? map.get("script.js") ?? "",
+  );
 
   if (cssContent) {
     html = html.replace(
