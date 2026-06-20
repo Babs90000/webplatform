@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import type { ArchitectPlan, ProjectFile } from "../services/codegenApi";
+import type { ReviewExpertScores } from "../lib/creativeCommittee";
 
 export type StudioPhase =
   | "idle"
@@ -26,6 +27,8 @@ interface StudioState {
   chatMessages: Array<{ role: "user" | "assistant"; content: string }>;
   visualEditMode: boolean;
   codeVisible: boolean;
+  committeeReviewActive: boolean;
+  expertScores: ReviewExpertScores | null;
 
   setStudioProjectId: (projectId: string) => void;
   setFiles: (files: ProjectFile[]) => void;
@@ -42,6 +45,8 @@ interface StudioState {
   resetStreaming: () => void;
   setVisualEditMode: (on: boolean) => void;
   setCodeVisible: (visible: boolean) => void;
+  setCommitteeReviewActive: (active: boolean) => void;
+  setExpertScores: (scores: ReviewExpertScores | null) => void;
 }
 
 export const useStudioStore = create<StudioState>()(
@@ -62,6 +67,8 @@ export const useStudioStore = create<StudioState>()(
       chatMessages: [],
       visualEditMode: false,
       codeVisible: false,
+      committeeReviewActive: false,
+      expertScores: null,
 
       setStudioProjectId: (projectId) => {
         const prev = get().studioProjectId;
@@ -79,6 +86,8 @@ export const useStudioStore = create<StudioState>()(
             streamingPaths: {},
             chatMessages: [],
             visualEditMode: false,
+            committeeReviewActive: false,
+            expertScores: null,
           });
           return;
         }
@@ -131,6 +140,8 @@ export const useStudioStore = create<StudioState>()(
       resetStreaming: () => set({ streamingPaths: {} }),
       setVisualEditMode: (on) => set({ visualEditMode: on }),
       setCodeVisible: (visible) => set({ codeVisible: visible }),
+      setCommitteeReviewActive: (active) => set({ committeeReviewActive: active }),
+      setExpertScores: (scores) => set({ expertScores: scores }),
     }),
     {
       name: "wp-studio-ui",

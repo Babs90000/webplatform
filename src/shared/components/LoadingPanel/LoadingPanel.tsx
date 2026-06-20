@@ -9,6 +9,7 @@ interface LoadingPanelProps {
   percent?: number;
   completedSteps?: string[];
   remainingSteps?: string[];
+  footer?: React.ReactNode;
 }
 
 export const LoadingPanel: React.FC<LoadingPanelProps> = ({
@@ -17,6 +18,7 @@ export const LoadingPanel: React.FC<LoadingPanelProps> = ({
   percent,
   completedSteps,
   remainingSteps,
+  footer,
 }) => {
   if (variant === "inline") {
     return (
@@ -36,6 +38,7 @@ export const LoadingPanel: React.FC<LoadingPanelProps> = ({
           completedSteps={completedSteps}
           remainingSteps={remainingSteps}
           showStepLists={Boolean(completedSteps?.length || remainingSteps?.length)}
+          footer={footer}
         />
       )}
       {variant === "preview" && (

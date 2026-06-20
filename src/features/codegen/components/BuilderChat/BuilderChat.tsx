@@ -7,6 +7,8 @@ import { Icon } from "@/shared/components/Icon";
 import styles from "./BuilderChat.module.css";
 import { AI_ASSISTANT_NAME } from "@/lib/branding";
 import { toast } from "@/store/toast";
+import { CreativeCommitteeStrip } from "../CreativeCommitteeStrip";
+import type { ReviewExpertScores } from "../../lib/creativeCommittee";
 
 interface BuilderChatProps {
   messages: Array<{ role: "user" | "assistant"; content: string }>;
@@ -14,6 +16,8 @@ interface BuilderChatProps {
   statusMessage: string;
   onSend: (instruction: string) => void;
   onUploadImage?: (file: File) => Promise<string>;
+  committeeReviewActive?: boolean;
+  expertScores?: ReviewExpertScores | null;
 }
 
 export const BuilderChat: React.FC<BuilderChatProps> = ({
@@ -22,6 +26,8 @@ export const BuilderChat: React.FC<BuilderChatProps> = ({
   statusMessage,
   onSend,
   onUploadImage,
+  committeeReviewActive = false,
+  expertScores = null,
 }) => {
   const [input, setInput] = useState("");
   const [attachedUrl, setAttachedUrl] = useState<string | null>(null);
@@ -67,6 +73,15 @@ export const BuilderChat: React.FC<BuilderChatProps> = ({
           </span>
         )}
       </div>
+      {(committeeReviewActive || expertScores) && (
+        <div className={styles.committeeRow}>
+          <CreativeCommitteeStrip
+            scores={expertScores}
+            active={committeeReviewActive && !expertScores}
+            align="start"
+          />
+        </div>
+      )}
 
       <div className={styles.messages}>
         {messages.length === 0 ? (

@@ -5,6 +5,8 @@ import styles from "./LivePreview.module.css";
 import { LoadingDots } from "@/shared/components/LoadingDots";
 import { LoadingPanel } from "@/shared/components/LoadingPanel";
 import { injectVisualEditor, type VisualMovePosition } from "../../lib/visualEditor";
+import { CreativeCommitteeStrip } from "../CreativeCommitteeStrip";
+import type { ReviewExpertScores } from "../../lib/creativeCommittee";
 
 interface LivePreviewProps {
   html: string;
@@ -13,6 +15,8 @@ interface LivePreviewProps {
   progressPercent?: number;
   progressDone?: string[];
   progressPending?: string[];
+  committeeReviewActive?: boolean;
+  expertScores?: ReviewExpertScores | null;
   editable?: boolean;
   onNavigate?: (path: string) => void;
   onEditText?: (path: string, value: string) => void;
@@ -32,6 +36,8 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
   progressPercent = 0,
   progressDone = [],
   progressPending = [],
+  committeeReviewActive = false,
+  expertScores = null,
   editable = false,
   onNavigate,
   onEditText,
@@ -110,6 +116,14 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
 
   const showPlaceholder = !throttledHtml && !isLoading;
   const displayPercent = isLoading ? Math.max(progressPercent, 8) : 0;
+  const committeeFooter =
+    committeeReviewActive || expertScores ? (
+      <CreativeCommitteeStrip
+        scores={expertScores}
+        active={committeeReviewActive && !expertScores}
+        showLabel={false}
+      />
+    ) : null;
 
   return (
     <div className={styles.container}>
@@ -149,6 +163,7 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
                   percent={displayPercent}
                   completedSteps={progressDone}
                   remainingSteps={progressPending}
+                  footer={committeeFooter}
                 />
               </div>
             )}

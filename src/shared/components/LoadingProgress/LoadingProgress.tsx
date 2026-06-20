@@ -10,6 +10,7 @@ interface LoadingProgressProps {
   completedSteps?: string[];
   remainingSteps?: string[];
   showStepLists?: boolean;
+  footer?: React.ReactNode;
 }
 
 export const LoadingProgress: React.FC<LoadingProgressProps> = ({
@@ -18,6 +19,7 @@ export const LoadingProgress: React.FC<LoadingProgressProps> = ({
   completedSteps = [],
   remainingSteps = [],
   showStepLists = true,
+  footer,
 }) => {
   const clamped = Math.min(100, Math.max(0, Math.round(percent)));
   const doneCount = completedSteps.length;
@@ -89,6 +91,8 @@ export const LoadingProgress: React.FC<LoadingProgressProps> = ({
           </div>
         </>
       )}
+
+      {footer}
     </div>
   );
 };

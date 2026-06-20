@@ -54,6 +54,8 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
     upsertFile,
     setVisualEditMode,
     setCodeVisible,
+    committeeReviewActive,
+    expertScores,
   } = useStudioStore();
 
   const [pendingImage, setPendingImage] = useState<{
@@ -247,6 +249,8 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
           onOpenSettings={() => setSettingsOpen(true)}
           onOpenPublish={() => setPublishOpen(true)}
           onAuditQuality={() => void auditQuality()}
+          committeeReviewActive={committeeReviewActive}
+          expertScores={expertScores}
         />
       }
       fileTree={
@@ -278,6 +282,8 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
           progressPercent={progressPercent}
           progressDone={progressDone}
           progressPending={progressPending}
+          committeeReviewActive={committeeReviewActive}
+          expertScores={expertScores}
           editable={visualEditMode}
           onNavigate={(path) => void handlePreviewNavigate(path)}
           onEditText={handleEditText}
@@ -297,6 +303,8 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
           statusMessage={statusMessage}
           onSend={(instruction) => void edit(instruction)}
           onUploadImage={(file) => uploadProjectAsset(projectId, file)}
+          committeeReviewActive={committeeReviewActive}
+          expertScores={expertScores}
         />
       }
     />

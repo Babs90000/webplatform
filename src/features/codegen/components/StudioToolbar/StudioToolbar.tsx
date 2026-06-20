@@ -11,6 +11,8 @@ import { AI_ASSISTANT_NAME } from "@/lib/branding";
 import { getExportZipUrl } from "../../services/codegenApi";
 import { getAuthToken } from "@/lib/authToken";
 import { useExportCheckout } from "@/features/billing/hooks/useBilling";
+import { CreativeCommitteeStrip } from "../CreativeCommitteeStrip";
+import type { ReviewExpertScores } from "../../lib/creativeCommittee";
 
 interface StudioToolbarProps {
   projectId: string;
@@ -27,6 +29,8 @@ interface StudioToolbarProps {
   onOpenSettings: () => void;
   onOpenPublish: () => void;
   onAuditQuality: () => void;
+  committeeReviewActive?: boolean;
+  expertScores?: ReviewExpertScores | null;
 }
 
 export const StudioToolbar: React.FC<StudioToolbarProps> = ({
@@ -44,6 +48,8 @@ export const StudioToolbar: React.FC<StudioToolbarProps> = ({
   onOpenSettings,
   onOpenPublish,
   onAuditQuality,
+  committeeReviewActive = false,
+  expertScores = null,
 }) => {
   const exportCheckout = useExportCheckout(projectId);
 
@@ -80,6 +86,13 @@ export const StudioToolbar: React.FC<StudioToolbarProps> = ({
               {statusMessage || (isBusy ? "Traitement en cours…" : "Studio prêt")}
             </span>
           </span>
+          {(committeeReviewActive || expertScores) && (
+            <CreativeCommitteeStrip
+              scores={expertScores}
+              active={committeeReviewActive && !expertScores}
+              align="start"
+            />
+          )}
         </div>
       </div>
 

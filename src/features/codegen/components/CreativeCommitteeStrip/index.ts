@@ -1,0 +1,1 @@
+export { CreativeCommitteeStrip } from "./CreativeCommitteeStrip";

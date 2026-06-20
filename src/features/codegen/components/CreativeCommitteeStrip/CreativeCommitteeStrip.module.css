@@ -1,0 +1,80 @@
+@reference "#tailwind-reference";
+
+.strip {
+  @apply flex flex-wrap items-center justify-center gap-1.5;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.chip {
+  @apply inline-flex items-center gap-1 rounded-full text-xs font-semibold tabular-nums;
+  padding: 0.2rem 0.45rem 0.2rem 0.55rem;
+  background: rgba(99, 102, 241, 0.14);
+  border: 1px solid rgba(99, 102, 241, 0.28);
+  color: var(--color-text-primary);
+}
+
+.chipActive {
+  animation: wpCommitteePulse 1.6s ease-in-out infinite;
+}
+
+.short {
+  letter-spacing: 0.02em;
+}
+
+.score {
+  @apply font-bold;
+  color: var(--color-text-accent);
+}
+
+.score::before {
+  content: "·";
+  margin-right: 0.2rem;
+  font-weight: 400;
+  opacity: 0.55;
+}
+
+.infoBtn {
+  @apply inline-flex items-center justify-center shrink-0 rounded-full border-0 cursor-help;
+  width: 14px;
+  height: 14px;
+  padding: 0;
+  background: transparent;
+  color: var(--color-text-tertiary);
+  transition: color 0.15s ease;
+}
+
+.infoBtn:hover,
+.infoBtn:focus-visible {
+  color: var(--color-text-accent);
+  outline: none;
+}
+
+.label {
+  @apply text-xs font-medium;
+  color: var(--color-text-tertiary);
+  margin-right: 0.35rem;
+}
+
+.wrap {
+  @apply flex flex-col items-center gap-2 w-full;
+}
+
+.wrapStart {
+  @apply items-start;
+}
+
+.wrapStart .strip {
+  @apply justify-start;
+}
+
+@keyframes wpCommitteePulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.72;
+  }
+}

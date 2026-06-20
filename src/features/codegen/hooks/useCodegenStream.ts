@@ -10,6 +10,7 @@ import {
   type CodegenSseEvent,
 } from "../services/codegenApi";
 import { bundlePreviewHtml } from "../lib/previewBundler";
+import type { ReviewExpertScores } from "../lib/creativeCommittee";
 import { useStudioStore } from "../store/studioStore";
 import { toast } from "@/store/toast";
 
@@ -19,29 +20,26 @@ const GENERATION_TASKS = [
   "Feuille de styles CSS",
   "Scripts interactifs",
   "Pages HTML",
-  "Revue créative (6 experts)",
+  "Revue créative",
   "Finitions premium",
   "Finalisation",
 ] as const;
 
 const AUDIT_TASKS = [
   "Préparation de l'audit",
-  "Revue créative (6 experts)",
+  "Revue créative",
   "Finitions premium",
   "Finalisation",
 ] as const;
 
-type ReviewExpertScores = {
+const toExpertScores = (raw: {
   directeur_artistique: number;
   designer_ux: number;
   redacteur: number;
   seo: number;
   cro: number;
   accessibilite: number;
-};
-
-const formatExpertScores = (e: ReviewExpertScores): string =>
-  `DA ${e.directeur_artistique} · UX ${e.designer_ux} · Réd ${e.redacteur} · SEO ${e.seo} · CRO ${e.cro} · A11y ${e.accessibilite}`;
+}): ReviewExpertScores => ({ ...raw });
 
 const taskProgress = (
   doneCount: number,
@@ -103,6 +101,8 @@ export const useCodegenStream = (projectId: string) => {
     progressDone,
     progressPending,
     upsertFile,
+    setCommitteeReviewActive,
+    setExpertScores,
   } = useStudioStore();
 
   const refreshPreview = useCallback(async () => {
@@ -159,6 +159,8 @@ export const useCodegenStream = (projectId: string) => {
         case "codegen_start": {
           setPhase("generating");
           setStatusMessage("Génération des fichiers…");
+          setCommitteeReviewActive(false);
+          setExpertScores(null);
           resetStreaming();
           const p = taskProgress(2, GENERATION_TASKS[2]);
           setProgress(p.percent, p.done, p.pending);
@@ -195,10 +197,12 @@ export const useCodegenStream = (projectId: string) => {
         case "audit_start": {
           auditFlowRef.current = true;
           setPhase("generating");
+          setCommitteeReviewActive(true);
+          setExpertScores(null);
           setStatusMessage(
             event.mode === "auto"
-              ? "Édition substantielle — audit qualité automatique…"
-              : "Audit qualité — comité créatif (6 experts)…",
+              ? "Audit qualité automatique…"
+              : "Audit qualité…",
           );
           const p = taskProgress(1, AUDIT_TASKS[1]);
           setProgress(p.percent, p.done, p.pending);
@@ -206,10 +210,11 @@ export const useCodegenStream = (projectId: string) => {
         }
         case "review_start": {
           setPhase("generating");
+          setCommitteeReviewActive(true);
           setStatusMessage(
             event.round > 1
-              ? "Re-contrôle qualité après finitions…"
-              : "Comité créatif : 6 experts (DA, UX, rédaction, SEO, CRO, a11y)…",
+              ? "Re-contrôle qualité…"
+              : "Revue créative…",
           );
           const p = auditFlowRef.current
             ? taskProgress(1, AUDIT_TASKS[1])
@@ -218,10 +223,11 @@ export const useCodegenStream = (projectId: string) => {
           break;
         }
         case "review_done": {
+          setExpertScores(toExpertScores(event.expert_scores));
           setStatusMessage(
             event.pass
-              ? `Qualité validée — ${event.score}/100 (${formatExpertScores(event.expert_scores)})`
-              : `Score ${event.score}/100 — ${event.issues_count} point(s) à peaufiner`,
+              ? `Qualité validée — ${event.score}/100`
+              : `Score ${event.score}/100 — ${event.issues_count} point(s) à corriger`,
           );
           const p = taskProgress(
             event.pass ? 7 : 5,
@@ -259,6 +265,7 @@ export const useCodegenStream = (projectId: string) => {
         case "done": {
           const isAudit = auditFlowRef.current;
           auditFlowRef.current = false;
+          setCommitteeReviewActive(false);
           setPhase("ready");
           const scoreLabel =
             typeof event.review_score === "number"
@@ -290,6 +297,7 @@ export const useCodegenStream = (projectId: string) => {
           break;
         }
         case "error":
+          setCommitteeReviewActive(false);
           setPhase("error");
           setStatusMessage(event.message);
           toast.error(event.message);
@@ -306,6 +314,8 @@ export const useCodegenStream = (projectId: string) => {
       setStatusMessage,
       syncFilesFromServer,
       upsertFile,
+      setCommitteeReviewActive,
+      setExpertScores,
     ],
   );
 
