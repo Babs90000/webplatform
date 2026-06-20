@@ -26,6 +26,7 @@
 
 .actions {
   display: flex;
+  flex-wrap: wrap;
   justify-content: flex-end;
   gap: var(--space-sm);
   margin-top: var(--space-sm);

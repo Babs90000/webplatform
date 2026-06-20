@@ -1,17 +1,18 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { projectsApi } from "../services/projectsApi";
 import type { CreateProjectBody, UpdateProjectBody } from "@/types";
+import type { ProjectListFilter } from "../services/projectsApi";
 import { toast } from "@/store/toast";
 import { ApiError } from "@/lib/api";
 import { useAuthStore } from "@/store/auth";
 
-export const useProjects = () => {
+export const useProjects = (filter: ProjectListFilter = "active") => {
   const token = useAuthStore((s) => s.token);
   const isHydrated = useAuthStore((s) => s.isHydrated);
 
   return useQuery({
-    queryKey: ["projects"],
-    queryFn: projectsApi.getAll,
+    queryKey: ["projects", filter],
+    queryFn: () => projectsApi.getAll(filter),
     enabled: isHydrated && !!token,
   });
 };
@@ -60,14 +61,52 @@ export const useUpdateProject = (id: string) => {
   });
 };
 
+export const useArchiveProject = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => projectsApi.delete(id, false),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
+      toast.success("Projet archivé");
+    },
+    onError: (error) => {
+      const message =
+        error instanceof ApiError
+          ? error.message
+          : "Impossible d'archiver le projet";
+      toast.error(message);
+    },
+  });
+};
+
+export const useRestoreProject = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => projectsApi.restore(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
+      toast.success("Projet restauré");
+    },
+    onError: (error) => {
+      const message =
+        error instanceof ApiError
+          ? error.message
+          : "Impossible de restaurer le projet";
+      toast.error(message);
+    },
+  });
+};
+
 export const useDeleteProject = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: string) => projectsApi.delete(id),
+    mutationFn: (id: string) => projectsApi.delete(id, true),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["projects"] });
-      toast.success("Projet supprimé");
+      toast.success("Projet supprimé définitivement");
     },
     onError: (error) => {
       const message =

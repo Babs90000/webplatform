@@ -12,9 +12,14 @@ interface ProjectResponse {
   project: Project;
 }
 
+export type ProjectListFilter = "active" | "archived";
+
 export const projectsApi = {
-  getAll: async (): Promise<Project[]> => {
-    const data = await api.get<ProjectsListResponse>("/projects", getToken());
+  getAll: async (filter: ProjectListFilter = "active"): Promise<Project[]> => {
+    const data = await api.get<ProjectsListResponse>(
+      `/projects?filter=${filter}`,
+      getToken(),
+    );
     return data.projects;
   },
 
@@ -33,8 +38,18 @@ export const projectsApi = {
     return res.project;
   },
 
-  delete: (id: string): Promise<void> => {
-    return api.delete(`/projects/${id}`, getToken());
+  delete: (id: string, permanent = false): Promise<void> => {
+    const query = permanent ? "?permanent=true" : "";
+    return api.delete(`/projects/${id}${query}`, getToken());
+  },
+
+  restore: async (id: string): Promise<Project> => {
+    const res = await api.post<ProjectResponse>(
+      `/projects/${id}/restore`,
+      {},
+      getToken(),
+    );
+    return res.project;
   },
 
   publish: async (

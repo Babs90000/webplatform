@@ -16,6 +16,7 @@ import { CreativeCommitteeStrip } from "../CreativeCommitteeStrip";
 import { PreviewViewportMenu } from "../PreviewViewportMenu";
 import type { ReviewExpertScores } from "../../lib/creativeCommittee";
 import type { PreviewViewport } from "../../lib/previewViewport";
+import type { CustomPreviewPreset } from "../../lib/customPreviewPresets";
 
 interface StudioToolbarProps {
   projectId: string;
@@ -33,7 +34,11 @@ interface StudioToolbarProps {
   onTogglePreviewFocus: () => void;
   previewViewport: PreviewViewport;
   viewportMenuOpen: boolean;
+  customPresets?: CustomPreviewPreset[];
+  activeCustomPresetId?: string | null;
   onSelectPreviewViewport: (viewport: PreviewViewport) => void;
+  onSelectCustomPreset?: (preset: CustomPreviewPreset) => void;
+  onOpenCustomViewportModal?: () => void;
   onViewportMenuOpenChange: (open: boolean) => void;
   onOpenShortcuts: () => void;
   onOpenSettings: () => void;
@@ -59,7 +64,11 @@ export const StudioToolbar: React.FC<StudioToolbarProps> = ({
   onTogglePreviewFocus,
   previewViewport,
   viewportMenuOpen,
+  customPresets = [],
+  activeCustomPresetId = null,
   onSelectPreviewViewport,
+  onSelectCustomPreset,
+  onOpenCustomViewportModal,
   onViewportMenuOpenChange,
   onOpenShortcuts,
   onOpenSettings,
@@ -183,6 +192,10 @@ export const StudioToolbar: React.FC<StudioToolbarProps> = ({
         <PreviewViewportMenu
           value={previewViewport}
           onChange={onSelectPreviewViewport}
+          customPresets={customPresets}
+          activeCustomPresetId={activeCustomPresetId}
+          onSelectCustomPreset={onSelectCustomPreset}
+          onOpenCustomModal={onOpenCustomViewportModal}
           disabled={!hasFiles}
           open={viewportMenuOpen}
           onOpenChange={onViewportMenuOpenChange}

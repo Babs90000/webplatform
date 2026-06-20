@@ -8,7 +8,7 @@ import React, {
   useState,
 } from "react";
 import { createPortal } from "react-dom";
-import { Check, ChevronDown } from "lucide-react";
+import { Check, ChevronDown, Plus, Ruler } from "lucide-react";
 import styles from "./PreviewViewportMenu.module.css";
 import { Icon } from "@/shared/components/Icon";
 import {
@@ -19,10 +19,15 @@ import {
   VIEWPORT_MENU_GROUPS,
   type PreviewViewport,
 } from "../../lib/previewViewport";
+import type { CustomPreviewPreset } from "../../lib/customPreviewPresets";
 
 interface PreviewViewportMenuProps {
   value: PreviewViewport;
   onChange: (viewport: PreviewViewport) => void;
+  customPresets?: CustomPreviewPreset[];
+  activeCustomPresetId?: string | null;
+  onSelectCustomPreset?: (preset: CustomPreviewPreset) => void;
+  onOpenCustomModal?: () => void;
   disabled?: boolean;
   /** Contrôle externe (ex. badge LivePreview) */
   open?: boolean;
@@ -32,6 +37,10 @@ interface PreviewViewportMenuProps {
 export const PreviewViewportMenu: React.FC<PreviewViewportMenuProps> = ({
   value,
   onChange,
+  customPresets = [],
+  activeCustomPresetId = null,
+  onSelectCustomPreset,
+  onOpenCustomModal,
   disabled = false,
   open: controlledOpen,
   onOpenChange,
@@ -52,8 +61,13 @@ export const PreviewViewportMenu: React.FC<PreviewViewportMenuProps> = ({
     [controlledOpen, onOpenChange],
   );
 
-  const ViewportIcon = getPreviewViewportIcon(value);
+  const ViewportIcon = getPreviewViewportIcon(value === "custom" ? "custom" : value);
   const deviceActive = isDevicePreview(value);
+  const activeCustomPreset =
+    value === "custom" && activeCustomPresetId
+      ? customPresets.find((p) => p.id === activeCustomPresetId) ?? null
+      : null;
+  const displayLabel = getPreviewViewportLabel(value, activeCustomPreset);
 
   const updateMenuPosition = useCallback(() => {
     const el = rootRef.current;
@@ -133,6 +147,53 @@ export const PreviewViewportMenu: React.FC<PreviewViewportMenuProps> = ({
             onKeyDown={handleMenuKeyDown}
           >
             {VIEWPORT_MENU_GROUPS.map((group) => {
+              if (group.id === "custom") {
+                return (
+                  <div key={group.id}>
+                    <div className={styles.groupLabel}>{group.label}</div>
+                    {customPresets.map((preset) => {
+                      const active =
+                        value === "custom" && activeCustomPresetId === preset.id;
+                      return (
+                        <button
+                          key={preset.id}
+                          type="button"
+                          role="menuitem"
+                          className={`${styles.menuItem} ${active ? styles.menuItemActive : ""}`}
+                          onClick={() => onSelectCustomPreset?.(preset)}
+                        >
+                          <Icon icon={Ruler} size="sm" className={styles.itemIcon} />
+                          <span className={styles.itemBody}>
+                            <span className={styles.itemLabel}>{preset.label}</span>
+                            <span className={styles.itemMeta}>
+                              {preset.width} × {preset.height}px
+                            </span>
+                          </span>
+                          {active && (
+                            <Icon icon={Check} size="sm" className={styles.check} />
+                          )}
+                        </button>
+                      );
+                    })}
+                    <button
+                      type="button"
+                      role="menuitem"
+                      className={styles.menuItem}
+                      onClick={() => {
+                        setOpen(false);
+                        onOpenCustomModal?.();
+                      }}
+                    >
+                      <Icon icon={Plus} size="sm" className={styles.itemIcon} />
+                      <span className={styles.itemBody}>
+                        <span className={styles.itemLabel}>Personnaliser…</span>
+                        <span className={styles.itemMeta}>390 × 844, etc.</span>
+                      </span>
+                    </button>
+                  </div>
+                );
+              }
+
               const items = PREVIEW_VIEWPORT_OPTIONS.filter(
                 (o) => o.menuGroup === group.id,
               );
@@ -196,7 +257,7 @@ export const PreviewViewportMenu: React.FC<PreviewViewportMenuProps> = ({
           onClick={() => !disabled && setOpen(!isOpen)}
         >
           <Icon icon={ViewportIcon} size="sm" />
-          {getPreviewViewportLabel(value)}
+          {displayLabel}
         </button>
         <button
           type="button"

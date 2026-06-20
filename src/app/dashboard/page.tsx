@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Suspense } from "react";
+import React, { Suspense, useState } from "react";
 import { Plus, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
 import styles from "./Dashboard.module.css";
@@ -12,11 +12,13 @@ import { ProjectList } from "@/features/projects/components/ProjectList";
 import { BillingCard } from "@/features/billing/components/BillingCard";
 import { Icon } from "@/shared/components/Icon";
 import { useCheckoutReturnToast } from "@/features/billing/hooks/useCheckoutReturnToast";
+import type { ProjectListFilter } from "@/features/projects/services/projectsApi";
 
 const DashboardContent: React.FC = () => {
   const router = useRouter();
   const { user, logout } = useAuth();
-  const { data: projects, isLoading, error, refetch } = useProjects();
+  const [filter, setFilter] = useState<ProjectListFilter>("active");
+  const { data: projects, isLoading, error, refetch } = useProjects(filter);
 
   useCheckoutReturnToast();
 
@@ -55,6 +57,8 @@ const DashboardContent: React.FC = () => {
           projects={projects}
           isLoading={isLoading}
           error={error}
+          filter={filter}
+          onFilterChange={setFilter}
           onRetry={refetch}
           onCreateProject={() => router.push("/onboarding")}
         />

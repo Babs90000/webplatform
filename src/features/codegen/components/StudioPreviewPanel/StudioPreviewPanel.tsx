@@ -1,9 +1,10 @@
 "use client";
 
-import React, { memo } from "react";
+import React, { memo, useMemo } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { LivePreview } from "../LivePreview";
 import { useStudioStore } from "../../store/studioStore";
+import { useCustomPreviewPresets } from "../../hooks/useCustomPreviewPresets";
 import type { VisualMovePosition } from "../../lib/visualEditor";
 
 interface StudioPreviewPanelProps {
@@ -29,6 +30,8 @@ const StudioPreviewPanelComponent: React.FC<StudioPreviewPanelProps> = ({
   onOpenShortcuts,
   onOpenViewportMenu,
 }) => {
+  const { presets: customPresets } = useCustomPreviewPresets();
+
   const {
     previewHtml,
     phase,
@@ -41,6 +44,7 @@ const StudioPreviewPanelComponent: React.FC<StudioPreviewPanelProps> = ({
     visualEditMode,
     previewViewport,
     previewZoom,
+    activeCustomPresetId,
     setPreviewZoom,
   } = useStudioStore(
     useShallow((state) => ({
@@ -55,8 +59,17 @@ const StudioPreviewPanelComponent: React.FC<StudioPreviewPanelProps> = ({
       visualEditMode: state.visualEditMode,
       previewViewport: state.previewViewport,
       previewZoom: state.previewZoom,
+      activeCustomPresetId: state.activeCustomPresetId,
       setPreviewZoom: state.setPreviewZoom,
     })),
+  );
+
+  const customPreset = useMemo(
+    () =>
+      activeCustomPresetId
+        ? customPresets.find((p) => p.id === activeCustomPresetId) ?? null
+        : null,
+    [activeCustomPresetId, customPresets],
   );
 
   const isLoading =
@@ -74,6 +87,7 @@ const StudioPreviewPanelComponent: React.FC<StudioPreviewPanelProps> = ({
       expertScores={expertScores}
       editable={visualEditMode}
       previewViewport={previewViewport}
+      customPreset={customPreset}
       previewZoom={previewZoom}
       onPreviewZoomChange={setPreviewZoom}
       onOpenShortcuts={onOpenShortcuts}

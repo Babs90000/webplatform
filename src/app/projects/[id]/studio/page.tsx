@@ -15,6 +15,8 @@ import { ImageReplaceModal } from "@/features/codegen/components/ImageReplaceMod
 import { SiteSettingsModal } from "@/features/codegen/components/SiteSettingsModal";
 import { PublishModal } from "@/features/projects/components/PublishModal";
 import { StudioShortcutsModal } from "@/features/codegen/components/StudioShortcutsModal";
+import { CustomViewportModal } from "@/features/codegen/components/CustomViewportModal";
+import { useCustomPreviewPresets } from "@/features/codegen/hooks/useCustomPreviewPresets";
 import { useProjectFiles } from "@/features/codegen/hooks/useProjectFiles";
 import { useCodegenStream } from "@/features/codegen/hooks/useCodegenStream";
 import { usePreviewBundle } from "@/features/codegen/hooks/usePreviewBundle";
@@ -22,6 +24,7 @@ import { useStudioShortcuts } from "@/features/codegen/hooks/useStudioShortcuts"
 import { useStudioStore } from "@/features/codegen/store/studioStore";
 import { cyclePreviewViewport } from "@/features/codegen/lib/previewViewport";
 import type { PreviewViewport } from "@/features/codegen/lib/previewViewport";
+import type { CustomPreviewPreset } from "@/features/codegen/lib/customPreviewPresets";
 import {
   saveProjectFile,
   uploadProjectAsset,
@@ -59,6 +62,7 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
     previewFocus,
     previewViewport,
     viewportMenuOpen,
+    activeCustomPresetId,
     committeeReviewActive,
     expertScores,
     setStudioProjectId,
@@ -71,6 +75,7 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
     setCodeVisible,
     setPreviewFocus,
     setPreviewViewport,
+    setActiveCustomPresetId,
     setViewportMenuOpen,
   } = useStudioStore(
     useShallow((state) => ({
@@ -85,6 +90,7 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
       previewFocus: state.previewFocus,
       previewViewport: state.previewViewport,
       viewportMenuOpen: state.viewportMenuOpen,
+      activeCustomPresetId: state.activeCustomPresetId,
       committeeReviewActive: state.committeeReviewActive,
       expertScores: state.expertScores,
       setStudioProjectId: state.setStudioProjectId,
@@ -97,6 +103,7 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
       setCodeVisible: state.setCodeVisible,
       setPreviewFocus: state.setPreviewFocus,
       setPreviewViewport: state.setPreviewViewport,
+      setActiveCustomPresetId: state.setActiveCustomPresetId,
       setViewportMenuOpen: state.setViewportMenuOpen,
     })),
   );
@@ -109,6 +116,9 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [publishOpen, setPublishOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const [customViewportOpen, setCustomViewportOpen] = useState(false);
+  const { presets: customPresets, savePreset, deletePreset } =
+    useCustomPreviewPresets();
 
   useEffect(() => {
     setStudioProjectId(projectId);
@@ -299,6 +309,22 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
     [setPreviewViewport, setPreviewFocus],
   );
 
+  const handleSelectCustomPreset = useCallback(
+    (preset: CustomPreviewPreset) => {
+      setActiveCustomPresetId(preset.id);
+      setPreviewViewport("custom");
+      setPreviewFocus(true);
+    },
+    [setActiveCustomPresetId, setPreviewViewport, setPreviewFocus],
+  );
+
+  const handleApplyCustomPreset = useCallback(
+    (preset: CustomPreviewPreset) => {
+      handleSelectCustomPreset(preset);
+    },
+    [handleSelectCustomPreset],
+  );
+
   const handleCyclePreviewViewport = useCallback(() => {
     const next = cyclePreviewViewport(previewViewport);
     handleSelectPreviewViewport(next);
@@ -356,7 +382,11 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
           onTogglePreviewFocus={handleTogglePreviewFocus}
           previewViewport={previewViewport}
           viewportMenuOpen={viewportMenuOpen}
+          customPresets={customPresets}
+          activeCustomPresetId={activeCustomPresetId}
           onSelectPreviewViewport={handleSelectPreviewViewport}
+          onSelectCustomPreset={handleSelectCustomPreset}
+          onOpenCustomViewportModal={() => setCustomViewportOpen(true)}
           onViewportMenuOpenChange={setViewportMenuOpen}
           onOpenShortcuts={() => setShortcutsOpen(true)}
           onOpenSettings={() => setSettingsOpen(true)}
@@ -439,6 +469,14 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
     <StudioShortcutsModal
       isOpen={shortcutsOpen}
       onClose={() => setShortcutsOpen(false)}
+    />
+    <CustomViewportModal
+      isOpen={customViewportOpen}
+      presets={customPresets}
+      onClose={() => setCustomViewportOpen(false)}
+      onApply={handleApplyCustomPreset}
+      onSave={savePreset}
+      onDelete={deletePreset}
     />
     </>
   );

@@ -1,14 +1,22 @@
 import type { LucideIcon } from "lucide-react";
-import { Monitor, Smartphone, Tablet } from "lucide-react";
+import { Monitor, Ruler, Smartphone, Tablet } from "lucide-react";
+import type { CustomPreviewPreset } from "./customPreviewPresets";
 
 export type PreviewViewport =
   | "full"
   | "mobile"
   | "tablet"
   | "desktop1280"
-  | "desktop1440";
+  | "desktop1440"
+  | "custom";
 
-export type PreviewViewportShortcutKey = "1" | "2" | "3" | "4" | "5";
+export type PreviewViewportShortcutKey =
+  | "1"
+  | "2"
+  | "3"
+  | "4"
+  | "5"
+  | "custom";
 
 export type PreviewZoomMode = "fit" | number;
 
@@ -90,6 +98,15 @@ export const PREVIEW_VIEWPORT_CONFIG: Record<
     shortcutKey: "5",
     menuGroup: "desktop",
   },
+  custom: {
+    width: 390,
+    height: 844,
+    label: "Personnalisé",
+    shortLabel: "Custom",
+    category: "device",
+    shortcutKey: "custom",
+    menuGroup: "device",
+  },
 };
 
 const VIEWPORT_ICONS: Record<PreviewViewport, LucideIcon> = {
@@ -98,8 +115,10 @@ const VIEWPORT_ICONS: Record<PreviewViewport, LucideIcon> = {
   tablet: Tablet,
   desktop1280: Monitor,
   desktop1440: Monitor,
+  custom: Ruler,
 };
 
+/** Presets intégrés affichés dans le menu (hors custom dynamique). */
 export const PREVIEW_VIEWPORT_OPTIONS: PreviewViewportOption[] =
   PREVIEW_VIEWPORT_ORDER.map((id) => {
     const cfg = PREVIEW_VIEWPORT_CONFIG[id];
@@ -120,12 +139,13 @@ export const PREVIEW_VIEWPORT_PRESETS = PREVIEW_VIEWPORT_OPTIONS.filter(
 );
 
 export const VIEWPORT_MENU_GROUPS: Array<{
-  id: PreviewViewportConfig["menuGroup"];
+  id: PreviewViewportConfig["menuGroup"] | "custom";
   label: string;
 }> = [
   { id: "full", label: "Plein écran" },
   { id: "device", label: "Mobile & tablette" },
   { id: "desktop", label: "Desktop QA" },
+  { id: "custom", label: "Mes presets" },
 ];
 
 const SHORTCUT_TO_VIEWPORT = new Map<string, PreviewViewport>(
@@ -138,15 +158,40 @@ export const getViewportByShortcut = (key: string): PreviewViewport | null =>
 export const cyclePreviewViewport = (
   current: PreviewViewport,
 ): PreviewViewport => {
-  const idx = PREVIEW_VIEWPORT_ORDER.indexOf(current);
-  return PREVIEW_VIEWPORT_ORDER[(idx + 1) % PREVIEW_VIEWPORT_ORDER.length];
+  const order = PREVIEW_VIEWPORT_ORDER;
+  const normalized = current === "custom" ? "full" : current;
+  const idx = order.indexOf(normalized);
+  return order[(idx + 1) % order.length];
+};
+
+export const resolveViewportConfig = (
+  viewport: PreviewViewport,
+  customPreset: CustomPreviewPreset | null,
+): PreviewViewportConfig => {
+  if (viewport === "custom" && customPreset) {
+    const category = customPreset.width >= 1024 ? "desktop" : "device";
+    return {
+      width: customPreset.width,
+      height: customPreset.height,
+      label: customPreset.label,
+      shortLabel: `${customPreset.width}px`,
+      category,
+      shortcutKey: "custom",
+      menuGroup: category,
+    };
+  }
+  return PREVIEW_VIEWPORT_CONFIG[viewport];
 };
 
 export const isDevicePreview = (viewport: PreviewViewport): boolean =>
   viewport !== "full";
 
-export const getPreviewViewportLabel = (viewport: PreviewViewport): string => {
+export const getPreviewViewportLabel = (
+  viewport: PreviewViewport,
+  customPreset?: CustomPreviewPreset | null,
+): string => {
   if (viewport === "full") return "Responsive";
+  if (viewport === "custom" && customPreset) return customPreset.label;
   return PREVIEW_VIEWPORT_CONFIG[viewport]?.label ?? "Responsive";
 };
 

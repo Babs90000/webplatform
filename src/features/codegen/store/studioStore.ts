@@ -36,6 +36,7 @@ interface StudioState {
   previewViewport: PreviewViewport;
   previewZoom: PreviewZoomMode;
   viewportMenuOpen: boolean;
+  activeCustomPresetId: string | null;
   committeeReviewActive: boolean;
   expertScores: ReviewExpertScores | null;
 
@@ -56,6 +57,7 @@ interface StudioState {
   setCodeVisible: (visible: boolean) => void;
   setPreviewFocus: (on: boolean) => void;
   setPreviewViewport: (viewport: PreviewViewport) => void;
+  setActiveCustomPresetId: (id: string | null) => void;
   setPreviewZoom: (zoom: PreviewZoomMode) => void;
   setViewportMenuOpen: (open: boolean) => void;
   setCommitteeReviewActive: (active: boolean) => void;
@@ -85,6 +87,7 @@ export const useStudioStore = create<StudioState>()(
       previewViewport: "full",
       previewZoom: "fit",
       viewportMenuOpen: false,
+      activeCustomPresetId: null,
       committeeReviewActive: false,
       expertScores: null,
 
@@ -108,6 +111,7 @@ export const useStudioStore = create<StudioState>()(
             previewViewport: "full",
             previewZoom: "fit",
             viewportMenuOpen: false,
+            activeCustomPresetId: null,
             committeeReviewActive: false,
             expertScores: null,
           });
@@ -211,7 +215,12 @@ export const useStudioStore = create<StudioState>()(
           ...(on ? { codeVisible: false } : {}),
         }),
       setPreviewViewport: (viewport) =>
-        set({ previewViewport: viewport, previewZoom: "fit" }),
+        set({
+          previewViewport: viewport,
+          previewZoom: "fit",
+          ...(viewport !== "custom" ? { activeCustomPresetId: null } : {}),
+        }),
+      setActiveCustomPresetId: (id) => set({ activeCustomPresetId: id }),
       setPreviewZoom: (zoom) => set({ previewZoom: zoom }),
       setViewportMenuOpen: (open) => set({ viewportMenuOpen: open }),
       setCommitteeReviewActive: (active) => set({ committeeReviewActive: active }),
@@ -226,6 +235,7 @@ export const useStudioStore = create<StudioState>()(
         selectedPath: state.selectedPath,
         previewPage: state.previewPage,
         previewViewport: state.previewViewport,
+        activeCustomPresetId: state.activeCustomPresetId,
       }),
     },
   ),

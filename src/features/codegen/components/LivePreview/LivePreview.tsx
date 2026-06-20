@@ -17,11 +17,12 @@ import type { ReviewExpertScores } from "../../lib/creativeCommittee";
 import {
   computeDeviceScale,
   isDevicePreview,
-  PREVIEW_VIEWPORT_CONFIG,
+  resolveViewportConfig,
   STUDIO_SHORTCUTS_SEEN_KEY,
   type PreviewViewport,
   type PreviewZoomMode,
 } from "../../lib/previewViewport";
+import type { CustomPreviewPreset } from "../../lib/customPreviewPresets";
 import { markStudioShortcutsSeen } from "../StudioShortcutsModal";
 
 interface LivePreviewProps {
@@ -35,6 +36,7 @@ interface LivePreviewProps {
   expertScores?: ReviewExpertScores | null;
   editable?: boolean;
   previewViewport?: PreviewViewport;
+  customPreset?: CustomPreviewPreset | null;
   previewZoom?: PreviewZoomMode;
   onPreviewZoomChange?: (zoom: PreviewZoomMode) => void;
   onOpenShortcuts?: () => void;
@@ -61,6 +63,7 @@ const LivePreviewComponent: React.FC<LivePreviewProps> = ({
   expertScores = null,
   editable = false,
   previewViewport = "full",
+  customPreset = null,
   previewZoom = "fit",
   onPreviewZoomChange,
   onOpenShortcuts,
@@ -81,7 +84,10 @@ const LivePreviewComponent: React.FC<LivePreviewProps> = ({
   const [containerWidth, setContainerWidth] = useState(0);
 
   const devicePreview = isDevicePreview(previewViewport);
-  const viewportConfig = PREVIEW_VIEWPORT_CONFIG[previewViewport];
+  const viewportConfig = useMemo(
+    () => resolveViewportConfig(previewViewport, customPreset),
+    [previewViewport, customPreset],
+  );
 
   useEffect(() => {
     if (typeof sessionStorage === "undefined") return;
@@ -214,7 +220,13 @@ const LivePreviewComponent: React.FC<LivePreviewProps> = ({
       ? styles.deviceFrameTablet
       : previewViewport === "desktop1280" || previewViewport === "desktop1440"
         ? styles.deviceFrameDesktop
-        : "";
+        : previewViewport === "custom" &&
+            customPreset &&
+            customPreset.width >= 1024
+          ? styles.deviceFrameDesktop
+          : previewViewport === "custom"
+            ? styles.deviceFrameTablet
+            : "";
 
   const showPlaceholder = !displayHtml && !isLoading;
   const displayPercent = isLoading ? Math.max(progressPercent, 8) : 0;
@@ -345,9 +357,12 @@ const LivePreviewComponent: React.FC<LivePreviewProps> = ({
                     }}
                   >
                     <div className={styles.deviceChrome}>
-                      {previewViewport === "mobile" && (
+                      {previewViewport === "mobile" ||
+                      (previewViewport === "custom" &&
+                        customPreset &&
+                        customPreset.width < 500) ? (
                         <span className={styles.deviceNotch} />
-                      )}
+                      ) : null}
                       <span className={styles.deviceLabel}>
                         {viewportConfig.width} × {viewportConfig.height}
                       </span>

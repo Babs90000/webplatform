@@ -1,0 +1,81 @@
+@reference "#tailwind-reference";
+
+.overlay {
+  @apply fixed inset-0 z-[var(--z-modal)] flex items-center justify-center bg-black/50 p-4;
+}
+
+.modal {
+  @apply w-full max-w-md rounded-lg border border-[var(--color-border-primary)] bg-[var(--color-bg-primary)] shadow-xl;
+}
+
+.header {
+  @apply flex items-center justify-between border-b border-[var(--color-border-primary)] px-5 py-4;
+}
+
+.title {
+  @apply text-base font-semibold text-[var(--color-text-primary)];
+}
+
+.closeBtn {
+  @apply flex h-8 w-8 items-center justify-center rounded-md border-0 bg-transparent text-xl text-[var(--color-text-secondary)] cursor-pointer hover:bg-[var(--color-bg-elevated)];
+}
+
+.body {
+  @apply flex flex-col gap-4 px-5 py-4;
+}
+
+.row {
+  @apply grid grid-cols-2 gap-3;
+}
+
+.chips {
+  @apply flex flex-wrap gap-2;
+}
+
+.chip {
+  @apply rounded-full border border-[var(--color-border-primary)] bg-[var(--color-bg-secondary)] px-2.5 py-1 text-xs font-medium text-[var(--color-text-secondary)] cursor-pointer hover:border-[var(--color-accent-primary)] hover:text-[var(--color-text-primary)];
+}
+
+.chipActive {
+  @apply border-[var(--color-accent-primary)] bg-[rgba(99,102,241,0.12)] text-[var(--color-text-primary)];
+}
+
+.sectionLabel {
+  @apply text-xs font-bold uppercase tracking-wide text-[var(--color-text-tertiary)];
+}
+
+.savedList {
+  @apply flex max-h-36 flex-col gap-1 overflow-y-auto rounded-md border border-[var(--color-border-primary)] p-2;
+}
+
+.savedItem {
+  @apply flex items-center gap-2 rounded-md px-2 py-1.5 text-left hover:bg-[var(--color-bg-elevated)];
+}
+
+.savedItemBtn {
+  @apply flex flex-1 flex-col gap-0.5 border-0 bg-transparent p-0 text-left cursor-pointer;
+}
+
+.savedLabel {
+  @apply text-sm font-semibold text-[var(--color-text-primary)];
+}
+
+.savedMeta {
+  @apply text-xs text-[var(--color-text-tertiary)];
+}
+
+.deleteSaved {
+  @apply flex h-7 w-7 shrink-0 items-center justify-center rounded-md border-0 bg-transparent text-[var(--color-text-tertiary)] cursor-pointer hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--color-danger)];
+}
+
+.error {
+  @apply text-sm text-[var(--color-danger)];
+}
+
+.hint {
+  @apply text-xs text-[var(--color-text-tertiary)];
+}
+
+.footer {
+  @apply flex justify-end gap-2 border-t border-[var(--color-border-primary)] px-5 py-4;
+}

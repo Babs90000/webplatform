@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { ArrowRight, Link2, Trash2 } from "lucide-react";
+import { ArrowRight, Archive, Link2 } from "lucide-react";
 import styles from "./ProjectCard.module.css";
 import { Icon } from "@/shared/components/Icon";
 import type { Project } from "@/types";
@@ -10,10 +10,10 @@ import { getProjectEditorPath } from "@/lib/projectRoutes";
 
 interface ProjectCardProps {
   project: Project;
-  onDelete: (project: Project) => void;
+  onManage: (project: Project) => void;
 }
 
-export const ProjectCard: React.FC<ProjectCardProps> = ({ project, onDelete }) => {
+export const ProjectCard: React.FC<ProjectCardProps> = ({ project, onManage }) => {
   const formattedDate = new Date(project.updated_at).toLocaleDateString("fr-FR", {
     day: "numeric",
     month: "short",
@@ -39,21 +39,27 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project, onDelete }) =
 
   const domain = project.custom_domain || `${project.subdomain}.kdevs.io`;
 
-  const handleDeleteClick = (event: React.MouseEvent<HTMLButtonElement>): void => {
+  const handleManageClick = (event: React.MouseEvent<HTMLButtonElement>): void => {
     event.preventDefault();
     event.stopPropagation();
-    onDelete(project);
+    onManage(project);
   };
+
+  const manageLabel =
+    project.status === "archived"
+      ? `Gérer ${project.name}`
+      : `Archiver ${project.name}`;
 
   return (
     <div className={styles.card}>
       <button
         type="button"
         className={styles.deleteBtn}
-        aria-label={`Supprimer ${project.name}`}
-        onClick={handleDeleteClick}
+        aria-label={manageLabel}
+        title={project.status === "archived" ? "Restaurer ou supprimer" : "Archiver"}
+        onClick={handleManageClick}
       >
-        <Icon icon={Trash2} size="sm" />
+        <Icon icon={Archive} size="sm" />
       </button>
 
       <Link href={getProjectEditorPath(project.id)} className={styles.cardLink}>
