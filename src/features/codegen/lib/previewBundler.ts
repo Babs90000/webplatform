@@ -3,6 +3,10 @@ import {
   ensureViewportMeta,
 } from "./responsiveBaseline";
 import {
+  stripUnusedCdnScripts,
+  stripUnusedJs,
+} from "./generatedSiteLight";
+import {
   appendNavMobileFixCss,
   appendNavMobileFixJs,
 } from "./navMobileBaseline";
@@ -104,9 +108,13 @@ export const bundlePreviewHtml = (
     .filter(([p]) => p.endsWith(".html"))
     .map(([, content]) => content);
 
-  const jsContent = appendNavMobileFixJs(
-    map.get("js/app.js") ?? map.get("script.js") ?? "",
-    htmlHints,
+  const htmlCorpus = htmlHints.join("\n");
+  const jsContent = stripUnusedJs(
+    appendNavMobileFixJs(
+      map.get("js/app.js") ?? map.get("script.js") ?? "",
+      htmlHints,
+    ),
+    htmlCorpus,
   );
 
   if (cssContent) {
@@ -143,7 +151,7 @@ export const bundlePreviewHtml = (
     html = ensureViewportMeta(html);
   }
 
-  return html;
+  return stripUnusedCdnScripts(html, htmlHints);
 };
 
 export const listHtmlPages = (files: PreviewFile[]): string[] =>

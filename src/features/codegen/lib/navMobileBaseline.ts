@@ -1,8 +1,10 @@
-/** Miroir frontend de node-apps/webplatform/src/lib/codegen/nav-mobile-baseline.ts */
+/** Correctifs UI générés — nav mobile/tablette, boutons, toggle canonique. */
 
 export const NAV_MOBILE_FIX_MARKER = "wp-nav-mobile-fix";
 export const UI_BASELINE_MARKER = "wp-generated-ui-baseline";
+export const UI_TABLET_CLOSED_MARKER = "wp-nav-tablet-closed";
 export const NAV_CANONICAL_MARKER = "wp-nav-canonical";
+export const NAV_INIT_CLOSED_MARKER = "wp-nav-init-closed";
 
 export const NAV_MOBILE_FIX_CSS = `
 /* ${NAV_MOBILE_FIX_MARKER} — panneau nav au-dessus de l'overlay (<1024px) */
@@ -53,6 +55,54 @@ export const NAV_MOBILE_FIX_CSS = `
   [class*="nav-backdrop"],
   [class*="menu-backdrop"] {
     z-index: 1000 !important;
+  }
+}
+`.trim();
+
+export const UI_TABLET_CLOSED_CSS = `
+/* ${UI_TABLET_CLOSED_MARKER} — menu fermé par défaut sur tablette/mobile */
+@media (max-width: 1023px) {
+  body:not(.nav-open):not(.menu-open):not(.mobile-nav-open):not(.is-menu-open) .nav-menu:not(.wp-nav-revealed):not(.open):not(.is-open):not(.active),
+  body:not(.nav-open):not(.menu-open):not(.mobile-nav-open):not(.is-menu-open) .nav-links:not(.wp-nav-revealed):not(.open):not(.is-open):not(.active),
+  body:not(.nav-open):not(.menu-open):not(.mobile-nav-open):not(.is-menu-open) .navbar-menu:not(.wp-nav-revealed):not(.open):not(.is-open):not(.active),
+  body:not(.nav-open):not(.menu-open):not(.mobile-nav-open):not(.is-menu-open) .mobile-menu:not(.wp-nav-revealed):not(.open):not(.is-open):not(.active),
+  body:not(.nav-open):not(.menu-open):not(.mobile-nav-open):not(.is-menu-open) .mobile-nav:not(.wp-nav-revealed):not(.open):not(.is-open):not(.active),
+  body:not(.nav-open):not(.menu-open):not(.mobile-nav-open):not(.is-menu-open) header .main-nav:not(.wp-nav-revealed):not(.open):not(.is-open):not(.active),
+  body:not(.nav-open):not(.menu-open):not(.mobile-nav-open):not(.is-menu-open) .header-nav:not(.wp-nav-revealed):not(.open):not(.is-open):not(.active),
+  body:not(.nav-open):not(.menu-open):not(.mobile-nav-open):not(.is-menu-open) header nav:not(.wp-nav-revealed):not(.open):not(.is-open):not(.active) {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    transform: translateX(100%) !important;
+    translate: none !important;
+  }
+
+  body:not(.nav-open):not(.menu-open):not(.mobile-nav-open):not(.is-menu-open) .nav-overlay,
+  body:not(.nav-open):not(.menu-open):not(.mobile-nav-open):not(.is-menu-open) .mobile-nav-overlay,
+  body:not(.nav-open):not(.menu-open):not(.mobile-nav-open):not(.is-menu-open) .menu-overlay,
+  body:not(.nav-open):not(.menu-open):not(.mobile-nav-open):not(.is-menu-open) .nav-backdrop,
+  body:not(.nav-open):not(.menu-open):not(.mobile-nav-open):not(.is-menu-open) .menu-backdrop {
+    display: none !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+
+  body.nav-open .nav-overlay,
+  body.nav-open .mobile-nav-overlay,
+  body.nav-open .menu-overlay,
+  body.nav-open .nav-backdrop,
+  body.nav-open .menu-backdrop,
+  body.menu-open .nav-overlay,
+  body.menu-open .mobile-nav-overlay,
+  body.menu-open .menu-overlay,
+  body.menu-open .nav-backdrop,
+  body.menu-open .menu-backdrop,
+  body.mobile-nav-open .nav-overlay,
+  body.is-menu-open .nav-overlay,
+  body.is-menu-open .menu-overlay {
+    display: block !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
   }
 }
 `.trim();
@@ -223,6 +273,42 @@ export const NAV_CANONICAL_JS = `
 })();
 `.trim();
 
+export const NAV_INIT_CLOSED_JS = `
+/* ${NAV_INIT_CLOSED_MARKER} */
+(function () {
+  var BODY = ["nav-open", "menu-open", "mobile-nav-open", "is-menu-open"];
+  var PANEL =
+    ".nav-menu, .nav-links, .navbar-menu, .mobile-nav, .mobile-menu, header nav, .main-nav, .header-nav";
+  var TOGGLE =
+    ".nav-toggle, .menu-toggle, .navbar-toggle, .mobile-menu-btn, .hamburger, .nav-toggle-btn, header button[aria-controls]";
+
+  var isTablet = function () {
+    return window.matchMedia("(max-width: 1023px)").matches;
+  };
+
+  var forceClosed = function () {
+    if (!isTablet()) return;
+    BODY.forEach(function (c) {
+      document.body.classList.remove(c);
+    });
+    document.querySelectorAll(PANEL).forEach(function (el) {
+      el.classList.remove("wp-nav-revealed");
+    });
+    document.querySelectorAll(TOGGLE).forEach(function (btn) {
+      btn.setAttribute("aria-expanded", "false");
+    });
+  };
+
+  forceClosed();
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", forceClosed);
+  }
+  window.addEventListener("resize", function () {
+    if (isTablet()) forceClosed();
+  });
+})();
+`.trim();
+
 export const NAV_MOBILE_FIX_JS = `
 /* ${NAV_MOBILE_FIX_MARKER} */
 (function () {
@@ -254,19 +340,30 @@ export const NAV_MOBILE_FIX_JS = `
     return toggles.length > 0;
   };
 
-  var alpinePanelOpen = function () {
-    var found = false;
-    panels().forEach(function (el) {
-      var st = el.getAttribute("style") || "";
-      if (st.indexOf("display: none") !== -1 || st.indexOf("display:none") !== -1) return;
-      if (window.getComputedStyle(el).display === "none") return;
-      found = true;
-    });
-    return found;
+  var panelExplicitlyOpen = function () {
+    var panels = document.querySelectorAll(PANEL);
+    for (var i = 0; i < panels.length; i++) {
+      var el = panels[i];
+      if (
+        el.classList.contains("open") ||
+        el.classList.contains("is-open") ||
+        el.classList.contains("active")
+      ) {
+        return true;
+      }
+    }
+    return false;
   };
 
   var refresh = function () {
-    var shouldReveal = overlayVisible() || toggleOpen() || alpinePanelOpen();
+    if (!window.matchMedia("(max-width: 1023px)").matches) {
+      panels().forEach(function (el) {
+        el.classList.remove("wp-nav-revealed");
+      });
+      return;
+    }
+    var shouldReveal =
+      overlayVisible() || toggleOpen() || panelExplicitlyOpen();
     panels().forEach(function (el) {
       if (shouldReveal) el.classList.add("wp-nav-revealed");
       else el.classList.remove("wp-nav-revealed");
@@ -298,6 +395,7 @@ export const NAV_MOBILE_FIX_JS = `
 const NAV_TOGGLE_PATTERN =
   /nav-open|menu-open|mobile-nav-open|is-menu-open|aria-expanded|classList\.(toggle|add|remove).*?(nav|menu)|@click\s*=\s*["'][^"']*\bopen\b|x-data\s*=\s*["'{][^"']*\bopen\b/i;
 
+/** Détecte une logique menu déjà présente (JS ou Alpine dans le HTML). */
 export const hasNavToggleLogic = (
   js: string,
   htmlHints: string[] = [],
@@ -311,6 +409,9 @@ export const appendNavMobileFixCss = (css: string): string => {
   if (!out.includes(UI_BASELINE_MARKER)) {
     out = `${out}\n\n${UI_BASELINE_CSS}\n`;
   }
+  if (!out.includes(UI_TABLET_CLOSED_MARKER)) {
+    out = `${out}\n\n${UI_TABLET_CLOSED_CSS}\n`;
+  }
   return out;
 };
 
@@ -319,6 +420,9 @@ export const appendNavMobileFixJs = (
   htmlHints: string[] = [],
 ): string => {
   let out = js.trim();
+  if (!out.includes(NAV_INIT_CLOSED_MARKER)) {
+    out = out ? `${out}\n\n${NAV_INIT_CLOSED_JS}\n` : `${NAV_INIT_CLOSED_JS}\n`;
+  }
   if (!out.includes(NAV_CANONICAL_MARKER) && !hasNavToggleLogic(out, htmlHints)) {
     out = out ? `${out}\n\n${NAV_CANONICAL_JS}\n` : `${NAV_CANONICAL_JS}\n`;
   }
