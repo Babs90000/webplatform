@@ -3,6 +3,7 @@ import {
   buildPreviewCssContent,
   buildPreviewJsContent,
   normalizePreviewPath,
+  resolveEmulatedPreviewWidth,
   resolvePageHtml,
   resolvePreviewAssets,
   type PreviewFile,
@@ -48,21 +49,32 @@ export const mergeFilesForPreview = (
   return [...map.entries()].map(([path, content]) => ({ path, content }));
 };
 
+export interface PreviewFingerprintInput {
+  previewPage: string;
+  projectId?: string;
+  previewViewport?: string;
+  customWidth?: number | null;
+}
+
 /**
  * Fingerprint limité aux fichiers qui impactent l'aperçu courant :
- * page affichée + CSS + JS (ignore les chunks vers d'autres pages HTML).
+ * page affichée + CSS + JS + viewport simulé.
  */
 export const fingerprintPreviewRelevant = (
   files: Array<{ path: string; content: string }>,
   streamingPaths: Record<string, string>,
   previewPage: string,
   projectId?: string,
+  previewViewport = "full",
+  customWidth?: number | null,
 ): string => {
   const merged = mergeFilesForPreview(files, streamingPaths);
   const map = new Map(merged.map((f) => [normalizePreviewPath(f.path), f.content]));
 
+  const emulated = resolveEmulatedPreviewWidth(previewViewport, customWidth);
+
   let digest = hashString(
-    `${normalizePreviewPath(previewPage)}\0${projectId ?? ""}`,
+    `${normalizePreviewPath(previewPage)}\0${projectId ?? ""}\0${previewViewport}\0${emulated ?? "full"}`,
   );
   digest = hashString(
     `${digest}\0page\0${resolvePageHtml(map, previewPage)}`,
@@ -135,8 +147,16 @@ export const applyPreviewHtml = (
   pagePath: string,
   projectId: string | undefined,
   setPreviewHtml: (html: string) => void,
+  previewViewport = "full",
+  customWidth?: number | null,
 ): void => {
-  const html = getCachedPreviewHtml(files, pagePath, projectId);
+  const html = getCachedPreviewHtml(
+    files,
+    pagePath,
+    projectId,
+    previewViewport,
+    customWidth,
+  );
   if (html) setPreviewHtml(html);
 };
 
@@ -145,10 +165,19 @@ export const getCachedPreviewHtml = (
   files: PreviewFile[],
   pagePath: string,
   projectId?: string,
+  previewViewport = "full",
+  customWidth?: number | null,
 ): string => {
   if (files.length === 0) return "";
 
-  const key = fingerprintPreviewRelevant(files, {}, pagePath, projectId);
+  const key = fingerprintPreviewRelevant(
+    files,
+    {},
+    pagePath,
+    projectId,
+    previewViewport,
+    customWidth,
+  );
   const cached = htmlCache.get(key);
   if (cached !== undefined) return cached;
 
@@ -156,12 +185,14 @@ export const getCachedPreviewHtml = (
   const pageHtml = resolvePageHtml(map, pagePath);
   if (!pageHtml) return "";
 
+  const emulatedWidth = resolveEmulatedPreviewWidth(previewViewport, customWidth);
+
   const html = assemblePreviewHtml(
     pageHtml,
     getCachedPatchedCss(rawCss),
     getCachedPatchedJs(rawJs, htmlHints),
     htmlHints,
-    projectId,
+    { projectId, emulatedWidth },
   );
 
   return rememberHtml(key, html);

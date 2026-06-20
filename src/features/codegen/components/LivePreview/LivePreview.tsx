@@ -141,7 +141,16 @@ const LivePreviewComponent: React.FC<LivePreviewProps> = ({
     if (!previewSrc || previewSrc === appliedSrcRef.current) return;
     appliedSrcRef.current = previewSrc;
     const frame = iframeRef.current;
-    if (frame) frame.srcdoc = previewSrc;
+    if (frame) {
+      frame.srcdoc = previewSrc;
+      frame.onload = () => {
+        try {
+          frame.contentWindow?.dispatchEvent(new Event("resize"));
+        } catch {
+          /* sandbox */
+        }
+      };
+    }
   }, [previewSrc]);
 
   const handleMessage = useCallback(
@@ -215,6 +224,16 @@ const LivePreviewComponent: React.FC<LivePreviewProps> = ({
       } as React.CSSProperties)
     : undefined;
 
+  useEffect(() => {
+    const frame = iframeRef.current;
+    if (!frame?.contentWindow) return;
+    try {
+      frame.contentWindow.dispatchEvent(new Event("resize"));
+    } catch {
+      /* sandbox */
+    }
+  }, [previewViewport, customPreset, deviceScale]);
+
   const deviceFrameClass =
     previewViewport === "tablet"
       ? styles.deviceFrameTablet
@@ -238,6 +257,10 @@ const LivePreviewComponent: React.FC<LivePreviewProps> = ({
         showLabel={false}
       />
     ) : null;
+
+  const showNavMobileHint =
+    previewViewport === "full" &&
+    /nav-toggle|#nav-menu|\.nav-menu|hamburger|mobile-menu/i.test(displayHtml);
 
   const handleZoomFit = (): void => onPreviewZoomChange?.("fit");
   const handleZoom100 = (): void => onPreviewZoomChange?.(100);
@@ -298,6 +321,16 @@ const LivePreviewComponent: React.FC<LivePreviewProps> = ({
             </button>
           </div>
         )}
+        {showNavMobileHint && onOpenViewportMenu && (
+          <button
+            type="button"
+            className={styles.navMobileHint}
+            onClick={onOpenViewportMenu}
+            title="Tester le menu burger en mode mobile ou tablette"
+          >
+            Menu mobile : touche <kbd>2</kbd> ou <kbd>3</kbd>
+          </button>
+        )}
         {editable && (
           <span className={styles.editBadge}>Édition visuelle active</span>
         )}
@@ -351,10 +384,7 @@ const LivePreviewComponent: React.FC<LivePreviewProps> = ({
                 >
                   <div
                     className={`${styles.deviceFrame} ${deviceFrameClass}`}
-                    style={{
-                      ...deviceFrameStyle,
-                      transform: `scale(${deviceScale})`,
-                    }}
+                    style={deviceFrameStyle}
                   >
                     <div className={styles.deviceChrome}>
                       {previewViewport === "mobile" ||

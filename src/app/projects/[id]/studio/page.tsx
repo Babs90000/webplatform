@@ -25,6 +25,7 @@ import { useStudioStore } from "@/features/codegen/store/studioStore";
 import { cyclePreviewViewport } from "@/features/codegen/lib/previewViewport";
 import type { PreviewViewport } from "@/features/codegen/lib/previewViewport";
 import type { CustomPreviewPreset } from "@/features/codegen/lib/customPreviewPresets";
+import { findCustomPreviewPreset } from "@/features/codegen/lib/customPreviewPresets";
 import {
   saveProjectFile,
   uploadProjectAsset,
@@ -176,7 +177,17 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
       const state = useStudioStore.getState();
       state.flushStreamingToFiles();
       const merged = mergeFilesForPreview(state.files, state.streamingPaths);
-      const html = getCachedPreviewHtml(merged, path, projectId);
+      const customWidth =
+        state.previewViewport === "custom"
+          ? findCustomPreviewPreset(state.activeCustomPresetId)?.width ?? null
+          : null;
+      const html = getCachedPreviewHtml(
+        merged,
+        path,
+        projectId,
+        state.previewViewport,
+        customWidth,
+      );
       if (html) {
         setPreviewHtml(html);
       } else {

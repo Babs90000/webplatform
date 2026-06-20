@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef } from "react";
 import { useStudioStore } from "../store/studioStore";
+import { findCustomPreviewPreset } from "../lib/customPreviewPresets";
 import {
   fingerprintPreviewRelevant,
   getCachedPreviewHtml,
@@ -10,8 +11,7 @@ const BUSY_PREVIEW_MS = 2_000;
 const IDLE_PREVIEW_MS = 120;
 
 /**
- * Rebundle l'aperçu uniquement quand la page courante, le CSS ou le JS changent.
- * Pendant la génération, debounce 2 s pour limiter les reloads iframe.
+ * Rebundle l'aperçu quand fichiers, page ou viewport simulé changent.
  */
 export const usePreviewBundle = (
   projectId: string,
@@ -20,7 +20,16 @@ export const usePreviewBundle = (
   const files = useStudioStore((state) => state.files);
   const streamingPaths = useStudioStore((state) => state.streamingPaths);
   const previewPage = useStudioStore((state) => state.previewPage);
+  const previewViewport = useStudioStore((state) => state.previewViewport);
+  const activeCustomPresetId = useStudioStore(
+    (state) => state.activeCustomPresetId,
+  );
   const setPreviewHtml = useStudioStore((state) => state.setPreviewHtml);
+
+  const customWidth = useMemo(() => {
+    if (previewViewport !== "custom") return null;
+    return findCustomPreviewPreset(activeCustomPresetId)?.width ?? null;
+  }, [previewViewport, activeCustomPresetId]);
 
   const relevantKey = useMemo(
     () =>
@@ -29,8 +38,17 @@ export const usePreviewBundle = (
         streamingPaths,
         previewPage,
         projectId,
+        previewViewport,
+        customWidth,
       ),
-    [files, streamingPaths, previewPage, projectId],
+    [
+      files,
+      streamingPaths,
+      previewPage,
+      projectId,
+      previewViewport,
+      customWidth,
+    ],
   );
 
   const lastAppliedKeyRef = useRef("");
@@ -50,10 +68,16 @@ export const usePreviewBundle = (
         state.files,
         state.streamingPaths,
       );
+      const nextCustomWidth =
+        state.previewViewport === "custom"
+          ? findCustomPreviewPreset(state.activeCustomPresetId)?.width ?? null
+          : null;
       const html = getCachedPreviewHtml(
         nextMerged,
         state.previewPage,
         projectId,
+        state.previewViewport,
+        nextCustomWidth,
       );
       if (html) {
         lastAppliedKeyRef.current = relevantKey;
@@ -69,6 +93,8 @@ export const usePreviewBundle = (
     streamingPaths,
     previewPage,
     projectId,
+    previewViewport,
+    customWidth,
     setPreviewHtml,
   ]);
 };

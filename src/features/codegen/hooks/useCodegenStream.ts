@@ -10,6 +10,7 @@ import {
   type CodegenSseEvent,
 } from "../services/codegenApi";
 import { getCachedPreviewHtml, mergeFilesForPreview } from "../lib/previewBundleCache";
+import { findCustomPreviewPreset } from "../lib/customPreviewPresets";
 import type { ReviewExpertScores } from "../lib/creativeCommittee";
 import { useStudioStore } from "../store/studioStore";
 import { toast } from "@/store/toast";
@@ -114,10 +115,17 @@ export const useCodegenStream = (projectId: string) => {
       state.streamingPaths,
     );
 
+    const customWidth =
+      state.previewViewport === "custom"
+        ? findCustomPreviewPreset(state.activeCustomPresetId)?.width ?? null
+        : null;
+
     const localHtml = getCachedPreviewHtml(
       merged,
       state.previewPage,
       projectId,
+      state.previewViewport,
+      customWidth,
     );
 
     if (localHtml) {

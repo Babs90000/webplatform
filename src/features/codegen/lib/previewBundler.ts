@@ -7,9 +7,10 @@ import {
   stripUnusedJs,
 } from "./generatedSiteLight";
 import {
-  appendNavMobileFixCss,
-  appendNavMobileFixJs,
-} from "./navMobileBaseline";
+  injectPreviewContextScript,
+  injectWpNavRuntimeTags,
+  WP_NAV_RUNTIME_MARKER,
+} from "./wp-nav-runtime";
 
 export interface PreviewFile {
   path: string;
@@ -73,16 +74,12 @@ export const patchHtmlForPreview = (
 };
 
 export const buildPreviewCssContent = (rawCss: string): string =>
-  appendNavMobileFixCss(appendResponsiveBaseline(rawCss));
+  appendResponsiveBaseline(rawCss);
 
 export const buildPreviewJsContent = (
   rawJs: string,
   htmlHints: string[],
-): string =>
-  stripUnusedJs(
-    appendNavMobileFixJs(rawJs, htmlHints),
-    htmlHints.join("\n"),
-  );
+): string => stripUnusedJs(rawJs, htmlHints.join("\n"));
 
 export interface PreviewAssets {
   map: Map<string, string>;
@@ -114,17 +111,26 @@ export const resolvePageHtml = (
   [...map.entries()].find(([p]) => p.endsWith(".html"))?.[1] ??
   "";
 
-/** Assemble un document iframe à partir de HTML/CSS/JS déjà patchés. */
+export interface AssemblePreviewOptions {
+  projectId?: string;
+  emulatedWidth?: number | null;
+}
+
+/** Assemble un document iframe — nav runtime via fichiers publics, pas inline. */
 export const assemblePreviewHtml = (
   pageHtml: string,
   cssContent: string,
   jsContent: string,
   htmlHints: string[],
-  projectId?: string,
+  options: AssemblePreviewOptions = {},
 ): string => {
   if (!pageHtml) return "";
 
+  const { projectId, emulatedWidth = null } = options;
   let html = projectId ? patchHtmlForPreview(pageHtml, projectId) : pageHtml;
+
+  html = injectWpNavRuntimeTags(html, { preview: true });
+  html = injectPreviewContextScript(html, emulatedWidth ?? null);
 
   if (cssContent) {
     html = html.replace(
@@ -163,11 +169,14 @@ export const assemblePreviewHtml = (
   return stripUnusedCdnScripts(html, htmlHints);
 };
 
+export { WP_NAV_RUNTIME_MARKER };
+
 /** Assemble HTML/CSS/JS en un document pour iframe srcDoc */
 export const bundlePreviewHtml = (
   files: PreviewFile[],
   pagePath = "index.html",
   projectId?: string,
+  emulatedWidth?: number | null,
 ): string => {
   if (files.length === 0) return "";
 
@@ -180,7 +189,7 @@ export const bundlePreviewHtml = (
     buildPreviewCssContent(rawCss),
     buildPreviewJsContent(rawJs, htmlHints),
     htmlHints,
-    projectId,
+    { projectId, emulatedWidth },
   );
 };
 
@@ -193,3 +202,23 @@ export const listHtmlPages = (files: PreviewFile[]): string[] =>
       if (b === "index.html") return 1;
       return a.localeCompare(b);
     });
+
+export const resolveEmulatedPreviewWidth = (
+  previewViewport: string,
+  customWidth?: number | null,
+): number | null => {
+  switch (previewViewport) {
+    case "mobile":
+      return 375;
+    case "tablet":
+      return 768;
+    case "desktop1280":
+      return 1280;
+    case "desktop1440":
+      return 1440;
+    case "custom":
+      return customWidth ?? 390;
+    default:
+      return null;
+  }
+};

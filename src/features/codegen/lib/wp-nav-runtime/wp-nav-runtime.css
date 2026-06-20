@@ -1,0 +1,122 @@
+/* wp-nav-runtime — navigation mobile/tablette (WebPlatform) */
+
+@media (min-width: 1024px) {
+  .nav-toggle,
+  .menu-toggle,
+  .navbar-toggle,
+  .mobile-menu-btn,
+  .hamburger,
+  .nav-toggle-btn,
+  [data-wp-nav="toggle"] {
+    display: none !important;
+  }
+
+  #nav-menu,
+  .nav-menu[data-wp-nav="panel"],
+  [data-wp-nav="panel"] {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    position: static !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    transform: none !important;
+    width: auto !important;
+    height: auto !important;
+    max-height: none !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    pointer-events: auto !important;
+    overflow: visible !important;
+  }
+
+  #nav-overlay,
+  [data-wp-nav="overlay"] {
+    display: none !important;
+  }
+}
+
+@media (max-width: 1023px) {
+  .nav-toggle,
+  .menu-toggle,
+  .navbar-toggle,
+  .mobile-menu-btn,
+  .hamburger,
+  .nav-toggle-btn,
+  header button[aria-controls],
+  [data-wp-nav="toggle"] {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+    cursor: pointer;
+    z-index: 1002;
+  }
+
+  #nav-menu,
+  .nav-menu[data-wp-nav="panel"],
+  [data-wp-nav="panel"] {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: min(100vw - 3rem, 320px);
+    max-width: 85vw;
+    height: 100dvh;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+    padding: 5rem 1.5rem 2rem;
+    background: var(--surface, var(--color-bg, #fff));
+    box-shadow: -8px 0 32px rgba(0, 0, 0, 0.12);
+    z-index: 1001;
+    overflow-y: auto;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateX(100%);
+    transition: transform 0.3s ease, visibility 0.3s ease;
+  }
+
+  body:not(.wp-nav-open) #nav-menu,
+  body:not(.wp-nav-open) .nav-menu[data-wp-nav="panel"],
+  body:not(.wp-nav-open) [data-wp-nav="panel"] {
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateX(100%);
+  }
+
+  body.wp-nav-open #nav-menu,
+  body.wp-nav-open .nav-menu[data-wp-nav="panel"],
+  body.wp-nav-open [data-wp-nav="panel"] {
+    display: flex !important;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateX(0);
+  }
+
+  #nav-overlay,
+  [data-wp-nav="overlay"] {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    background: rgba(0, 0, 0, 0.45);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+
+  body.wp-nav-open #nav-overlay,
+  body.wp-nav-open [data-wp-nav="overlay"] {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #nav-menu,
+  [data-wp-nav="panel"],
+  #nav-overlay,
+  [data-wp-nav="overlay"] {
+    transition: none !important;
+  }
+}
