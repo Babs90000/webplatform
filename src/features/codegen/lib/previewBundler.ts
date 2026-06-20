@@ -100,8 +100,13 @@ export const bundlePreviewHtml = (
       map.get("css/style.css") ?? map.get("styles.css") ?? "",
     ),
   );
+  const htmlHints = [...map.entries()]
+    .filter(([p]) => p.endsWith(".html"))
+    .map(([, content]) => content);
+
   const jsContent = appendNavMobileFixJs(
     map.get("js/app.js") ?? map.get("script.js") ?? "",
+    htmlHints,
   );
 
   if (cssContent) {
