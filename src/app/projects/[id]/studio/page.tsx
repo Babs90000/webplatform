@@ -28,6 +28,7 @@ import {
 } from "@/features/codegen/lib/previewBundleCache";
 import { applyVisualEdit, applyVisualMove, type VisualMovePosition } from "@/features/codegen/lib/visualEditor";
 import { toast } from "@/store/toast";
+import { EmptyState } from "@/shared/components/EmptyState";
 
 interface StudioPageProps {
   params: Promise<{ id: string }>;
@@ -270,6 +271,11 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
     setVisualEditMode(!visualEditMode);
   }, [visualEditMode, setVisualEditMode]);
 
+  const hasPreviewFiles = useMemo(() => {
+    const merged = mergeFilesForPreview(files, streamingPaths);
+    return merged.some((f) => f.path.toLowerCase().endsWith(".html"));
+  }, [files, streamingPaths]);
+
   const handleToggleCode = useCallback(() => {
     setCodeVisible(!codeVisible);
   }, [codeVisible, setCodeVisible]);
@@ -315,17 +321,26 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
         />
       }
       preview={
-        <StudioPreviewPanel
-          onNavigate={handlePreviewNavigate}
-          onEditText={handleEditText}
-          onEditImageRequest={(path, current) =>
-            setPendingImage({ path, mode: "image", current })
-          }
-          onEditBgRequest={(path) => setPendingImage({ path, mode: "background" })}
-          onMoveElement={(fromPath, toPath, position) =>
-            void handleMoveElement(fromPath, toPath, position)
-          }
-        />
+        hasPreviewFiles ? (
+          <StudioPreviewPanel
+            onNavigate={handlePreviewNavigate}
+            onEditText={handleEditText}
+            onEditImageRequest={(path, current) =>
+              setPendingImage({ path, mode: "image", current })
+            }
+            onEditBgRequest={(path) =>
+              setPendingImage({ path, mode: "background" })
+            }
+            onMoveElement={(fromPath, toPath, position) =>
+              void handleMoveElement(fromPath, toPath, position)
+            }
+          />
+        ) : (
+          <EmptyState
+            title="Aperçu en attente"
+            description="L'aperçu live apparaîtra dès que la première page HTML est générée."
+          />
+        )
       }
       chat={
         <BuilderChat

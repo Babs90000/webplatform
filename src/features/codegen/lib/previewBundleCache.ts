@@ -1,6 +1,18 @@
-import { bundlePreviewHtml, type PreviewFile } from "./previewBundler";
+import {
+  assemblePreviewHtml,
+  buildPreviewCssContent,
+  buildPreviewJsContent,
+  normalizePreviewPath,
+  resolvePageHtml,
+  resolvePreviewAssets,
+  type PreviewFile,
+} from "./previewBundler";
 
 const CACHE_MAX = 24;
+const PATCH_CACHE_MAX = 32;
+
+const CSS_PATHS = ["css/style.css", "styles.css"] as const;
+const JS_PATHS = ["js/app.js", "script.js"] as const;
 
 /** djb2 xor — rapide, suffisant pour clé de cache locale. */
 const hashString = (value: string): number => {
@@ -11,23 +23,60 @@ const hashString = (value: string): number => {
   return hash >>> 0;
 };
 
-export const fingerprintPreviewInputs = (
-  files: PreviewFile[],
-  pagePath: string,
+const contentAt = (
+  map: Map<string, string>,
+  paths: readonly string[],
+): string => {
+  for (const path of paths) {
+    const content = map.get(normalizePreviewPath(path));
+    if (content !== undefined) return content;
+  }
+  return "";
+};
+
+export const mergeFilesForPreview = (
+  files: Array<{ path: string; content: string }>,
+  streamingPaths: Record<string, string>,
+): PreviewFile[] => {
+  if (Object.keys(streamingPaths).length === 0) {
+    return files.map((f) => ({ path: f.path, content: f.content }));
+  }
+  const map = new Map(files.map((f) => [f.path, f.content]));
+  for (const [path, content] of Object.entries(streamingPaths)) {
+    map.set(path, content);
+  }
+  return [...map.entries()].map(([path, content]) => ({ path, content }));
+};
+
+/**
+ * Fingerprint limité aux fichiers qui impactent l'aperçu courant :
+ * page affichée + CSS + JS (ignore les chunks vers d'autres pages HTML).
+ */
+export const fingerprintPreviewRelevant = (
+  files: Array<{ path: string; content: string }>,
+  streamingPaths: Record<string, string>,
+  previewPage: string,
   projectId?: string,
 ): string => {
-  let digest = hashString(`${pagePath}\0${projectId ?? ""}`);
-  const sorted = [...files].sort((a, b) => a.path.localeCompare(b.path));
-  for (const file of sorted) {
-    digest = hashString(`${digest}\0${file.path}\0${file.content.length}\0${file.content}`);
-  }
+  const merged = mergeFilesForPreview(files, streamingPaths);
+  const map = new Map(merged.map((f) => [normalizePreviewPath(f.path), f.content]));
+
+  let digest = hashString(
+    `${normalizePreviewPath(previewPage)}\0${projectId ?? ""}`,
+  );
+  digest = hashString(
+    `${digest}\0page\0${resolvePageHtml(map, previewPage)}`,
+  );
+  digest = hashString(`${digest}\0css\0${contentAt(map, CSS_PATHS)}`);
+  digest = hashString(`${digest}\0js\0${contentAt(map, JS_PATHS)}`);
+
   return String(digest);
 };
 
 const htmlCache = new Map<string, string>();
 const cacheOrder: string[] = [];
 
-const remember = (key: string, html: string): string => {
+const rememberHtml = (key: string, html: string): string => {
   if (htmlCache.has(key)) {
     const idx = cacheOrder.indexOf(key);
     if (idx >= 0) cacheOrder.splice(idx, 1);
@@ -43,30 +92,77 @@ const remember = (key: string, html: string): string => {
   return html;
 };
 
-/** Bundle mémorisé — recalcule uniquement si le fingerprint change. */
+const patchedCssCache = new Map<number, string>();
+const patchedJsCache = new Map<number, string>();
+
+const getCachedPatchedCss = (rawCss: string): string => {
+  const key = hashString(rawCss);
+  const hit = patchedCssCache.get(key);
+  if (hit !== undefined) return hit;
+  const out = buildPreviewCssContent(rawCss);
+  patchedCssCache.set(key, out);
+  if (patchedCssCache.size > PATCH_CACHE_MAX) {
+    const oldest = patchedCssCache.keys().next().value;
+    if (oldest !== undefined) patchedCssCache.delete(oldest);
+  }
+  return out;
+};
+
+const getCachedPatchedJs = (rawJs: string, htmlHints: string[]): string => {
+  const corpus = htmlHints.join("\n");
+  const key = hashString(`${rawJs}\0${corpus}`);
+  const hit = patchedJsCache.get(key);
+  if (hit !== undefined) return hit;
+  const out = buildPreviewJsContent(rawJs, htmlHints);
+  patchedJsCache.set(key, out);
+  if (patchedJsCache.size > PATCH_CACHE_MAX) {
+    const oldest = patchedJsCache.keys().next().value;
+    if (oldest !== undefined) patchedJsCache.delete(oldest);
+  }
+  return out;
+};
+
+/** @deprecated Utiliser fingerprintPreviewRelevant. */
+export const fingerprintPreviewInputs = (
+  files: PreviewFile[],
+  pagePath: string,
+  projectId?: string,
+): string => fingerprintPreviewRelevant(files, {}, pagePath, projectId);
+
+/** Force la mise à jour iframe (ex. file_saved) — bypass le debounce busy. */
+export const applyPreviewHtml = (
+  files: PreviewFile[],
+  pagePath: string,
+  projectId: string | undefined,
+  setPreviewHtml: (html: string) => void,
+): void => {
+  const html = getCachedPreviewHtml(files, pagePath, projectId);
+  if (html) setPreviewHtml(html);
+};
+
+/** Bundle mémorisé — CSS/JS patchés en cache séparé. */
 export const getCachedPreviewHtml = (
   files: PreviewFile[],
   pagePath: string,
   projectId?: string,
 ): string => {
   if (files.length === 0) return "";
-  const key = fingerprintPreviewInputs(files, pagePath, projectId);
+
+  const key = fingerprintPreviewRelevant(files, {}, pagePath, projectId);
   const cached = htmlCache.get(key);
   if (cached !== undefined) return cached;
-  const html = bundlePreviewHtml(files, pagePath, projectId);
-  return remember(key, html);
-};
 
-export const mergeFilesForPreview = (
-  files: Array<{ path: string; content: string }>,
-  streamingPaths: Record<string, string>,
-): PreviewFile[] => {
-  if (Object.keys(streamingPaths).length === 0) {
-    return files.map((f) => ({ path: f.path, content: f.content }));
-  }
-  const map = new Map(files.map((f) => [f.path, f.content]));
-  for (const [path, content] of Object.entries(streamingPaths)) {
-    map.set(path, content);
-  }
-  return [...map.entries()].map(([path, content]) => ({ path, content }));
+  const { map, htmlHints, rawCss, rawJs } = resolvePreviewAssets(files);
+  const pageHtml = resolvePageHtml(map, pagePath);
+  if (!pageHtml) return "";
+
+  const html = assemblePreviewHtml(
+    pageHtml,
+    getCachedPatchedCss(rawCss),
+    getCachedPatchedJs(rawJs, htmlHints),
+    htmlHints,
+    projectId,
+  );
+
+  return rememberHtml(key, html);
 };

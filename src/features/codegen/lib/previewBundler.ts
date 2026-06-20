@@ -41,7 +41,7 @@ const usesAlpine = (html: string): boolean =>
 const hasAlpineScript = (html: string): boolean =>
   /alpinejs|alpine\.js/i.test(html);
 
-const normalizePath = (path: string): string =>
+export const normalizePreviewPath = (path: string): string =>
   path.replace(/\\/g, "/").replace(/^\.\//, "").toLowerCase();
 
 const CONTACT_PLACEHOLDER = "__WP_CONTACT_API__";
@@ -72,50 +72,59 @@ export const patchHtmlForPreview = (
   return html;
 };
 
-/** Assemble HTML/CSS/JS en un document pour iframe srcDoc */
-export const bundlePreviewHtml = (
-  files: PreviewFile[],
-  pagePath = "index.html",
-  projectId?: string,
-): string => {
-  if (files.length === 0) {
-    return "";
-  }
+export const buildPreviewCssContent = (rawCss: string): string =>
+  appendNavMobileFixCss(appendResponsiveBaseline(rawCss));
 
-  const map = new Map(files.map((f) => [normalizePath(f.path), f.content]));
-  const pageKey = normalizePath(pagePath);
-
-  let html =
-    map.get(pageKey) ??
-    map.get("index.html") ??
-    [...map.entries()].find(([p]) => p.endsWith(".html"))?.[1] ??
-    "";
-
-  if (!html) {
-    return "";
-  }
-
-  if (projectId) {
-    html = patchHtmlForPreview(html, projectId);
-  }
-
-  const cssContent = appendNavMobileFixCss(
-    appendResponsiveBaseline(
-      map.get("css/style.css") ?? map.get("styles.css") ?? "",
-    ),
+export const buildPreviewJsContent = (
+  rawJs: string,
+  htmlHints: string[],
+): string =>
+  stripUnusedJs(
+    appendNavMobileFixJs(rawJs, htmlHints),
+    htmlHints.join("\n"),
   );
+
+export interface PreviewAssets {
+  map: Map<string, string>;
+  htmlHints: string[];
+  rawCss: string;
+  rawJs: string;
+}
+
+export const resolvePreviewAssets = (files: PreviewFile[]): PreviewAssets => {
+  const map = new Map(files.map((f) => [normalizePreviewPath(f.path), f.content]));
   const htmlHints = [...map.entries()]
     .filter(([p]) => p.endsWith(".html"))
     .map(([, content]) => content);
 
-  const htmlCorpus = htmlHints.join("\n");
-  const jsContent = stripUnusedJs(
-    appendNavMobileFixJs(
-      map.get("js/app.js") ?? map.get("script.js") ?? "",
-      htmlHints,
-    ),
-    htmlCorpus,
-  );
+  return {
+    map,
+    htmlHints,
+    rawCss: map.get("css/style.css") ?? map.get("styles.css") ?? "",
+    rawJs: map.get("js/app.js") ?? map.get("script.js") ?? "",
+  };
+};
+
+export const resolvePageHtml = (
+  map: Map<string, string>,
+  pagePath: string,
+): string =>
+  map.get(normalizePreviewPath(pagePath)) ??
+  map.get("index.html") ??
+  [...map.entries()].find(([p]) => p.endsWith(".html"))?.[1] ??
+  "";
+
+/** Assemble un document iframe à partir de HTML/CSS/JS déjà patchés. */
+export const assemblePreviewHtml = (
+  pageHtml: string,
+  cssContent: string,
+  jsContent: string,
+  htmlHints: string[],
+  projectId?: string,
+): string => {
+  if (!pageHtml) return "";
+
+  let html = projectId ? patchHtmlForPreview(pageHtml, projectId) : pageHtml;
 
   if (cssContent) {
     html = html.replace(
@@ -152,6 +161,27 @@ export const bundlePreviewHtml = (
   }
 
   return stripUnusedCdnScripts(html, htmlHints);
+};
+
+/** Assemble HTML/CSS/JS en un document pour iframe srcDoc */
+export const bundlePreviewHtml = (
+  files: PreviewFile[],
+  pagePath = "index.html",
+  projectId?: string,
+): string => {
+  if (files.length === 0) return "";
+
+  const { map, htmlHints, rawCss, rawJs } = resolvePreviewAssets(files);
+  const pageHtml = resolvePageHtml(map, pagePath);
+  if (!pageHtml) return "";
+
+  return assemblePreviewHtml(
+    pageHtml,
+    buildPreviewCssContent(rawCss),
+    buildPreviewJsContent(rawJs, htmlHints),
+    htmlHints,
+    projectId,
+  );
 };
 
 export const listHtmlPages = (files: PreviewFile[]): string[] =>
