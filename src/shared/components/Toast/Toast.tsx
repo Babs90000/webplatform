@@ -24,9 +24,14 @@ export const Toast: React.FC<ToastProps> = ({ toast }) => {
     return () => clearTimeout(timer);
   }, [toast.id, duration, removeToast]);
 
-  const handleClose = () => {
+  const handleClose = (): void => {
     setIsRemoving(true);
     setTimeout(() => removeToast(toast.id), 200);
+  };
+
+  const handleAction = (): void => {
+    toast.action?.onClick();
+    handleClose();
   };
 
   const statusIcon =
@@ -47,6 +52,12 @@ export const Toast: React.FC<ToastProps> = ({ toast }) => {
       </div>
 
       <div className={styles.message}>{toast.message}</div>
+
+      {toast.action && (
+        <button type="button" className={styles.action} onClick={handleAction}>
+          {toast.action.label}
+        </button>
+      )}
 
       <button onClick={handleClose} className={styles.close} aria-label="Fermer">
         <Icon icon={X} size="sm" />

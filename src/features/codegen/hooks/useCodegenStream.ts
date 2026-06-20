@@ -11,6 +11,7 @@ import {
 } from "../services/codegenApi";
 import { getCachedPreviewHtml, mergeFilesForPreview } from "../lib/previewBundleCache";
 import { findCustomPreviewPreset } from "../lib/customPreviewPresets";
+import { offerNavMobilePreviewAfterAudit } from "../lib/offerNavMobilePreview";
 import type { ReviewExpertScores } from "../lib/creativeCommittee";
 import { useStudioStore } from "../store/studioStore";
 import { toast } from "@/store/toast";
@@ -292,6 +293,18 @@ export const useCodegenStream = (projectId: string) => {
           );
           await syncFilesFromServer();
           await refreshPreview();
+          if (isAudit) {
+            const state = useStudioStore.getState();
+            offerNavMobilePreviewAfterAudit({
+              files: state.files,
+              previewViewport: state.previewViewport,
+              onApply: () => {
+                const s = useStudioStore.getState();
+                s.setPreviewViewport("tablet");
+                s.setPreviewFocus(true);
+              },
+            });
+          }
           if (event.client_ready === false) {
             toast.error(
               typeof event.review_score === "number"

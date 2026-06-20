@@ -7,6 +7,10 @@ export interface Toast {
   type: ToastType;
   message: string;
   duration?: number;
+  action?: {
+    label: string;
+    onClick: () => void;
+  };
 }
 
 interface ToastState {
@@ -33,4 +37,15 @@ export const toast = {
     useToastStore.getState().addToast({ type: "error", message, duration }),
   info: (message: string, duration?: number) =>
     useToastStore.getState().addToast({ type: "info", message, duration }),
+  prompt: (
+    message: string,
+    action: { label: string; onClick: () => void },
+    duration = 12_000,
+  ) =>
+    useToastStore.getState().addToast({
+      type: "info",
+      message,
+      duration,
+      action,
+    }),
 };
