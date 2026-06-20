@@ -1,7 +1,13 @@
 "use client";
 
 import React from "react";
-import { ArrowLeft } from "lucide-react";
+import {
+  ArrowLeft,
+  CircleHelp,
+  Monitor,
+  Smartphone,
+  Tablet,
+} from "lucide-react";
 import { LoadingDots } from "@/shared/components/LoadingDots";
 import { Icon } from "@/shared/components/Icon";
 import Link from "next/link";
@@ -13,6 +19,11 @@ import { getAuthToken } from "@/lib/authToken";
 import { useExportCheckout } from "@/features/billing/hooks/useBilling";
 import { CreativeCommitteeStrip } from "../CreativeCommitteeStrip";
 import type { ReviewExpertScores } from "../../lib/creativeCommittee";
+import {
+  getPreviewViewportLabel,
+  isDevicePreview,
+  type PreviewViewport,
+} from "../../lib/previewViewport";
 
 interface StudioToolbarProps {
   projectId: string;
@@ -28,12 +39,23 @@ interface StudioToolbarProps {
   onToggleCode: () => void;
   previewFocus: boolean;
   onTogglePreviewFocus: () => void;
+  previewViewport: PreviewViewport;
+  onCyclePreviewViewport: () => void;
+  onOpenShortcuts: () => void;
   onOpenSettings: () => void;
   onOpenPublish: () => void;
   onAuditQuality: () => void;
   committeeReviewActive?: boolean;
   expertScores?: ReviewExpertScores | null;
 }
+
+const VIEWPORT_ICONS = {
+  full: Monitor,
+  mobile: Smartphone,
+  tablet: Tablet,
+  desktop1280: Monitor,
+  desktop1440: Monitor,
+} as const;
 
 export const StudioToolbar: React.FC<StudioToolbarProps> = ({
   projectId,
@@ -49,6 +71,9 @@ export const StudioToolbar: React.FC<StudioToolbarProps> = ({
   onToggleCode,
   previewFocus,
   onTogglePreviewFocus,
+  previewViewport,
+  onCyclePreviewViewport,
+  onOpenShortcuts,
   onOpenSettings,
   onOpenPublish,
   onAuditQuality,
@@ -56,6 +81,8 @@ export const StudioToolbar: React.FC<StudioToolbarProps> = ({
   expertScores = null,
 }) => {
   const exportCheckout = useExportCheckout(projectId);
+  const ViewportIcon = VIEWPORT_ICONS[previewViewport];
+  const deviceActive = isDevicePreview(previewViewport);
 
   const handleExport = async () => {
     const token = getAuthToken();
@@ -102,10 +129,30 @@ export const StudioToolbar: React.FC<StudioToolbarProps> = ({
 
       <div className={styles.right}>
         <Button
+          variant="ghost"
+          size="sm"
+          onClick={onOpenShortcuts}
+          ariaLabel="Guide du studio et raccourcis (?)"
+          title="Guide du studio (?)"
+        >
+          <Icon icon={CircleHelp} size="sm" />
+        </Button>
+        <Button
+          variant={deviceActive ? "primary" : "secondary"}
+          size="sm"
+          onClick={onCyclePreviewViewport}
+          disabled={!hasFiles}
+          title="Cycle responsive (M) — mobile, tablette, desktop 1280/1440"
+        >
+          <Icon icon={ViewportIcon} size="sm" />
+          {getPreviewViewportLabel(previewViewport)}
+        </Button>
+        <Button
           variant={previewFocus ? "primary" : "secondary"}
           size="sm"
           onClick={onTogglePreviewFocus}
           disabled={!hasFiles}
+          title="Aperçu seul (F)"
         >
           {previewFocus ? "Quitter aperçu seul" : "Aperçu seul"}
         </Button>
@@ -114,6 +161,7 @@ export const StudioToolbar: React.FC<StudioToolbarProps> = ({
           size="sm"
           onClick={onToggleCode}
           disabled={!hasFiles || previewFocus}
+          title={previewFocus ? undefined : "Afficher le code (C)"}
         >
           {codeVisible ? "Masquer le code" : "Afficher le code"}
         </Button>

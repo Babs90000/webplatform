@@ -67,10 +67,13 @@ export const useDeleteProject = () => {
     mutationFn: (id: string) => projectsApi.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["projects"] });
-      toast.success("Project deleted successfully");
+      toast.success("Projet supprimé");
     },
     onError: (error) => {
-      const message = error instanceof ApiError ? error.message : "Failed to delete project";
+      const message =
+        error instanceof ApiError
+          ? error.message
+          : "Impossible de supprimer le projet";
       toast.error(message);
     },
   });

@@ -6,6 +6,7 @@ import {
   cancelStreamingFlush,
   scheduleStreamingFlush,
 } from "./studioStreamingFlush";
+import type { PreviewViewport } from "../lib/previewViewport";
 
 export type StudioPhase =
   | "idle"
@@ -32,6 +33,7 @@ interface StudioState {
   visualEditMode: boolean;
   codeVisible: boolean;
   previewFocus: boolean;
+  previewViewport: PreviewViewport;
   committeeReviewActive: boolean;
   expertScores: ReviewExpertScores | null;
 
@@ -51,6 +53,7 @@ interface StudioState {
   setVisualEditMode: (on: boolean) => void;
   setCodeVisible: (visible: boolean) => void;
   setPreviewFocus: (on: boolean) => void;
+  setPreviewViewport: (viewport: PreviewViewport) => void;
   setCommitteeReviewActive: (active: boolean) => void;
   setExpertScores: (scores: ReviewExpertScores | null) => void;
   flushStreamingToFiles: () => void;
@@ -75,6 +78,7 @@ export const useStudioStore = create<StudioState>()(
       visualEditMode: false,
       codeVisible: false,
       previewFocus: false,
+      previewViewport: "full",
       committeeReviewActive: false,
       expertScores: null,
 
@@ -95,6 +99,7 @@ export const useStudioStore = create<StudioState>()(
             chatMessages: [],
             visualEditMode: false,
             previewFocus: false,
+            previewViewport: "full",
             committeeReviewActive: false,
             expertScores: null,
           });
@@ -197,6 +202,7 @@ export const useStudioStore = create<StudioState>()(
           previewFocus: on,
           ...(on ? { codeVisible: false } : {}),
         }),
+      setPreviewViewport: (viewport) => set({ previewViewport: viewport }),
       setCommitteeReviewActive: (active) => set({ committeeReviewActive: active }),
       setExpertScores: (scores) => set({ expertScores: scores }),
     }),

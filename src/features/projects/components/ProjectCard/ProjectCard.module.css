@@ -6,15 +6,28 @@
   border-radius: var(--radius-lg);
   padding: var(--space-lg);
   transition: all var(--transition-normal);
-  cursor: pointer;
   height: 100%;
   position: relative;
   overflow: hidden;
 }
 
+.cardLink {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+}
+
 .card:hover {
   border-color: var(--color-border-focus);
   box-shadow: var(--shadow-md), var(--shadow-glow);
+}
+
+.card:hover .deleteBtn {
+  opacity: 1;
 }
 
 .card::before {
@@ -27,9 +40,42 @@
   background: var(--gradient-primary);
   opacity: 0;
   transition: opacity var(--transition-normal);
+  pointer-events: none;
 }
 
 .card:hover::before {
+  opacity: 1;
+}
+
+.deleteBtn {
+  position: absolute;
+  top: var(--space-md);
+  right: var(--space-md);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  background: var(--color-bg-secondary);
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  opacity: 0.55;
+  transition: all var(--transition-normal);
+}
+
+.deleteBtn:hover {
+  opacity: 1;
+  color: var(--color-accent-danger);
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.22);
+}
+
+.deleteBtn:focus-visible {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 2px;
   opacity: 1;
 }
 
@@ -38,6 +84,7 @@
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: var(--space-md);
+  padding-right: 2.25rem;
 }
 
 .title {

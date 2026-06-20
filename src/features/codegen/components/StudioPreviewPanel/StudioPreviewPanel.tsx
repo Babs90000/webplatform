@@ -16,6 +16,7 @@ interface StudioPreviewPanelProps {
     toPath: string,
     position: VisualMovePosition,
   ) => void;
+  onOpenShortcuts?: () => void;
 }
 
 const StudioPreviewPanelComponent: React.FC<StudioPreviewPanelProps> = ({
@@ -24,6 +25,7 @@ const StudioPreviewPanelComponent: React.FC<StudioPreviewPanelProps> = ({
   onEditImageRequest,
   onEditBgRequest,
   onMoveElement,
+  onOpenShortcuts,
 }) => {
   const {
     previewHtml,
@@ -35,6 +37,7 @@ const StudioPreviewPanelComponent: React.FC<StudioPreviewPanelProps> = ({
     committeeReviewActive,
     expertScores,
     visualEditMode,
+    previewViewport,
   } = useStudioStore(
     useShallow((state) => ({
       previewHtml: state.previewHtml,
@@ -46,6 +49,7 @@ const StudioPreviewPanelComponent: React.FC<StudioPreviewPanelProps> = ({
       committeeReviewActive: state.committeeReviewActive,
       expertScores: state.expertScores,
       visualEditMode: state.visualEditMode,
+      previewViewport: state.previewViewport,
     })),
   );
 
@@ -63,6 +67,8 @@ const StudioPreviewPanelComponent: React.FC<StudioPreviewPanelProps> = ({
       committeeReviewActive={committeeReviewActive}
       expertScores={expertScores}
       editable={visualEditMode}
+      previewViewport={previewViewport}
+      onOpenShortcuts={onOpenShortcuts}
       onNavigate={onNavigate}
       onEditText={onEditText}
       onEditImageRequest={onEditImageRequest}

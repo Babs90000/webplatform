@@ -1,11 +1,15 @@
-import React from "react";
+"use client";
+
+import React, { useCallback, useState } from "react";
 import { Plus } from "lucide-react";
 import styles from "./ProjectList.module.css";
 import { Skeleton } from "@/shared/components/Skeleton";
 import { Icon } from "@/shared/components/Icon";
 import { ProjectCard } from "../ProjectCard";
+import { DeleteProjectModal } from "../DeleteProjectModal";
 import { EmptyState } from "@/shared/components/EmptyState";
 import { ErrorMessage } from "@/shared/components/ErrorMessage";
+import { useDeleteProject } from "../../hooks/useProjects";
 import type { Project } from "@/types";
 
 interface ProjectListProps {
@@ -23,10 +27,29 @@ export const ProjectList: React.FC<ProjectListProps> = ({
   onRetry,
   onCreateProject,
 }) => {
+  const [deleteTarget, setDeleteTarget] = useState<Project | null>(null);
+  const deleteProject = useDeleteProject();
+
+  const handleDeleteRequest = useCallback((project: Project) => {
+    setDeleteTarget(project);
+  }, []);
+
+  const handleCloseDelete = useCallback(() => {
+    if (deleteProject.isPending) return;
+    setDeleteTarget(null);
+  }, [deleteProject.isPending]);
+
+  const handleConfirmDelete = useCallback(() => {
+    if (!deleteTarget) return;
+    deleteProject.mutate(deleteTarget.id, {
+      onSuccess: () => setDeleteTarget(null),
+    });
+  }, [deleteTarget, deleteProject]);
+
   if (error) {
     return (
-      <ErrorMessage 
-        title="Impossible de charger les projets" 
+      <ErrorMessage
+        title="Impossible de charger les projets"
         message={error.message}
         onRetry={onRetry}
       />
@@ -60,10 +83,24 @@ export const ProjectList: React.FC<ProjectListProps> = ({
   }
 
   return (
-    <div className={styles.grid}>
-      {projects.map((project) => (
-        <ProjectCard key={project.id} project={project} />
-      ))}
-    </div>
+    <>
+      <div className={styles.grid}>
+        {projects.map((project) => (
+          <ProjectCard
+            key={project.id}
+            project={project}
+            onDelete={handleDeleteRequest}
+          />
+        ))}
+      </div>
+
+      <DeleteProjectModal
+        isOpen={deleteTarget !== null}
+        projectName={deleteTarget?.name ?? ""}
+        isDeleting={deleteProject.isPending}
+        onClose={handleCloseDelete}
+        onConfirm={handleConfirmDelete}
+      />
+    </>
   );
 };

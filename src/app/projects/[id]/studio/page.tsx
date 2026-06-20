@@ -14,10 +14,13 @@ import { BuilderChat } from "@/features/codegen/components/BuilderChat";
 import { ImageReplaceModal } from "@/features/codegen/components/ImageReplaceModal";
 import { SiteSettingsModal } from "@/features/codegen/components/SiteSettingsModal";
 import { PublishModal } from "@/features/projects/components/PublishModal";
+import { StudioShortcutsModal } from "@/features/codegen/components/StudioShortcutsModal";
 import { useProjectFiles } from "@/features/codegen/hooks/useProjectFiles";
 import { useCodegenStream } from "@/features/codegen/hooks/useCodegenStream";
 import { usePreviewBundle } from "@/features/codegen/hooks/usePreviewBundle";
+import { useStudioShortcuts } from "@/features/codegen/hooks/useStudioShortcuts";
 import { useStudioStore } from "@/features/codegen/store/studioStore";
+import { cyclePreviewViewport } from "@/features/codegen/lib/previewViewport";
 import {
   saveProjectFile,
   uploadProjectAsset,
@@ -53,6 +56,7 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
     visualEditMode,
     codeVisible,
     previewFocus,
+    previewViewport,
     committeeReviewActive,
     expertScores,
     setStudioProjectId,
@@ -64,6 +68,7 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
     setVisualEditMode,
     setCodeVisible,
     setPreviewFocus,
+    setPreviewViewport,
   } = useStudioStore(
     useShallow((state) => ({
       files: state.files,
@@ -75,6 +80,7 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
       visualEditMode: state.visualEditMode,
       codeVisible: state.codeVisible,
       previewFocus: state.previewFocus,
+      previewViewport: state.previewViewport,
       committeeReviewActive: state.committeeReviewActive,
       expertScores: state.expertScores,
       setStudioProjectId: state.setStudioProjectId,
@@ -86,6 +92,7 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
       setVisualEditMode: state.setVisualEditMode,
       setCodeVisible: state.setCodeVisible,
       setPreviewFocus: state.setPreviewFocus,
+      setPreviewViewport: state.setPreviewViewport,
     })),
   );
 
@@ -96,6 +103,7 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
   } | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [publishOpen, setPublishOpen] = useState(false);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
 
   useEffect(() => {
     setStudioProjectId(projectId);
@@ -278,9 +286,38 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
     setPreviewFocus(!previewFocus);
   }, [previewFocus, setPreviewFocus]);
 
+  const handleCyclePreviewViewport = useCallback(() => {
+    const next = cyclePreviewViewport(previewViewport);
+    setPreviewViewport(next);
+    if (next !== "full") setPreviewFocus(true);
+  }, [previewViewport, setPreviewViewport, setPreviewFocus]);
+
+  const handleSetViewportFull = useCallback(() => {
+    setPreviewViewport("full");
+  }, [setPreviewViewport]);
+
+  const handleExitPreviewFocus = useCallback(() => {
+    setPreviewFocus(false);
+  }, [setPreviewFocus]);
+
   const handleToggleCode = useCallback(() => {
+    if (previewFocus) return;
     setCodeVisible(!codeVisible);
-  }, [codeVisible, setCodeVisible]);
+  }, [codeVisible, previewFocus, setCodeVisible]);
+
+  useStudioShortcuts({
+    enabled: files.length > 0,
+    shortcutsOpen,
+    previewViewport,
+    previewFocus,
+    onCycleViewport: handleCyclePreviewViewport,
+    onTogglePreviewFocus: handleTogglePreviewFocus,
+    onToggleCode: handleToggleCode,
+    onOpenHelp: () => setShortcutsOpen(true),
+    onCloseHelp: () => setShortcutsOpen(false),
+    onSetViewportFull: handleSetViewportFull,
+    onExitPreviewFocus: handleExitPreviewFocus,
+  });
 
   return (
     <>
@@ -302,6 +339,9 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
           onToggleCode={handleToggleCode}
           previewFocus={previewFocus}
           onTogglePreviewFocus={handleTogglePreviewFocus}
+          previewViewport={previewViewport}
+          onCyclePreviewViewport={handleCyclePreviewViewport}
+          onOpenShortcuts={() => setShortcutsOpen(true)}
           onOpenSettings={() => setSettingsOpen(true)}
           onOpenPublish={() => setPublishOpen(true)}
           onAuditQuality={() => void auditQuality()}
@@ -338,6 +378,7 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
           onMoveElement={(fromPath, toPath, position) =>
             void handleMoveElement(fromPath, toPath, position)
           }
+          onOpenShortcuts={() => setShortcutsOpen(true)}
         />
       }
       chat={
@@ -376,6 +417,10 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
       projectId={projectId}
       initialSubdomain={project?.subdomain ?? project?.slug ?? ""}
       initialCustomDomain={project?.custom_domain ?? ""}
+    />
+    <StudioShortcutsModal
+      isOpen={shortcutsOpen}
+      onClose={() => setShortcutsOpen(false)}
     />
     </>
   );

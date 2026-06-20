@@ -14,6 +14,13 @@ import { LoadingPanel } from "@/shared/components/LoadingPanel";
 import { injectVisualEditor, type VisualMovePosition } from "../../lib/visualEditor";
 import { CreativeCommitteeStrip } from "../CreativeCommitteeStrip";
 import type { ReviewExpertScores } from "../../lib/creativeCommittee";
+import {
+  isDevicePreview,
+  PREVIEW_VIEWPORT_CONFIG,
+  STUDIO_SHORTCUTS_SEEN_KEY,
+  type PreviewViewport,
+} from "../../lib/previewViewport";
+import { markStudioShortcutsSeen } from "../StudioShortcutsModal";
 
 interface LivePreviewProps {
   html: string;
@@ -25,6 +32,8 @@ interface LivePreviewProps {
   committeeReviewActive?: boolean;
   expertScores?: ReviewExpertScores | null;
   editable?: boolean;
+  previewViewport?: PreviewViewport;
+  onOpenShortcuts?: () => void;
   onNavigate?: (path: string) => void;
   onEditText?: (path: string, value: string) => void;
   onEditImageRequest?: (path: string, current?: string) => void;
@@ -46,6 +55,8 @@ const LivePreviewComponent: React.FC<LivePreviewProps> = ({
   committeeReviewActive = false,
   expertScores = null,
   editable = false,
+  previewViewport = "full",
+  onOpenShortcuts,
   onNavigate,
   onEditText,
   onEditImageRequest,
@@ -57,6 +68,17 @@ const LivePreviewComponent: React.FC<LivePreviewProps> = ({
   const [displayHtml, setDisplayHtml] = useState(html);
   const lastPushRef = useRef(0);
   const pendingHtmlRef = useRef(html);
+  const [showShortcutsHint, setShowShortcutsHint] = useState(false);
+
+  const devicePreview = isDevicePreview(previewViewport);
+  const viewportConfig = PREVIEW_VIEWPORT_CONFIG[previewViewport];
+
+  useEffect(() => {
+    if (typeof sessionStorage === "undefined") return;
+    if (!sessionStorage.getItem(STUDIO_SHORTCUTS_SEEN_KEY)) {
+      setShowShortcutsHint(true);
+    }
+  }, []);
 
   useEffect(() => {
     pendingHtmlRef.current = html;
@@ -138,6 +160,31 @@ const LivePreviewComponent: React.FC<LivePreviewProps> = ({
     return () => window.removeEventListener("message", handleMessage);
   }, [handleMessage]);
 
+  const handleDismissHint = useCallback(() => {
+    markStudioShortcutsSeen();
+    setShowShortcutsHint(false);
+  }, []);
+
+  const handleOpenShortcutsFromHint = useCallback(() => {
+    markStudioShortcutsSeen();
+    setShowShortcutsHint(false);
+    onOpenShortcuts?.();
+  }, [onOpenShortcuts]);
+
+  const deviceFrameStyle = viewportConfig
+    ? ({
+        "--preview-device-width": `${viewportConfig.width}px`,
+        "--preview-device-height": `${viewportConfig.height}px`,
+      } as React.CSSProperties)
+    : undefined;
+
+  const deviceFrameClass =
+    previewViewport === "tablet"
+      ? styles.deviceFrameTablet
+      : previewViewport === "desktop1280" || previewViewport === "desktop1440"
+        ? styles.deviceFrameDesktop
+        : "";
+
   const showPlaceholder = !displayHtml && !isLoading;
   const displayPercent = isLoading ? Math.max(progressPercent, 8) : 0;
   const committeeFooter =
@@ -153,8 +200,34 @@ const LivePreviewComponent: React.FC<LivePreviewProps> = ({
     <div className={styles.container}>
       <div className={styles.toolbar}>
         <span className={styles.label}>Aperçu live</span>
+        {devicePreview && viewportConfig && (
+          <span className={styles.viewportBadge}>
+            {viewportConfig.label}
+          </span>
+        )}
         {editable && (
           <span className={styles.editBadge}>Édition visuelle active</span>
+        )}
+        {showShortcutsHint && (
+          <button
+            type="button"
+            className={styles.shortcutsHint}
+            onClick={handleOpenShortcutsFromHint}
+          >
+            Touche <kbd className={styles.hintKey}>?</kbd> pour le guide
+            · <kbd className={styles.hintKey}>M</kbd> tailles
+            · <kbd className={styles.hintKey}>C</kbd> code
+            <span
+              className={styles.hintDismiss}
+              onClick={(event) => {
+                event.stopPropagation();
+                handleDismissHint();
+              }}
+              aria-label="Masquer"
+            >
+              ×
+            </span>
+          </button>
         )}
         {isLoading && (
           <span className={styles.loadingBadge}>
@@ -163,23 +236,48 @@ const LivePreviewComponent: React.FC<LivePreviewProps> = ({
           </span>
         )}
       </div>
-      <div className={styles.frameWrap}>
+      <div
+        className={`${styles.frameWrap} ${devicePreview ? styles.frameWrapDevice : ""}`}
+      >
         {showPlaceholder ? (
           <div className={styles.placeholder}>
             L&apos;aperçu apparaîtra après la génération
           </div>
         ) : (
           <>
-            {displayHtml && (
-              <iframe
-                ref={iframeRef}
-                title="Aperçu du site"
-                className={styles.frame}
-                sandbox="allow-scripts allow-same-origin"
-              />
-            )}
+            {displayHtml &&
+              (devicePreview && viewportConfig ? (
+                <div
+                  className={`${styles.deviceFrame} ${deviceFrameClass}`}
+                  style={deviceFrameStyle}
+                >
+                  <div className={styles.deviceChrome}>
+                    {previewViewport === "mobile" && (
+                      <span className={styles.deviceNotch} />
+                    )}
+                    <span className={styles.deviceLabel}>
+                      {viewportConfig.width} × {viewportConfig.height}
+                    </span>
+                  </div>
+                  <iframe
+                    ref={iframeRef}
+                    title={`Aperçu ${viewportConfig.label}`}
+                    className={styles.frameDevice}
+                    sandbox="allow-scripts allow-same-origin"
+                  />
+                </div>
+              ) : (
+                <iframe
+                  ref={iframeRef}
+                  title="Aperçu du site"
+                  className={styles.frame}
+                  sandbox="allow-scripts allow-same-origin"
+                />
+              ))}
             {isLoading && (
-              <div className={styles.overlay}>
+              <div
+                className={`${styles.overlay} ${devicePreview ? styles.overlayDevice : ""}`}
+              >
                 <LoadingPanel
                   variant="preview"
                   message={loadingMessage}
