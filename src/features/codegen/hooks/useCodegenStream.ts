@@ -1,10 +1,12 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
+  fetchActiveCodegenJob,
   fetchPreviewHtml,
-  streamAuditSite,
-  streamEditSite,
-  streamGenerateSite,
+  followCodegenJob,
+  startAuditJob,
+  startEditJob,
+  startGenerateJob,
   type CodegenSseEvent,
 } from "../services/codegenApi";
 import { bundlePreviewHtml } from "../lib/previewBundler";
@@ -58,10 +60,36 @@ const taskProgress = (
   return { percent, done, pending };
 };
 
+const cursorStorageKey = (projectId: string, jobId: string): string =>
+  `wp-codegen-cursor-${projectId}-${jobId}`;
+
+const readEventCursor = (projectId: string, jobId: string): number => {
+  if (typeof sessionStorage === "undefined") return 0;
+  const raw = sessionStorage.getItem(cursorStorageKey(projectId, jobId));
+  const n = raw ? Number.parseInt(raw, 10) : 0;
+  return Number.isNaN(n) ? 0 : n;
+};
+
+const writeEventCursor = (
+  projectId: string,
+  jobId: string,
+  after: number,
+): void => {
+  if (typeof sessionStorage === "undefined") return;
+  sessionStorage.setItem(cursorStorageKey(projectId, jobId), String(after));
+};
+
+const clearEventCursor = (projectId: string, jobId: string): void => {
+  if (typeof sessionStorage === "undefined") return;
+  sessionStorage.removeItem(cursorStorageKey(projectId, jobId));
+};
+
 export const useCodegenStream = (projectId: string) => {
   const queryClient = useQueryClient();
   const [isBusy, setIsBusy] = useState(false);
   const auditFlowRef = useRef(false);
+  const pollLockRef = useRef(false);
+  const resumeCheckedRef = useRef(false);
   const {
     setPhase,
     setStatusMessage,
@@ -104,6 +132,12 @@ export const useCodegenStream = (projectId: string) => {
       // preview pas encore prête
     }
   }, [projectId, setPreviewHtml]);
+
+  const syncFilesFromServer = useCallback(async () => {
+    await queryClient.invalidateQueries({
+      queryKey: ["project-files", projectId],
+    });
+  }, [queryClient, projectId]);
 
   const handleEvent = useCallback(
     async (event: CodegenSseEvent) => {
@@ -148,12 +182,13 @@ export const useCodegenStream = (projectId: string) => {
           appendFileChunk(event.path, event.chunk);
           break;
         case "file_saved": {
+          await syncFilesFromServer();
           const streamed =
             useStudioStore.getState().streamingPaths[event.path] ??
             useStudioStore.getState().files.find((f) => f.path === event.path)
               ?.content ??
             "";
-          upsertFile(event.path, streamed);
+          if (streamed) upsertFile(event.path, streamed);
           void refreshPreview();
           break;
         }
@@ -237,7 +272,7 @@ export const useCodegenStream = (projectId: string) => {
             isAudit ? [...AUDIT_TASKS] : [...GENERATION_TASKS],
             [],
           );
-          await queryClient.invalidateQueries({ queryKey: ["project-files", projectId] });
+          await syncFilesFromServer();
           await refreshPreview();
           if (event.client_ready === false) {
             toast.error(
@@ -263,83 +298,114 @@ export const useCodegenStream = (projectId: string) => {
     },
     [
       appendFileChunk,
-      queryClient,
-      projectId,
       refreshPreview,
       resetStreaming,
       setPhase,
       setPlan,
       setProgress,
       setStatusMessage,
+      syncFilesFromServer,
       upsertFile,
     ],
   );
 
+  const runJobFollow = useCallback(
+    async (jobId: string, options?: { editInstruction?: string }) => {
+      if (pollLockRef.current) return;
+      pollLockRef.current = true;
+      setIsBusy(true);
+
+      const initialAfter = readEventCursor(projectId, jobId);
+      let doneMeta: {
+        review_score?: number;
+        client_ready?: boolean;
+      } = {};
+
+      try {
+        await followCodegenJob(
+          projectId,
+          jobId,
+          async (event) => {
+            if (event.type === "done") {
+              doneMeta = {
+                review_score: event.review_score,
+                client_ready: event.client_ready,
+              };
+            }
+            await handleEvent(event);
+          },
+          {
+            initialAfter,
+            onAfter: (cursor) => writeEventCursor(projectId, jobId, cursor),
+          },
+        );
+
+        if (options?.editInstruction) {
+          if (typeof doneMeta.review_score === "number") {
+            addChatMessage(
+              "assistant",
+              doneMeta.client_ready === false
+                ? `Modifications appliquées. Audit qualité : ${doneMeta.review_score}/100 — relecture recommandée.`
+                : `Modifications appliquées. Audit qualité : ${doneMeta.review_score}/100.`,
+            );
+          } else {
+            addChatMessage("assistant", "Modifications appliquées.");
+          }
+        }
+
+        clearEventCursor(projectId, jobId);
+      } catch (err) {
+        const msg =
+          err instanceof Error ? err.message : "Erreur de génération";
+        setPhase("error");
+        setStatusMessage(msg);
+        toast.error(msg);
+      } finally {
+        pollLockRef.current = false;
+        setIsBusy(false);
+      }
+    },
+    [projectId, handleEvent, addChatMessage, setPhase, setStatusMessage],
+  );
+
   const generate = useCallback(async () => {
-    setIsBusy(true);
     setProgress(5, [], [...GENERATION_TASKS]);
     try {
-      await streamGenerateSite(projectId, handleEvent);
+      const { job_id } = await startGenerateJob(projectId);
+      await runJobFollow(job_id);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Erreur de génération";
       setPhase("error");
       setStatusMessage(msg);
       toast.error(msg);
-    } finally {
-      setIsBusy(false);
     }
-  }, [projectId, handleEvent, setPhase, setProgress, setStatusMessage]);
+  }, [projectId, runJobFollow, setPhase, setProgress, setStatusMessage]);
 
   const edit = useCallback(
     async (instruction: string) => {
-      setIsBusy(true);
       addChatMessage("user", instruction);
       setPhase("editing");
       setStatusMessage("Modification en cours…");
-      setProgress(20, ["Analyse de la demande"], ["Application des modifications", "Finalisation"]);
+      setProgress(20, ["Analyse de la demande"], [
+        "Application des modifications",
+        "Finalisation",
+      ]);
       resetStreaming();
 
       try {
-        let doneMeta: {
-          review_score?: number;
-          client_ready?: boolean;
-        } = {};
-
-        const onEditEvent = (event: CodegenSseEvent) => {
-          if (event.type === "done") {
-            doneMeta = {
-              review_score: event.review_score,
-              client_ready: event.client_ready,
-            };
-          }
-          void handleEvent(event);
-        };
-
-        await streamEditSite(projectId, instruction, onEditEvent);
-
-        if (typeof doneMeta.review_score === "number") {
-          addChatMessage(
-            "assistant",
-            doneMeta.client_ready === false
-              ? `Modifications appliquées. Audit qualité : ${doneMeta.review_score}/100 — relecture recommandée.`
-              : `Modifications appliquées. Audit qualité : ${doneMeta.review_score}/100.`,
-          );
-        } else {
-          addChatMessage("assistant", "Modifications appliquées.");
-        }
+        const { job_id } = await startEditJob(projectId, instruction);
+        await runJobFollow(job_id, { editInstruction: instruction });
       } catch (err) {
         const msg = err instanceof Error ? err.message : "Erreur d'édition";
         setPhase("error");
         setStatusMessage(msg);
         addChatMessage("assistant", msg);
         toast.error(msg);
-      } finally {
-        setIsBusy(false);
       }
     },
     [
       projectId,
-      handleEvent,
+      runJobFollow,
       addChatMessage,
       setPhase,
       setProgress,
@@ -349,7 +415,6 @@ export const useCodegenStream = (projectId: string) => {
   );
 
   const auditQuality = useCallback(async () => {
-    setIsBusy(true);
     auditFlowRef.current = true;
     setPhase("generating");
     setStatusMessage("Audit qualité en cours…");
@@ -357,24 +422,55 @@ export const useCodegenStream = (projectId: string) => {
     resetStreaming();
 
     try {
-      await streamAuditSite(projectId, handleEvent);
+      const { job_id } = await startAuditJob(projectId);
+      await runJobFollow(job_id);
     } catch (err) {
       auditFlowRef.current = false;
       const msg = err instanceof Error ? err.message : "Erreur d'audit qualité";
       setPhase("error");
       setStatusMessage(msg);
       toast.error(msg);
-    } finally {
-      setIsBusy(false);
     }
   }, [
     projectId,
-    handleEvent,
+    runJobFollow,
     setPhase,
     setProgress,
     setStatusMessage,
     resetStreaming,
   ]);
+
+  useEffect(() => {
+    if (resumeCheckedRef.current || !projectId) return;
+    resumeCheckedRef.current = true;
+
+    void (async () => {
+      try {
+        const { job } = await fetchActiveCodegenJob(projectId);
+        if (
+          !job ||
+          (job.status !== "queued" && job.status !== "running")
+        ) {
+          return;
+        }
+
+        if (job.type === "audit") auditFlowRef.current = true;
+
+        const progressMsg =
+          typeof job.progress.status_message === "string"
+            ? job.progress.status_message
+            : "Génération en cours (reprise)…";
+        setStatusMessage(progressMsg);
+        setPhase(job.type === "edit" ? "editing" : "generating");
+
+        toast.success("Génération en cours — reprise automatique");
+
+        await runJobFollow(job.id);
+      } catch {
+        // pas de job actif ou API indisponible
+      }
+    })();
+  }, [projectId, runJobFollow, setPhase, setStatusMessage]);
 
   return {
     generate,

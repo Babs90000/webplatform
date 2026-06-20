@@ -6,4 +6,7 @@ export const useProjectFiles = (projectId: string) =>
     queryKey: ["project-files", projectId],
     queryFn: () => fetchProjectFiles(projectId),
     enabled: Boolean(projectId),
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    refetchOnMount: false,
   });

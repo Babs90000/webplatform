@@ -46,6 +46,7 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
     chatMessages,
     visualEditMode,
     codeVisible,
+    setStudioProjectId,
     setFiles,
     selectPath,
     setPreviewPage,
@@ -62,6 +63,10 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
   } | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [publishOpen, setPublishOpen] = useState(false);
+
+  useEffect(() => {
+    setStudioProjectId(projectId);
+  }, [projectId, setStudioProjectId]);
 
   useEffect(() => {
     if (serverFiles && serverFiles.length > 0) {

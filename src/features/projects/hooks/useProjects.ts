@@ -21,6 +21,9 @@ export const useProject = (id: string) => {
     queryKey: ["projects", id],
     queryFn: () => projectsApi.getById(id),
     enabled: !!id,
+    staleTime: 10 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    refetchOnMount: false,
   });
 };
 

@@ -153,18 +153,46 @@ export const uploadProjectAsset = async (
   return data.asset.public_url;
 };
 
-const consumeSseStream = async (
+export type CodegenJobStatus = "queued" | "running" | "completed" | "failed";
+export type CodegenJobType = "generate" | "edit" | "audit";
+
+export interface CodegenJobSnapshot {
+  id: string;
+  project_id: string;
+  type: CodegenJobType;
+  status: CodegenJobStatus;
+  instruction: string | null;
+  progress: Record<string, unknown>;
+  result: Record<string, unknown> | null;
+  error: string | null;
+  event_count: number;
+  created_at: string;
+  updated_at: string;
+  completed_at: string | null;
+}
+
+export interface CodegenJobStartResponse {
+  job_id: string;
+  status: CodegenJobStatus;
+  resumed: boolean;
+}
+
+export interface CodegenJobPollResponse {
+  job: CodegenJobSnapshot;
+  events: CodegenSseEvent[];
+  event_count: number;
+}
+
+const postCodegenJob = async (
   url: string,
-  method: "POST" | "GET",
-  body: unknown | undefined,
-  onEvent: (event: CodegenSseEvent) => void,
-): Promise<void> => {
+  body?: unknown,
+): Promise<CodegenJobStartResponse> => {
   let res: Response;
   try {
     res = await fetch(url, {
-      method,
+      method: "POST",
       headers: authHeaders(),
-      body: body !== undefined ? JSON.stringify(body) : undefined,
+      body: body !== undefined ? JSON.stringify(body) : "{}",
     });
   } catch {
     throw new Error(
@@ -182,72 +210,81 @@ const consumeSseStream = async (
     throw new Error(text || `Erreur HTTP ${res.status}`);
   }
 
-  if (!res.body) throw new Error("Flux SSE indisponible");
-
-  const reader = res.body.getReader();
-  const decoder = new TextDecoder();
-  let buffer = "";
-
-  try {
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-
-      buffer += decoder.decode(value, { stream: true });
-      const parts = buffer.split("\n\n");
-      buffer = parts.pop() ?? "";
-
-      for (const part of parts) {
-        const line = part
-          .split("\n")
-          .map((l) => l.trim())
-          .find((l) => l.startsWith("data:"));
-        if (!line) continue;
-        try {
-          const event = JSON.parse(line.slice(5).trim()) as CodegenSseEvent;
-          onEvent(event);
-        } catch {
-          // ignorer
-        }
-      }
-    }
-  } catch {
-    throw new Error(
-      "Connexion interrompue pendant la génération — réessayez (l'IA peut mettre 1 à 2 minutes).",
-    );
-  }
+  return res.json() as Promise<CodegenJobStartResponse>;
 };
 
-export const streamGenerateSite = async (
+export const startGenerateJob = async (
   projectId: string,
-  onEvent: (event: CodegenSseEvent) => void,
-): Promise<void> =>
-  consumeSseStream(
-    `${BASE}/projects/${projectId}/codegen/generate`,
-    "POST",
-    {},
-    onEvent,
-  );
+): Promise<CodegenJobStartResponse> =>
+  postCodegenJob(`${BASE}/projects/${projectId}/codegen/generate`);
 
-export const streamEditSite = async (
+export const startEditJob = async (
   projectId: string,
   instruction: string,
-  onEvent: (event: CodegenSseEvent) => void,
-): Promise<void> =>
-  consumeSseStream(
-    `${BASE}/projects/${projectId}/codegen/edit`,
-    "POST",
-    { instruction },
-    onEvent,
-  );
+): Promise<CodegenJobStartResponse> =>
+  postCodegenJob(`${BASE}/projects/${projectId}/codegen/edit`, { instruction });
 
-export const streamAuditSite = async (
+export const startAuditJob = async (
   projectId: string,
-  onEvent: (event: CodegenSseEvent) => void,
-): Promise<void> =>
-  consumeSseStream(
-    `${BASE}/projects/${projectId}/codegen/audit`,
-    "POST",
-    {},
-    onEvent,
+): Promise<CodegenJobStartResponse> =>
+  postCodegenJob(`${BASE}/projects/${projectId}/codegen/audit`);
+
+export const fetchActiveCodegenJob = async (
+  projectId: string,
+): Promise<{ job: CodegenJobSnapshot | null }> => {
+  const res = await fetch(
+    `${BASE}/projects/${projectId}/codegen/jobs/active`,
+    { headers: authHeaders() },
   );
+  if (!res.ok) throw new Error("Impossible de charger le job actif");
+  return res.json() as Promise<{ job: CodegenJobSnapshot | null }>;
+};
+
+export const pollCodegenJob = async (
+  projectId: string,
+  jobId: string,
+  after = 0,
+): Promise<CodegenJobPollResponse> => {
+  const res = await fetch(
+    `${BASE}/projects/${projectId}/codegen/jobs/${jobId}?after=${after}`,
+    { headers: authHeaders() },
+  );
+  if (!res.ok) throw new Error("Impossible de suivre la génération");
+  return res.json() as Promise<CodegenJobPollResponse>;
+};
+
+const JOB_POLL_MS = 2_500;
+
+export const followCodegenJob = async (
+  projectId: string,
+  jobId: string,
+  onEvent: (event: CodegenSseEvent) => void | Promise<void>,
+  options?: { initialAfter?: number; onAfter?: (cursor: number) => void },
+): Promise<CodegenJobSnapshot> => {
+  let after = options?.initialAfter ?? 0;
+
+  while (true) {
+    const data = await pollCodegenJob(projectId, jobId, after);
+
+    for (const event of data.events) {
+      await onEvent(event);
+    }
+    after = data.event_count;
+    options?.onAfter?.(after);
+
+    if (
+      data.job.status === "completed" ||
+      data.job.status === "failed"
+    ) {
+      if (data.job.status === "failed" && data.job.error) {
+        const hadErrorEvent = data.events.some((e) => e.type === "error");
+        if (!hadErrorEvent) {
+          await onEvent({ type: "error", message: data.job.error });
+        }
+      }
+      return data.job;
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, JOB_POLL_MS));
+  }
+};
