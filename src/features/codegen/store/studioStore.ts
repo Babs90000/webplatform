@@ -31,6 +31,7 @@ interface StudioState {
   chatMessages: Array<{ role: "user" | "assistant"; content: string }>;
   visualEditMode: boolean;
   codeVisible: boolean;
+  previewFocus: boolean;
   committeeReviewActive: boolean;
   expertScores: ReviewExpertScores | null;
 
@@ -49,6 +50,7 @@ interface StudioState {
   resetStreaming: () => void;
   setVisualEditMode: (on: boolean) => void;
   setCodeVisible: (visible: boolean) => void;
+  setPreviewFocus: (on: boolean) => void;
   setCommitteeReviewActive: (active: boolean) => void;
   setExpertScores: (scores: ReviewExpertScores | null) => void;
   flushStreamingToFiles: () => void;
@@ -72,6 +74,7 @@ export const useStudioStore = create<StudioState>()(
       chatMessages: [],
       visualEditMode: false,
       codeVisible: false,
+      previewFocus: false,
       committeeReviewActive: false,
       expertScores: null,
 
@@ -91,6 +94,7 @@ export const useStudioStore = create<StudioState>()(
             streamingPaths: {},
             chatMessages: [],
             visualEditMode: false,
+            previewFocus: false,
             committeeReviewActive: false,
             expertScores: null,
           });
@@ -188,6 +192,11 @@ export const useStudioStore = create<StudioState>()(
       },
       setVisualEditMode: (on) => set({ visualEditMode: on }),
       setCodeVisible: (visible) => set({ codeVisible: visible }),
+      setPreviewFocus: (on) =>
+        set({
+          previewFocus: on,
+          ...(on ? { codeVisible: false } : {}),
+        }),
       setCommitteeReviewActive: (active) => set({ committeeReviewActive: active }),
       setExpertScores: (scores) => set({ expertScores: scores }),
     }),
@@ -199,7 +208,6 @@ export const useStudioStore = create<StudioState>()(
         chatMessages: state.chatMessages,
         selectedPath: state.selectedPath,
         previewPage: state.previewPage,
-        codeVisible: state.codeVisible,
       }),
     },
   ),

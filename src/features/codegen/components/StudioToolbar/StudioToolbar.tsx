@@ -26,6 +26,8 @@ interface StudioToolbarProps {
   onToggleVisualEdit: () => void;
   codeVisible: boolean;
   onToggleCode: () => void;
+  previewFocus: boolean;
+  onTogglePreviewFocus: () => void;
   onOpenSettings: () => void;
   onOpenPublish: () => void;
   onAuditQuality: () => void;
@@ -45,6 +47,8 @@ export const StudioToolbar: React.FC<StudioToolbarProps> = ({
   onToggleVisualEdit,
   codeVisible,
   onToggleCode,
+  previewFocus,
+  onTogglePreviewFocus,
   onOpenSettings,
   onOpenPublish,
   onAuditQuality,
@@ -98,10 +102,18 @@ export const StudioToolbar: React.FC<StudioToolbarProps> = ({
 
       <div className={styles.right}>
         <Button
+          variant={previewFocus ? "primary" : "secondary"}
+          size="sm"
+          onClick={onTogglePreviewFocus}
+          disabled={!hasFiles}
+        >
+          {previewFocus ? "Quitter aperçu seul" : "Aperçu seul"}
+        </Button>
+        <Button
           variant={codeVisible ? "primary" : "secondary"}
           size="sm"
           onClick={onToggleCode}
-          disabled={!hasFiles}
+          disabled={!hasFiles || previewFocus}
         >
           {codeVisible ? "Masquer le code" : "Afficher le code"}
         </Button>

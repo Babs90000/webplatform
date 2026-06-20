@@ -23,6 +23,14 @@ export const NAV_MOBILE_FIX_CSS = `
   body.mobile-nav-open .nav-links,
   body.is-menu-open .nav-menu,
   body.is-menu-open .nav-links,
+  body.nav-open header nav,
+  body.nav-open .main-nav,
+  body.nav-open .header-nav,
+  body.menu-open header nav,
+  body.menu-open .main-nav,
+  body.menu-open .header-nav,
+  body.mobile-nav-open header nav,
+  body.is-menu-open header nav,
   .nav-menu.is-open,
   .nav-menu.open,
   .nav-menu.active,
@@ -32,6 +40,9 @@ export const NAV_MOBILE_FIX_CSS = `
   .mobile-menu.open,
   header nav.is-open,
   header nav.open,
+  header nav.wp-nav-revealed,
+  .main-nav.wp-nav-revealed,
+  .header-nav.wp-nav-revealed,
   .wp-nav-revealed {
     display: flex !important;
     flex-direction: column !important;
@@ -69,7 +80,7 @@ export const UI_TABLET_CLOSED_CSS = `
   body:not(.nav-open):not(.menu-open):not(.mobile-nav-open):not(.is-menu-open) .mobile-nav:not(.wp-nav-revealed):not(.open):not(.is-open):not(.active),
   body:not(.nav-open):not(.menu-open):not(.mobile-nav-open):not(.is-menu-open) header .main-nav:not(.wp-nav-revealed):not(.open):not(.is-open):not(.active),
   body:not(.nav-open):not(.menu-open):not(.mobile-nav-open):not(.is-menu-open) .header-nav:not(.wp-nav-revealed):not(.open):not(.is-open):not(.active),
-  body:not(.nav-open):not(.menu-open):not(.mobile-nav-open):not(.is-menu-open) header nav:not(.wp-nav-revealed):not(.open):not(.is-open):not(.active) {
+  body:not(.nav-open):not(.menu-open):not(.mobile-nav-open):not(.is-menu-open) header nav:not(.nav-menu):not(.nav-links):not(.wp-nav-revealed):not(.open):not(.is-open):not(.active) {
     display: none !important;
     visibility: hidden !important;
     pointer-events: none !important;
@@ -210,7 +221,7 @@ export const NAV_CANONICAL_JS = `
     "#nav-menu, .nav-menu, .nav-links, .navbar-menu, .mobile-nav, .mobile-menu, header nav, .main-nav, .header-nav";
   var OVERLAY =
     ".nav-overlay, .mobile-nav-overlay, .menu-overlay, .nav-backdrop, .menu-backdrop";
-  var BODY_OPEN = ["nav-open", "menu-open"];
+  var BODY_OPEN = ["nav-open", "menu-open", "mobile-nav-open", "is-menu-open"];
 
   var isMobile = function () {
     return window.matchMedia("(max-width: 1023px)").matches;
@@ -303,11 +314,16 @@ export const NAV_INIT_CLOSED_JS = `
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", forceClosed);
   }
+  var lastTablet = isTablet();
   var resizeTimer = 0;
   window.addEventListener("resize", function () {
     clearTimeout(resizeTimer);
     resizeTimer = setTimeout(function () {
-      if (isTablet()) forceClosed();
+      var nowTablet = isTablet();
+      if (nowTablet !== lastTablet) {
+        forceClosed();
+        lastTablet = nowTablet;
+      }
     }, 150);
   });
 })();

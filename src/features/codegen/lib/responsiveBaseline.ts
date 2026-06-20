@@ -25,6 +25,43 @@ iframe {
 .container {
   width: min(100% - 2rem, var(--container-max, 1200px));
   margin-inline: auto;
+  padding-inline: 1rem;
+}
+
+@media (max-width: 767px) {
+  .container,
+  .wrapper,
+  [class*="__container"],
+  [class*="-container"]:not(.nav-menu):not(.navbar) {
+    width: min(100% - 1.25rem, 100%) !important;
+    max-width: 100% !important;
+    padding-inline: 0.75rem;
+  }
+
+  .grid,
+  [class*="grid"]:not([class*="icon"]),
+  .features-grid,
+  .cards-grid,
+  .card-grid,
+  .services-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  section,
+  .section {
+    padding-block: clamp(2.5rem, 8vw, 4rem);
+  }
+
+  h1,
+  .hero-title {
+    font-size: clamp(1.75rem, 7vw, 2.75rem) !important;
+    line-height: 1.15 !important;
+  }
+
+  .hero,
+  [class*="hero"] {
+    padding-inline: 0.75rem;
+  }
 }
 
 @media (min-width: 1024px) {

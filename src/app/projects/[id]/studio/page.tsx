@@ -28,7 +28,6 @@ import {
 } from "@/features/codegen/lib/previewBundleCache";
 import { applyVisualEdit, applyVisualMove, type VisualMovePosition } from "@/features/codegen/lib/visualEditor";
 import { toast } from "@/store/toast";
-import { EmptyState } from "@/shared/components/EmptyState";
 
 interface StudioPageProps {
   params: Promise<{ id: string }>;
@@ -53,6 +52,7 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
     chatMessages,
     visualEditMode,
     codeVisible,
+    previewFocus,
     committeeReviewActive,
     expertScores,
     setStudioProjectId,
@@ -63,6 +63,7 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
     upsertFile,
     setVisualEditMode,
     setCodeVisible,
+    setPreviewFocus,
   } = useStudioStore(
     useShallow((state) => ({
       files: state.files,
@@ -73,6 +74,7 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
       chatMessages: state.chatMessages,
       visualEditMode: state.visualEditMode,
       codeVisible: state.codeVisible,
+      previewFocus: state.previewFocus,
       committeeReviewActive: state.committeeReviewActive,
       expertScores: state.expertScores,
       setStudioProjectId: state.setStudioProjectId,
@@ -83,6 +85,7 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
       upsertFile: state.upsertFile,
       setVisualEditMode: state.setVisualEditMode,
       setCodeVisible: state.setCodeVisible,
+      setPreviewFocus: state.setPreviewFocus,
     })),
   );
 
@@ -271,10 +274,9 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
     setVisualEditMode(!visualEditMode);
   }, [visualEditMode, setVisualEditMode]);
 
-  const hasPreviewFiles = useMemo(() => {
-    const merged = mergeFilesForPreview(files, streamingPaths);
-    return merged.some((f) => f.path.toLowerCase().endsWith(".html"));
-  }, [files, streamingPaths]);
+  const handleTogglePreviewFocus = useCallback(() => {
+    setPreviewFocus(!previewFocus);
+  }, [previewFocus, setPreviewFocus]);
 
   const handleToggleCode = useCallback(() => {
     setCodeVisible(!codeVisible);
@@ -284,6 +286,7 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
     <>
     <StudioLayout
       showCode={codeVisible}
+      previewFocus={previewFocus}
       toolbar={
         <StudioToolbar
           projectId={projectId}
@@ -297,6 +300,8 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
           onToggleVisualEdit={handleToggleVisualEdit}
           codeVisible={codeVisible}
           onToggleCode={handleToggleCode}
+          previewFocus={previewFocus}
+          onTogglePreviewFocus={handleTogglePreviewFocus}
           onOpenSettings={() => setSettingsOpen(true)}
           onOpenPublish={() => setPublishOpen(true)}
           onAuditQuality={() => void auditQuality()}
@@ -321,26 +326,19 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
         />
       }
       preview={
-        hasPreviewFiles ? (
-          <StudioPreviewPanel
-            onNavigate={handlePreviewNavigate}
-            onEditText={handleEditText}
-            onEditImageRequest={(path, current) =>
-              setPendingImage({ path, mode: "image", current })
-            }
-            onEditBgRequest={(path) =>
-              setPendingImage({ path, mode: "background" })
-            }
-            onMoveElement={(fromPath, toPath, position) =>
-              void handleMoveElement(fromPath, toPath, position)
-            }
-          />
-        ) : (
-          <EmptyState
-            title="Aperçu en attente"
-            description="L'aperçu live apparaîtra dès que la première page HTML est générée."
-          />
-        )
+        <StudioPreviewPanel
+          onNavigate={handlePreviewNavigate}
+          onEditText={handleEditText}
+          onEditImageRequest={(path, current) =>
+            setPendingImage({ path, mode: "image", current })
+          }
+          onEditBgRequest={(path) =>
+            setPendingImage({ path, mode: "background" })
+          }
+          onMoveElement={(fromPath, toPath, position) =>
+            void handleMoveElement(fromPath, toPath, position)
+          }
+        />
       }
       chat={
         <BuilderChat
