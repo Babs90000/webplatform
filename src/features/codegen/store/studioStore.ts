@@ -6,7 +6,7 @@ import {
   cancelStreamingFlush,
   scheduleStreamingFlush,
 } from "./studioStreamingFlush";
-import type { PreviewViewport } from "../lib/previewViewport";
+import type { PreviewViewport, PreviewZoomMode } from "../lib/previewViewport";
 
 export type StudioPhase =
   | "idle"
@@ -34,6 +34,8 @@ interface StudioState {
   codeVisible: boolean;
   previewFocus: boolean;
   previewViewport: PreviewViewport;
+  previewZoom: PreviewZoomMode;
+  viewportMenuOpen: boolean;
   committeeReviewActive: boolean;
   expertScores: ReviewExpertScores | null;
 
@@ -54,6 +56,8 @@ interface StudioState {
   setCodeVisible: (visible: boolean) => void;
   setPreviewFocus: (on: boolean) => void;
   setPreviewViewport: (viewport: PreviewViewport) => void;
+  setPreviewZoom: (zoom: PreviewZoomMode) => void;
+  setViewportMenuOpen: (open: boolean) => void;
   setCommitteeReviewActive: (active: boolean) => void;
   setExpertScores: (scores: ReviewExpertScores | null) => void;
   flushStreamingToFiles: () => void;
@@ -79,6 +83,8 @@ export const useStudioStore = create<StudioState>()(
       codeVisible: false,
       previewFocus: false,
       previewViewport: "full",
+      previewZoom: "fit",
+      viewportMenuOpen: false,
       committeeReviewActive: false,
       expertScores: null,
 
@@ -100,6 +106,8 @@ export const useStudioStore = create<StudioState>()(
             visualEditMode: false,
             previewFocus: false,
             previewViewport: "full",
+            previewZoom: "fit",
+            viewportMenuOpen: false,
             committeeReviewActive: false,
             expertScores: null,
           });
@@ -202,7 +210,10 @@ export const useStudioStore = create<StudioState>()(
           previewFocus: on,
           ...(on ? { codeVisible: false } : {}),
         }),
-      setPreviewViewport: (viewport) => set({ previewViewport: viewport }),
+      setPreviewViewport: (viewport) =>
+        set({ previewViewport: viewport, previewZoom: "fit" }),
+      setPreviewZoom: (zoom) => set({ previewZoom: zoom }),
+      setViewportMenuOpen: (open) => set({ viewportMenuOpen: open }),
       setCommitteeReviewActive: (active) => set({ committeeReviewActive: active }),
       setExpertScores: (scores) => set({ expertScores: scores }),
     }),
@@ -214,6 +225,7 @@ export const useStudioStore = create<StudioState>()(
         chatMessages: state.chatMessages,
         selectedPath: state.selectedPath,
         previewPage: state.previewPage,
+        previewViewport: state.previewViewport,
       }),
     },
   ),

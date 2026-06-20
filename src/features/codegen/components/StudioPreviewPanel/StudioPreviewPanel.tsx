@@ -17,6 +17,7 @@ interface StudioPreviewPanelProps {
     position: VisualMovePosition,
   ) => void;
   onOpenShortcuts?: () => void;
+  onOpenViewportMenu?: () => void;
 }
 
 const StudioPreviewPanelComponent: React.FC<StudioPreviewPanelProps> = ({
@@ -26,6 +27,7 @@ const StudioPreviewPanelComponent: React.FC<StudioPreviewPanelProps> = ({
   onEditBgRequest,
   onMoveElement,
   onOpenShortcuts,
+  onOpenViewportMenu,
 }) => {
   const {
     previewHtml,
@@ -38,6 +40,8 @@ const StudioPreviewPanelComponent: React.FC<StudioPreviewPanelProps> = ({
     expertScores,
     visualEditMode,
     previewViewport,
+    previewZoom,
+    setPreviewZoom,
   } = useStudioStore(
     useShallow((state) => ({
       previewHtml: state.previewHtml,
@@ -50,6 +54,8 @@ const StudioPreviewPanelComponent: React.FC<StudioPreviewPanelProps> = ({
       expertScores: state.expertScores,
       visualEditMode: state.visualEditMode,
       previewViewport: state.previewViewport,
+      previewZoom: state.previewZoom,
+      setPreviewZoom: state.setPreviewZoom,
     })),
   );
 
@@ -68,7 +74,10 @@ const StudioPreviewPanelComponent: React.FC<StudioPreviewPanelProps> = ({
       expertScores={expertScores}
       editable={visualEditMode}
       previewViewport={previewViewport}
+      previewZoom={previewZoom}
+      onPreviewZoomChange={setPreviewZoom}
       onOpenShortcuts={onOpenShortcuts}
+      onOpenViewportMenu={onOpenViewportMenu}
       onNavigate={onNavigate}
       onEditText={onEditText}
       onEditImageRequest={onEditImageRequest}

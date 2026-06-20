@@ -4,9 +4,8 @@ import React from "react";
 import styles from "./StudioShortcutsModal.module.css";
 import { Modal } from "@/shared/components/Modal";
 import {
-  PREVIEW_VIEWPORT_PRESETS,
+  PREVIEW_VIEWPORT_OPTIONS,
   STUDIO_SHORTCUTS,
-  STUDIO_SHORTCUTS_SEEN_KEY,
 } from "../../lib/previewViewport";
 
 interface StudioShortcutsModalProps {
@@ -16,7 +15,7 @@ interface StudioShortcutsModalProps {
 
 export const markStudioShortcutsSeen = (): void => {
   if (typeof sessionStorage === "undefined") return;
-  sessionStorage.setItem(STUDIO_SHORTCUTS_SEEN_KEY, "1");
+  sessionStorage.setItem("wp-studio-shortcuts-seen", "1");
 };
 
 export const StudioShortcutsModal: React.FC<StudioShortcutsModalProps> = ({
@@ -36,9 +35,9 @@ export const StudioShortcutsModal: React.FC<StudioShortcutsModalProps> = ({
       size="md"
     >
       <p className={styles.intro}>
-        Raccourcis clavier et tailles d&apos;aperçu pour tester votre site sur
-        mobile, tablette et grands écrans. Inactifs pendant la saisie dans le
-        chat ou l&apos;éditeur.
+        Testez votre site sur mobile, tablette et grands écrans. Utilisez le menu
+        déroulant <strong>Responsive</strong> dans la barre d&apos;outils ou les
+        raccourcis clavier (inactifs pendant la saisie).
       </p>
 
       <h3 className={styles.sectionTitle}>Raccourcis clavier</h3>
@@ -62,31 +61,34 @@ export const StudioShortcutsModal: React.FC<StudioShortcutsModalProps> = ({
         ))}
       </ul>
 
-      <h3 className={styles.sectionTitle}>Tailles d&apos;aperçu (touche M)</h3>
+      <h3 className={styles.sectionTitle}>Tailles d&apos;aperçu</h3>
       <p className={styles.sectionIntro}>
-        Le bouton <strong>Responsive</strong> ou la touche{" "}
-        <kbd className={styles.keyInline}>M</kbd> cycle dans cet ordre :
+        Touches <kbd className={styles.keyInline}>1</kbd> à{" "}
+        <kbd className={styles.keyInline}>5</kbd> pour un saut direct, ou{" "}
+        <kbd className={styles.keyInline}>M</kbd> pour cycler.
       </p>
-      <ol className={styles.viewportList}>
-        <li className={styles.viewportItem}>
-          <span className={styles.viewportName}>Plein écran</span>
-          <span className={styles.viewportMeta}>Aperçu adaptatif du panneau</span>
-        </li>
-        {PREVIEW_VIEWPORT_PRESETS.map((preset) => (
-          <li key={preset.id} className={styles.viewportItem}>
-            <span className={styles.viewportName}>{preset.label}</span>
+      <ul className={styles.viewportList}>
+        {PREVIEW_VIEWPORT_OPTIONS.map((opt) => (
+          <li key={opt.id} className={styles.viewportItem}>
+            <span className={styles.viewportName}>
+              <kbd className={styles.keyInline}>{opt.shortcutKey}</kbd>{" "}
+              {opt.label}
+            </span>
             <span className={styles.viewportMeta}>
-              {preset.width} × {preset.height}px
-              {preset.category === "desktop" ? " · QA grand écran" : ""}
+              {opt.width && opt.height
+                ? `${opt.width} × ${opt.height}px`
+                : "Adaptatif au panneau"}
+              {opt.menuGroup === "desktop" ? " · QA grand écran" : ""}
             </span>
           </li>
         ))}
-      </ol>
+      </ul>
 
       <p className={styles.tip}>
-        Les presets device activent automatiquement l&apos;aperçu seul.{" "}
-        <kbd className={styles.keyInline}>Échap</kbd> revient au plein écran, puis
-        quitte l&apos;aperçu seul.
+        Les presets device activent l&apos;aperçu seul. Le zoom{" "}
+        <strong>Ajuster</strong> réduit automatiquement les grands écrans.
+        <kbd className={styles.keyInline}>Échap</kbd> ferme les menus, revient au
+        plein écran, puis quitte l&apos;aperçu seul.
       </p>
     </Modal>
   );

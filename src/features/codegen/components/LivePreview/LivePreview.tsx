@@ -15,10 +15,12 @@ import { injectVisualEditor, type VisualMovePosition } from "../../lib/visualEdi
 import { CreativeCommitteeStrip } from "../CreativeCommitteeStrip";
 import type { ReviewExpertScores } from "../../lib/creativeCommittee";
 import {
+  computeDeviceScale,
   isDevicePreview,
   PREVIEW_VIEWPORT_CONFIG,
   STUDIO_SHORTCUTS_SEEN_KEY,
   type PreviewViewport,
+  type PreviewZoomMode,
 } from "../../lib/previewViewport";
 import { markStudioShortcutsSeen } from "../StudioShortcutsModal";
 
@@ -33,7 +35,10 @@ interface LivePreviewProps {
   expertScores?: ReviewExpertScores | null;
   editable?: boolean;
   previewViewport?: PreviewViewport;
+  previewZoom?: PreviewZoomMode;
+  onPreviewZoomChange?: (zoom: PreviewZoomMode) => void;
   onOpenShortcuts?: () => void;
+  onOpenViewportMenu?: () => void;
   onNavigate?: (path: string) => void;
   onEditText?: (path: string, value: string) => void;
   onEditImageRequest?: (path: string, current?: string) => void;
@@ -56,7 +61,10 @@ const LivePreviewComponent: React.FC<LivePreviewProps> = ({
   expertScores = null,
   editable = false,
   previewViewport = "full",
+  previewZoom = "fit",
+  onPreviewZoomChange,
   onOpenShortcuts,
+  onOpenViewportMenu,
   onNavigate,
   onEditText,
   onEditImageRequest,
@@ -64,11 +72,13 @@ const LivePreviewComponent: React.FC<LivePreviewProps> = ({
   onMoveElement,
 }) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const frameWrapRef = useRef<HTMLDivElement>(null);
   const appliedSrcRef = useRef("");
   const [displayHtml, setDisplayHtml] = useState(html);
   const lastPushRef = useRef(0);
   const pendingHtmlRef = useRef(html);
   const [showShortcutsHint, setShowShortcutsHint] = useState(false);
+  const [containerWidth, setContainerWidth] = useState(0);
 
   const devicePreview = isDevicePreview(previewViewport);
   const viewportConfig = PREVIEW_VIEWPORT_CONFIG[previewViewport];
@@ -78,6 +88,19 @@ const LivePreviewComponent: React.FC<LivePreviewProps> = ({
     if (!sessionStorage.getItem(STUDIO_SHORTCUTS_SEEN_KEY)) {
       setShowShortcutsHint(true);
     }
+  }, []);
+
+  useEffect(() => {
+    const el = frameWrapRef.current;
+    if (!el) return;
+
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (entry) setContainerWidth(entry.contentRect.width);
+    });
+    observer.observe(el);
+    setContainerWidth(el.clientWidth);
+    return () => observer.disconnect();
   }, []);
 
   useEffect(() => {
@@ -171,10 +194,18 @@ const LivePreviewComponent: React.FC<LivePreviewProps> = ({
     onOpenShortcuts?.();
   }, [onOpenShortcuts]);
 
-  const deviceFrameStyle = viewportConfig
+  const deviceScale = useMemo(() => {
+    if (!devicePreview || !viewportConfig.width) return 1;
+    return computeDeviceScale(containerWidth, viewportConfig.width, previewZoom);
+  }, [containerWidth, devicePreview, viewportConfig.width, previewZoom]);
+
+  const scalePercent = Math.round(deviceScale * 100);
+
+  const deviceFrameStyle = viewportConfig.width
     ? ({
         "--preview-device-width": `${viewportConfig.width}px`,
         "--preview-device-height": `${viewportConfig.height}px`,
+        "--preview-device-scale": String(deviceScale),
       } as React.CSSProperties)
     : undefined;
 
@@ -196,14 +227,64 @@ const LivePreviewComponent: React.FC<LivePreviewProps> = ({
       />
     ) : null;
 
+  const handleZoomFit = (): void => onPreviewZoomChange?.("fit");
+  const handleZoom100 = (): void => onPreviewZoomChange?.(100);
+  const handleZoomStep = (delta: number): void => {
+    const base =
+      previewZoom === "fit" ? scalePercent : previewZoom;
+    const next = Math.min(150, Math.max(25, base + delta));
+    onPreviewZoomChange?.(next);
+  };
+
   return (
     <div className={styles.container}>
       <div className={styles.toolbar}>
         <span className={styles.label}>Aperçu live</span>
         {devicePreview && viewportConfig && (
-          <span className={styles.viewportBadge}>
-            {viewportConfig.label}
-          </span>
+          <button
+            type="button"
+            className={styles.viewportBadge}
+            onClick={onOpenViewportMenu}
+            title="Changer la taille (menu ou 1-5)"
+          >
+            {viewportConfig.shortLabel}
+            {scalePercent < 100 && ` @ ${scalePercent}%`}
+          </button>
+        )}
+        {devicePreview && onPreviewZoomChange && (
+          <div className={styles.zoomControls}>
+            <button
+              type="button"
+              className={`${styles.zoomBtn} ${previewZoom === "fit" ? styles.zoomBtnActive : ""}`}
+              onClick={handleZoomFit}
+              title="Ajuster au panneau"
+            >
+              Ajuster
+            </button>
+            <button
+              type="button"
+              className={styles.zoomBtn}
+              onClick={() => handleZoomStep(-10)}
+              aria-label="Zoom arrière"
+            >
+              −
+            </button>
+            <button
+              type="button"
+              className={`${styles.zoomBtn} ${previewZoom === 100 ? styles.zoomBtnActive : ""}`}
+              onClick={handleZoom100}
+            >
+              100%
+            </button>
+            <button
+              type="button"
+              className={styles.zoomBtn}
+              onClick={() => handleZoomStep(10)}
+              aria-label="Zoom avant"
+            >
+              +
+            </button>
+          </div>
         )}
         {editable && (
           <span className={styles.editBadge}>Édition visuelle active</span>
@@ -214,9 +295,10 @@ const LivePreviewComponent: React.FC<LivePreviewProps> = ({
             className={styles.shortcutsHint}
             onClick={handleOpenShortcutsFromHint}
           >
-            Touche <kbd className={styles.hintKey}>?</kbd> pour le guide
-            · <kbd className={styles.hintKey}>M</kbd> tailles
+            <kbd className={styles.hintKey}>1-5</kbd> tailles
+            · <kbd className={styles.hintKey}>M</kbd> cycle
             · <kbd className={styles.hintKey}>C</kbd> code
+            · <kbd className={styles.hintKey}>?</kbd> guide
             <span
               className={styles.hintDismiss}
               onClick={(event) => {
@@ -237,6 +319,7 @@ const LivePreviewComponent: React.FC<LivePreviewProps> = ({
         )}
       </div>
       <div
+        ref={frameWrapRef}
         className={`${styles.frameWrap} ${devicePreview ? styles.frameWrapDevice : ""}`}
       >
         {showPlaceholder ? (
@@ -246,25 +329,36 @@ const LivePreviewComponent: React.FC<LivePreviewProps> = ({
         ) : (
           <>
             {displayHtml &&
-              (devicePreview && viewportConfig ? (
+              (devicePreview && viewportConfig.width ? (
                 <div
-                  className={`${styles.deviceFrame} ${deviceFrameClass}`}
-                  style={deviceFrameStyle}
+                  className={styles.deviceScaler}
+                  style={{
+                    width: viewportConfig.width * deviceScale,
+                    height: viewportConfig.height * deviceScale + 32 * deviceScale,
+                  }}
                 >
-                  <div className={styles.deviceChrome}>
-                    {previewViewport === "mobile" && (
-                      <span className={styles.deviceNotch} />
-                    )}
-                    <span className={styles.deviceLabel}>
-                      {viewportConfig.width} × {viewportConfig.height}
-                    </span>
+                  <div
+                    className={`${styles.deviceFrame} ${deviceFrameClass}`}
+                    style={{
+                      ...deviceFrameStyle,
+                      transform: `scale(${deviceScale})`,
+                    }}
+                  >
+                    <div className={styles.deviceChrome}>
+                      {previewViewport === "mobile" && (
+                        <span className={styles.deviceNotch} />
+                      )}
+                      <span className={styles.deviceLabel}>
+                        {viewportConfig.width} × {viewportConfig.height}
+                      </span>
+                    </div>
+                    <iframe
+                      ref={iframeRef}
+                      title={`Aperçu ${viewportConfig.label}`}
+                      className={styles.frameDevice}
+                      sandbox="allow-scripts allow-same-origin"
+                    />
                   </div>
-                  <iframe
-                    ref={iframeRef}
-                    title={`Aperçu ${viewportConfig.label}`}
-                    className={styles.frameDevice}
-                    sandbox="allow-scripts allow-same-origin"
-                  />
                 </div>
               ) : (
                 <iframe

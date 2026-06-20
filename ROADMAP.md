@@ -41,6 +41,7 @@ Principes directeurs :
 | Routes `/hermes/*` (backend WP) | Alias interne → Koala Codeur (DeepSeek, stateless) | ✅ Opérationnel — **≠ Hermes Agent** |
 | Édition visuelle | Clic sur texte / image / fond dans l'aperçu | ✅ Opérationnel |
 | Aperçu live | iframe `srcDoc`, bundler, Alpine.js (CDN) | ✅ Opérationnel |
+| QA responsive studio | Menu presets, raccourcis 1-5/M/F/C, zoom auto-fit | ✅ Opérationnel |
 | Upload d'images | Supabase Storage (URL publique + repli signé) | ✅ Opérationnel |
 | Auth & projets | Supabase | ✅ Opérationnel |
 | Facturation | Stripe | ⛔ À faire (V1) |
@@ -55,6 +56,18 @@ Principes directeurs :
 
 Le cœur du produit fonctionne : génération, édition visuelle et assistée,
 aperçu, gestion de projets. C'est la fondation des versions suivantes.
+
+#### Studio — QA responsive
+
+| Preset | Dimensions | Raccourci |
+|--------|------------|-----------|
+| Plein écran | Adaptatif | `1` |
+| Mobile | 375 × 667 | `2` |
+| Tablette | 768 × 1024 | `3` |
+| Desktop QA | 1280 × 800 | `4` |
+| Desktop QA | 1440 × 900 | `5` |
+
+Raccourcis : `M` cycle · `F` aperçu seul · `C` code · `?` guide · menu déroulant dans la toolbar.
 
 ---
 

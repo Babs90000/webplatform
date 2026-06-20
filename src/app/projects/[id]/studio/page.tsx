@@ -21,6 +21,7 @@ import { usePreviewBundle } from "@/features/codegen/hooks/usePreviewBundle";
 import { useStudioShortcuts } from "@/features/codegen/hooks/useStudioShortcuts";
 import { useStudioStore } from "@/features/codegen/store/studioStore";
 import { cyclePreviewViewport } from "@/features/codegen/lib/previewViewport";
+import type { PreviewViewport } from "@/features/codegen/lib/previewViewport";
 import {
   saveProjectFile,
   uploadProjectAsset,
@@ -57,6 +58,7 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
     codeVisible,
     previewFocus,
     previewViewport,
+    viewportMenuOpen,
     committeeReviewActive,
     expertScores,
     setStudioProjectId,
@@ -69,6 +71,7 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
     setCodeVisible,
     setPreviewFocus,
     setPreviewViewport,
+    setViewportMenuOpen,
   } = useStudioStore(
     useShallow((state) => ({
       files: state.files,
@@ -81,6 +84,7 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
       codeVisible: state.codeVisible,
       previewFocus: state.previewFocus,
       previewViewport: state.previewViewport,
+      viewportMenuOpen: state.viewportMenuOpen,
       committeeReviewActive: state.committeeReviewActive,
       expertScores: state.expertScores,
       setStudioProjectId: state.setStudioProjectId,
@@ -93,6 +97,7 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
       setCodeVisible: state.setCodeVisible,
       setPreviewFocus: state.setPreviewFocus,
       setPreviewViewport: state.setPreviewViewport,
+      setViewportMenuOpen: state.setViewportMenuOpen,
     })),
   );
 
@@ -286,11 +291,18 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
     setPreviewFocus(!previewFocus);
   }, [previewFocus, setPreviewFocus]);
 
+  const handleSelectPreviewViewport = useCallback(
+    (viewport: PreviewViewport) => {
+      setPreviewViewport(viewport);
+      if (viewport !== "full") setPreviewFocus(true);
+    },
+    [setPreviewViewport, setPreviewFocus],
+  );
+
   const handleCyclePreviewViewport = useCallback(() => {
     const next = cyclePreviewViewport(previewViewport);
-    setPreviewViewport(next);
-    if (next !== "full") setPreviewFocus(true);
-  }, [previewViewport, setPreviewViewport, setPreviewFocus]);
+    handleSelectPreviewViewport(next);
+  }, [previewViewport, handleSelectPreviewViewport]);
 
   const handleSetViewportFull = useCallback(() => {
     setPreviewViewport("full");
@@ -308,13 +320,16 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
   useStudioShortcuts({
     enabled: files.length > 0,
     shortcutsOpen,
+    viewportMenuOpen,
     previewViewport,
     previewFocus,
+    onSelectViewport: handleSelectPreviewViewport,
     onCycleViewport: handleCyclePreviewViewport,
     onTogglePreviewFocus: handleTogglePreviewFocus,
     onToggleCode: handleToggleCode,
     onOpenHelp: () => setShortcutsOpen(true),
     onCloseHelp: () => setShortcutsOpen(false),
+    onCloseViewportMenu: () => setViewportMenuOpen(false),
     onSetViewportFull: handleSetViewportFull,
     onExitPreviewFocus: handleExitPreviewFocus,
   });
@@ -340,7 +355,9 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
           previewFocus={previewFocus}
           onTogglePreviewFocus={handleTogglePreviewFocus}
           previewViewport={previewViewport}
-          onCyclePreviewViewport={handleCyclePreviewViewport}
+          viewportMenuOpen={viewportMenuOpen}
+          onSelectPreviewViewport={handleSelectPreviewViewport}
+          onViewportMenuOpenChange={setViewportMenuOpen}
           onOpenShortcuts={() => setShortcutsOpen(true)}
           onOpenSettings={() => setSettingsOpen(true)}
           onOpenPublish={() => setPublishOpen(true)}
@@ -379,6 +396,7 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
             void handleMoveElement(fromPath, toPath, position)
           }
           onOpenShortcuts={() => setShortcutsOpen(true)}
+          onOpenViewportMenu={() => setViewportMenuOpen(true)}
         />
       }
       chat={

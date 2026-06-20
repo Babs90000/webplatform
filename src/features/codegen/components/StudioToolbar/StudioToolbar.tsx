@@ -1,13 +1,8 @@
 "use client";
 
-import React from "react";
-import {
-  ArrowLeft,
-  CircleHelp,
-  Monitor,
-  Smartphone,
-  Tablet,
-} from "lucide-react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { ArrowLeft, CircleHelp, MoreHorizontal } from "lucide-react";
 import { LoadingDots } from "@/shared/components/LoadingDots";
 import { Icon } from "@/shared/components/Icon";
 import Link from "next/link";
@@ -18,12 +13,9 @@ import { getExportZipUrl } from "../../services/codegenApi";
 import { getAuthToken } from "@/lib/authToken";
 import { useExportCheckout } from "@/features/billing/hooks/useBilling";
 import { CreativeCommitteeStrip } from "../CreativeCommitteeStrip";
+import { PreviewViewportMenu } from "../PreviewViewportMenu";
 import type { ReviewExpertScores } from "../../lib/creativeCommittee";
-import {
-  getPreviewViewportLabel,
-  isDevicePreview,
-  type PreviewViewport,
-} from "../../lib/previewViewport";
+import type { PreviewViewport } from "../../lib/previewViewport";
 
 interface StudioToolbarProps {
   projectId: string;
@@ -40,7 +32,9 @@ interface StudioToolbarProps {
   previewFocus: boolean;
   onTogglePreviewFocus: () => void;
   previewViewport: PreviewViewport;
-  onCyclePreviewViewport: () => void;
+  viewportMenuOpen: boolean;
+  onSelectPreviewViewport: (viewport: PreviewViewport) => void;
+  onViewportMenuOpenChange: (open: boolean) => void;
   onOpenShortcuts: () => void;
   onOpenSettings: () => void;
   onOpenPublish: () => void;
@@ -48,14 +42,6 @@ interface StudioToolbarProps {
   committeeReviewActive?: boolean;
   expertScores?: ReviewExpertScores | null;
 }
-
-const VIEWPORT_ICONS = {
-  full: Monitor,
-  mobile: Smartphone,
-  tablet: Tablet,
-  desktop1280: Monitor,
-  desktop1440: Monitor,
-} as const;
 
 export const StudioToolbar: React.FC<StudioToolbarProps> = ({
   projectId,
@@ -72,7 +58,9 @@ export const StudioToolbar: React.FC<StudioToolbarProps> = ({
   previewFocus,
   onTogglePreviewFocus,
   previewViewport,
-  onCyclePreviewViewport,
+  viewportMenuOpen,
+  onSelectPreviewViewport,
+  onViewportMenuOpenChange,
   onOpenShortcuts,
   onOpenSettings,
   onOpenPublish,
@@ -81,8 +69,10 @@ export const StudioToolbar: React.FC<StudioToolbarProps> = ({
   expertScores = null,
 }) => {
   const exportCheckout = useExportCheckout(projectId);
-  const ViewportIcon = VIEWPORT_ICONS[previewViewport];
-  const deviceActive = isDevicePreview(previewViewport);
+  const moreRef = useRef<HTMLDivElement>(null);
+  const moreMenuRef = useRef<HTMLDivElement>(null);
+  const [moreOpen, setMoreOpen] = useState(false);
+  const [morePos, setMorePos] = useState({ top: 0, left: 0 });
 
   const handleExport = async () => {
     const token = getAuthToken();
@@ -98,6 +88,58 @@ export const StudioToolbar: React.FC<StudioToolbarProps> = ({
     a.click();
     URL.revokeObjectURL(url);
   };
+
+  const updateMorePosition = useCallback(() => {
+    const el = moreRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    setMorePos({ top: rect.bottom + 6, left: rect.right - 200 });
+  }, []);
+
+  useEffect(() => {
+    if (!moreOpen) return;
+    updateMorePosition();
+    const onDocClick = (event: MouseEvent): void => {
+      const target = event.target as Node;
+      if (moreRef.current?.contains(target)) return;
+      if (moreMenuRef.current?.contains(target)) return;
+      setMoreOpen(false);
+    };
+    document.addEventListener("mousedown", onDocClick);
+    return () => document.removeEventListener("mousedown", onDocClick);
+  }, [moreOpen, updateMorePosition]);
+
+  const moreMenu =
+    moreOpen && typeof document !== "undefined"
+      ? createPortal(
+          <div
+            ref={moreMenuRef}
+            className={styles.moreMenu}
+            style={{ top: morePos.top, left: morePos.left }}
+            role="menu"
+          >
+            <button type="button" className={styles.moreItem} onClick={() => { onToggleVisualEdit(); setMoreOpen(false); }} disabled={!hasFiles}>
+              {visualEditMode ? "Terminer l'édition" : "Édition visuelle"}
+            </button>
+            <button type="button" className={styles.moreItem} onClick={() => { void onRefreshPreview(); setMoreOpen(false); }} disabled={!hasFiles}>
+              Actualiser l&apos;aperçu
+            </button>
+            <button type="button" className={styles.moreItem} onClick={() => { onOpenSettings(); setMoreOpen(false); }} disabled={!hasFiles}>
+              Paramètres
+            </button>
+            <button type="button" className={styles.moreItem} onClick={() => { void onAuditQuality(); setMoreOpen(false); }} disabled={!hasFiles || isBusy}>
+              Auditer la qualité
+            </button>
+            <button type="button" className={styles.moreItem} onClick={() => { void exportCheckout.mutate(); setMoreOpen(false); }} disabled={!hasFiles || exportCheckout.isPending}>
+              {exportCheckout.isPending ? "Redirection…" : "Acheter l'export"}
+            </button>
+            <button type="button" className={styles.moreItem} onClick={() => { void handleExport(); setMoreOpen(false); }} disabled={!hasFiles}>
+              Export ZIP (dev)
+            </button>
+          </div>,
+          document.body,
+        )
+      : null;
 
   return (
     <header className={styles.toolbar}>
@@ -137,16 +179,15 @@ export const StudioToolbar: React.FC<StudioToolbarProps> = ({
         >
           <Icon icon={CircleHelp} size="sm" />
         </Button>
-        <Button
-          variant={deviceActive ? "primary" : "secondary"}
-          size="sm"
-          onClick={onCyclePreviewViewport}
+
+        <PreviewViewportMenu
+          value={previewViewport}
+          onChange={onSelectPreviewViewport}
           disabled={!hasFiles}
-          title="Cycle responsive (M) — mobile, tablette, desktop 1280/1440"
-        >
-          <Icon icon={ViewportIcon} size="sm" />
-          {getPreviewViewportLabel(previewViewport)}
-        </Button>
+          open={viewportMenuOpen}
+          onOpenChange={onViewportMenuOpenChange}
+        />
+
         <Button
           variant={previewFocus ? "primary" : "secondary"}
           size="sm"
@@ -156,67 +197,71 @@ export const StudioToolbar: React.FC<StudioToolbarProps> = ({
         >
           {previewFocus ? "Quitter aperçu seul" : "Aperçu seul"}
         </Button>
-        <Button
-          variant={codeVisible ? "primary" : "secondary"}
-          size="sm"
-          onClick={onToggleCode}
-          disabled={!hasFiles || previewFocus}
-          title={previewFocus ? undefined : "Afficher le code (C)"}
-        >
-          {codeVisible ? "Masquer le code" : "Afficher le code"}
-        </Button>
-        <Button
-          variant={visualEditMode ? "primary" : "secondary"}
-          size="sm"
-          onClick={onToggleVisualEdit}
-          disabled={!hasFiles}
-        >
-          {visualEditMode ? "Terminer l'édition" : "Édition visuelle"}
-        </Button>
-        <Button variant="secondary" size="sm" onClick={onRefreshPreview} disabled={!hasFiles}>
-          Actualiser l&apos;aperçu
-        </Button>
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={onOpenSettings}
-          disabled={!hasFiles}
-        >
-          Paramètres
-        </Button>
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={onAuditQuality}
-          disabled={!hasFiles || isBusy}
-        >
-          Auditer la qualité
-        </Button>
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={onOpenPublish}
-          disabled={!hasFiles || isBusy}
-        >
-          Publier
-        </Button>
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={() => exportCheckout.mutate()}
-          disabled={!hasFiles || exportCheckout.isPending}
-        >
-          {exportCheckout.isPending ? "Redirection…" : "Acheter l'export"}
-        </Button>
-        <Button variant="secondary" size="sm" onClick={handleExport} disabled={!hasFiles}>
-          Export ZIP (dev)
-        </Button>
-        <Button variant="primary" size="sm" onClick={onGenerate} disabled={isBusy}>
-          {hasFiles ? "Régénérer" : `Générer avec ${AI_ASSISTANT_NAME}`}
-        </Button>
-        <Link href={`/projects/${projectId}/preview`} target="_blank">
-          <Button variant="secondary" size="sm">Plein écran</Button>
-        </Link>
+
+        <div className={styles.primaryActions}>
+          <Button
+            variant={codeVisible ? "primary" : "secondary"}
+            size="sm"
+            onClick={onToggleCode}
+            disabled={!hasFiles || previewFocus}
+            title={previewFocus ? undefined : "Afficher le code (C)"}
+          >
+            {codeVisible ? "Masquer le code" : "Afficher le code"}
+          </Button>
+          <Button
+            variant={visualEditMode ? "primary" : "secondary"}
+            size="sm"
+            onClick={onToggleVisualEdit}
+            disabled={!hasFiles}
+            className={styles.hideNarrow}
+          >
+            {visualEditMode ? "Terminer l'édition" : "Édition visuelle"}
+          </Button>
+          <Button variant="secondary" size="sm" onClick={onRefreshPreview} disabled={!hasFiles} className={styles.hideNarrow}>
+            Actualiser l&apos;aperçu
+          </Button>
+          <Button variant="secondary" size="sm" onClick={onOpenSettings} disabled={!hasFiles} className={styles.hideNarrow}>
+            Paramètres
+          </Button>
+          <Button variant="secondary" size="sm" onClick={onAuditQuality} disabled={!hasFiles || isBusy} className={styles.hideNarrow}>
+            Auditer la qualité
+          </Button>
+          <Button variant="secondary" size="sm" onClick={onOpenPublish} disabled={!hasFiles || isBusy}>
+            Publier
+          </Button>
+          <Button variant="primary" size="sm" onClick={onGenerate} disabled={isBusy}>
+            {hasFiles ? "Régénérer" : `Générer avec ${AI_ASSISTANT_NAME}`}
+          </Button>
+          <Link href={`/projects/${projectId}/preview`} target="_blank" className={styles.hideNarrow}>
+            <Button variant="secondary" size="sm">Plein écran</Button>
+          </Link>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => void exportCheckout.mutate()}
+            disabled={!hasFiles || exportCheckout.isPending}
+            className={styles.hideWide}
+          >
+            {exportCheckout.isPending ? "Redirection…" : "Acheter l'export"}
+          </Button>
+          <Button variant="secondary" size="sm" onClick={() => void handleExport()} disabled={!hasFiles} className={styles.hideWide}>
+            Export ZIP
+          </Button>
+        </div>
+
+        <div className={styles.moreWrap} ref={moreRef}>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => setMoreOpen((o) => !o)}
+            ariaLabel="Plus d'actions"
+            className={styles.showNarrow}
+          >
+            <Icon icon={MoreHorizontal} size="sm" />
+            Plus
+          </Button>
+        </div>
+        {moreMenu}
       </div>
     </header>
   );
