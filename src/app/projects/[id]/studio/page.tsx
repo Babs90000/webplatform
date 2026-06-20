@@ -1,26 +1,31 @@
 "use client";
 
-import React, { use, useCallback, useEffect, useState, Suspense } from "react";
+import React, { use, useCallback, useEffect, useMemo, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import { useShallow } from "zustand/react/shallow";
 import { AuthGuard } from "@/shared/components/AuthGuard";
 import { useProject } from "@/features/projects/hooks/useProjects";
 import { StudioLayout } from "@/features/codegen/components/StudioLayout";
 import { StudioToolbar } from "@/features/codegen/components/StudioToolbar";
 import { FileTree } from "@/features/codegen/components/FileTree";
 import { CodeView } from "@/features/codegen/components/CodeView";
-import { LivePreview } from "@/features/codegen/components/LivePreview";
+import { StudioPreviewPanel } from "@/features/codegen/components/StudioPreviewPanel";
 import { BuilderChat } from "@/features/codegen/components/BuilderChat";
 import { ImageReplaceModal } from "@/features/codegen/components/ImageReplaceModal";
 import { SiteSettingsModal } from "@/features/codegen/components/SiteSettingsModal";
 import { PublishModal } from "@/features/projects/components/PublishModal";
 import { useProjectFiles } from "@/features/codegen/hooks/useProjectFiles";
 import { useCodegenStream } from "@/features/codegen/hooks/useCodegenStream";
+import { usePreviewBundle } from "@/features/codegen/hooks/usePreviewBundle";
 import { useStudioStore } from "@/features/codegen/store/studioStore";
 import {
   saveProjectFile,
   uploadProjectAsset,
 } from "@/features/codegen/services/codegenApi";
-import { bundlePreviewHtml } from "@/features/codegen/lib/previewBundler";
+import {
+  getCachedPreviewHtml,
+  mergeFilesForPreview,
+} from "@/features/codegen/lib/previewBundleCache";
 import { applyVisualEdit, applyVisualMove, type VisualMovePosition } from "@/features/codegen/lib/visualEditor";
 import { toast } from "@/store/toast";
 
@@ -32,20 +37,23 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
   const searchParams = useSearchParams();
   const { data: project, refetch: refetchProject } = useProject(projectId);
   const { data: serverFiles, refetch } = useProjectFiles(projectId);
-  const { generate, edit, auditQuality, isBusy, refreshPreview, progressPercent, progressDone, progressPending } = useCodegenStream(projectId);
+  const { generate, edit, auditQuality, isBusy, refreshPreview } = useCodegenStream(projectId);
   const [isSaving, setIsSaving] = useState(false);
   const [autoGenerateStarted, setAutoGenerateStarted] = useState(false);
 
+  usePreviewBundle(projectId, isBusy);
+
   const {
     files,
+    streamingPaths,
     selectedPath,
-    previewHtml,
     previewPage,
-    phase,
     statusMessage,
     chatMessages,
     visualEditMode,
     codeVisible,
+    committeeReviewActive,
+    expertScores,
     setStudioProjectId,
     setFiles,
     selectPath,
@@ -54,9 +62,28 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
     upsertFile,
     setVisualEditMode,
     setCodeVisible,
-    committeeReviewActive,
-    expertScores,
-  } = useStudioStore();
+  } = useStudioStore(
+    useShallow((state) => ({
+      files: state.files,
+      streamingPaths: state.streamingPaths,
+      selectedPath: state.selectedPath,
+      previewPage: state.previewPage,
+      statusMessage: state.statusMessage,
+      chatMessages: state.chatMessages,
+      visualEditMode: state.visualEditMode,
+      codeVisible: state.codeVisible,
+      committeeReviewActive: state.committeeReviewActive,
+      expertScores: state.expertScores,
+      setStudioProjectId: state.setStudioProjectId,
+      setFiles: state.setFiles,
+      selectPath: state.selectPath,
+      setPreviewPage: state.setPreviewPage,
+      setPreviewHtml: state.setPreviewHtml,
+      upsertFile: state.upsertFile,
+      setVisualEditMode: state.setVisualEditMode,
+      setCodeVisible: state.setCodeVisible,
+    })),
+  );
 
   const [pendingImage, setPendingImage] = useState<{
     path: string;
@@ -80,18 +107,6 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
   }, [serverFiles, setFiles, selectPath, selectedPath]);
 
   useEffect(() => {
-    if (files.length === 0) return;
-    const html = bundlePreviewHtml(
-      files.map((f) => ({ path: f.path, content: f.content })),
-      previewPage,
-      projectId,
-    );
-    if (html) {
-      setPreviewHtml(html);
-    }
-  }, [files, previewPage, projectId, setPreviewHtml]);
-
-  useEffect(() => {
     if (
       searchParams.get("generate") === "1" &&
       !autoGenerateStarted &&
@@ -103,13 +118,21 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
     }
   }, [searchParams, autoGenerateStarted, project, files.length, generate]);
 
-  const selectedFile = files.find((f) => f.path === selectedPath) ?? null;
+  const selectedFile = useMemo(
+    () => files.find((f) => f.path === selectedPath) ?? null,
+    [files, selectedPath],
+  );
+
+  const selectedContent = useMemo(() => {
+    if (!selectedPath) return "";
+    return streamingPaths[selectedPath] ?? selectedFile?.content ?? "";
+  }, [selectedPath, streamingPaths, selectedFile?.content]);
 
   const handleSaveFile = useCallback(async () => {
     if (!selectedPath || !selectedFile) return;
     setIsSaving(true);
     try {
-      await saveProjectFile(projectId, selectedPath, selectedFile.content);
+      await saveProjectFile(projectId, selectedPath, selectedContent);
       await refetch();
       await refreshPreview();
       toast.success("Fichier enregistré");
@@ -118,17 +141,15 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
     } finally {
       setIsSaving(false);
     }
-  }, [selectedPath, selectedFile, projectId, refetch, refreshPreview]);
+  }, [selectedPath, selectedFile, selectedContent, projectId, refetch, refreshPreview]);
 
   const handlePreviewNavigate = useCallback(
     (path: string) => {
       setPreviewPage(path);
       const state = useStudioStore.getState();
-      const html = bundlePreviewHtml(
-        state.files.map((f) => ({ path: f.path, content: f.content })),
-        path,
-        projectId,
-      );
+      state.flushStreamingToFiles();
+      const merged = mergeFilesForPreview(state.files, state.streamingPaths);
+      const html = getCachedPreviewHtml(merged, path, projectId);
       if (html) {
         setPreviewHtml(html);
       } else {
@@ -147,12 +168,13 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
       current?: string,
     ) => {
       const pageFile = files.find((f) => f.path === previewPage) ?? null;
-      if (!pageFile) {
+      const pageContent = streamingPaths[previewPage] ?? pageFile?.content ?? "";
+      if (!pageContent) {
         toast.error("Page introuvable pour l'édition");
         return;
       }
 
-      const updated = applyVisualEdit(pageFile.content, {
+      const updated = applyVisualEdit(pageContent, {
         kind,
         path,
         value,
@@ -167,13 +189,12 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
       upsertFile(previewPage, updated);
       try {
         await saveProjectFile(projectId, previewPage, updated);
-        // Texte : déjà visible dans l'iframe. Image / fond / logo : recharger l'aperçu.
         if (kind === "image" || kind === "background") await refreshPreview();
       } catch {
         toast.error("Échec de l'enregistrement de la modification");
       }
     },
-    [files, previewPage, projectId, upsertFile, refreshPreview],
+    [files, streamingPaths, previewPage, projectId, upsertFile, refreshPreview],
   );
 
   const handleEditText = useCallback(
@@ -190,12 +211,13 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
       position: VisualMovePosition,
     ) => {
       const pageFile = files.find((f) => f.path === previewPage) ?? null;
-      if (!pageFile) {
+      const pageContent = streamingPaths[previewPage] ?? pageFile?.content ?? "";
+      if (!pageContent) {
         toast.error("Page introuvable pour le déplacement");
         return;
       }
 
-      const updated = applyVisualMove(pageFile.content, {
+      const updated = applyVisualMove(pageContent, {
         fromPath,
         toPath,
         position,
@@ -216,7 +238,7 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
         toast.error("Échec de l'enregistrement du déplacement");
       }
     },
-    [files, previewPage, projectId, upsertFile, refreshPreview],
+    [files, streamingPaths, previewPage, projectId, upsertFile, refreshPreview],
   );
 
   const handleImageConfirm = useCallback(
@@ -228,6 +250,29 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
     },
     [pendingImage, persistPageEdit],
   );
+
+  const handleSelectFile = useCallback(
+    (path: string) => {
+      selectPath(path);
+      setCodeVisible(true);
+    },
+    [selectPath, setCodeVisible],
+  );
+
+  const handleCodeChange = useCallback(
+    (content: string) => {
+      if (selectedPath) upsertFile(selectedPath, content);
+    },
+    [selectedPath, upsertFile],
+  );
+
+  const handleToggleVisualEdit = useCallback(() => {
+    setVisualEditMode(!visualEditMode);
+  }, [visualEditMode, setVisualEditMode]);
+
+  const handleToggleCode = useCallback(() => {
+    setCodeVisible(!codeVisible);
+  }, [codeVisible, setCodeVisible]);
 
   return (
     <>
@@ -243,9 +288,9 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
           onRefreshPreview={() => void refreshPreview()}
           hasFiles={files.length > 0}
           visualEditMode={visualEditMode}
-          onToggleVisualEdit={() => setVisualEditMode(!visualEditMode)}
+          onToggleVisualEdit={handleToggleVisualEdit}
           codeVisible={codeVisible}
-          onToggleCode={() => setCodeVisible(!codeVisible)}
+          onToggleCode={handleToggleCode}
           onOpenSettings={() => setSettingsOpen(true)}
           onOpenPublish={() => setPublishOpen(true)}
           onAuditQuality={() => void auditQuality()}
@@ -257,35 +302,21 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
         <FileTree
           files={files}
           selectedPath={selectedPath}
-          onSelect={(path) => {
-            selectPath(path);
-            setCodeVisible(true);
-          }}
+          onSelect={handleSelectFile}
         />
       }
       codeView={
         <CodeView
           path={selectedPath}
-          content={selectedFile?.content ?? ""}
-          onChange={(content) => {
-            if (selectedPath) upsertFile(selectedPath, content);
-          }}
+          content={selectedContent}
+          onChange={handleCodeChange}
           onSave={() => void handleSaveFile()}
           isSaving={isSaving}
         />
       }
       preview={
-        <LivePreview
-          html={previewHtml}
-          isLoading={phase === "generating" || phase === "architect" || phase === "editing"}
-          loadingMessage={statusMessage || "Génération en cours…"}
-          progressPercent={progressPercent}
-          progressDone={progressDone}
-          progressPending={progressPending}
-          committeeReviewActive={committeeReviewActive}
-          expertScores={expertScores}
-          editable={visualEditMode}
-          onNavigate={(path) => void handlePreviewNavigate(path)}
+        <StudioPreviewPanel
+          onNavigate={handlePreviewNavigate}
           onEditText={handleEditText}
           onEditImageRequest={(path, current) =>
             setPendingImage({ path, mode: "image", current })

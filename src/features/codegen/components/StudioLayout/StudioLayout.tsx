@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo } from "react";
 import styles from "./StudioLayout.module.css";
 
 interface StudioLayoutProps {
@@ -10,7 +10,7 @@ interface StudioLayoutProps {
   showCode?: boolean;
 }
 
-export const StudioLayout: React.FC<StudioLayoutProps> = ({
+export const StudioLayout: React.FC<StudioLayoutProps> = memo(({
   toolbar,
   fileTree,
   codeView,
@@ -29,4 +29,4 @@ export const StudioLayout: React.FC<StudioLayoutProps> = ({
       <aside className={styles.chatPanel}>{chat}</aside>
     </div>
   </div>
-);
+));

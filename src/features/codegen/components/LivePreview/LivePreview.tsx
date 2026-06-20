@@ -1,6 +1,13 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import styles from "./LivePreview.module.css";
 import { LoadingDots } from "@/shared/components/LoadingDots";
 import { LoadingPanel } from "@/shared/components/LoadingPanel";
@@ -29,7 +36,7 @@ interface LivePreviewProps {
   ) => void;
 }
 
-export const LivePreview: React.FC<LivePreviewProps> = ({
+const LivePreviewComponent: React.FC<LivePreviewProps> = ({
   html,
   isLoading = false,
   loadingMessage = "Génération en cours…",
@@ -46,28 +53,45 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
   onMoveElement,
 }) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  const [throttledHtml, setThrottledHtml] = useState(html);
-  const lastUpdate = useRef(0);
+  const appliedSrcRef = useRef("");
+  const [displayHtml, setDisplayHtml] = useState(html);
+  const lastPushRef = useRef(0);
+  const pendingHtmlRef = useRef(html);
 
   useEffect(() => {
+    pendingHtmlRef.current = html;
+    if (html === displayHtml) return;
+
     const now = Date.now();
-    const delay = isLoading ? 2000 : 800;
-    if (now - lastUpdate.current >= delay) {
-      setThrottledHtml(html);
-      lastUpdate.current = now;
+    const delay = isLoading ? 1200 : 500;
+
+    const push = (): void => {
+      const next = pendingHtmlRef.current;
+      if (next === displayHtml) return;
+      setDisplayHtml(next);
+      lastPushRef.current = Date.now();
+    };
+
+    if (now - lastPushRef.current >= delay) {
+      push();
       return;
     }
-    const timer = window.setTimeout(() => {
-      setThrottledHtml(html);
-      lastUpdate.current = Date.now();
-    }, delay);
+
+    const timer = window.setTimeout(push, delay);
     return () => window.clearTimeout(timer);
-  }, [html, isLoading]);
+  }, [html, isLoading, displayHtml]);
 
   const previewSrc = useMemo(
-    () => (editable ? injectVisualEditor(throttledHtml) : throttledHtml),
-    [editable, throttledHtml],
+    () => (editable ? injectVisualEditor(displayHtml) : displayHtml),
+    [editable, displayHtml],
   );
+
+  useEffect(() => {
+    if (!previewSrc || previewSrc === appliedSrcRef.current) return;
+    appliedSrcRef.current = previewSrc;
+    const frame = iframeRef.current;
+    if (frame) frame.srcdoc = previewSrc;
+  }, [previewSrc]);
 
   const handleMessage = useCallback(
     (event: MessageEvent) => {
@@ -114,7 +138,7 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
     return () => window.removeEventListener("message", handleMessage);
   }, [handleMessage]);
 
-  const showPlaceholder = !throttledHtml && !isLoading;
+  const showPlaceholder = !displayHtml && !isLoading;
   const displayPercent = isLoading ? Math.max(progressPercent, 8) : 0;
   const committeeFooter =
     committeeReviewActive || expertScores ? (
@@ -146,13 +170,12 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
           </div>
         ) : (
           <>
-            {throttledHtml && (
+            {displayHtml && (
               <iframe
                 ref={iframeRef}
                 title="Aperçu du site"
                 className={styles.frame}
                 sandbox="allow-scripts allow-same-origin"
-                srcDoc={previewSrc}
               />
             )}
             {isLoading && (
@@ -173,3 +196,5 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
     </div>
   );
 };
+
+export const LivePreview = memo(LivePreviewComponent);

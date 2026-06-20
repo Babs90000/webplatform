@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { memo, useEffect, useState } from "react";
 import styles from "./CodeView.module.css";
 
 interface CodeViewProps {
@@ -11,7 +11,7 @@ interface CodeViewProps {
   isSaving?: boolean;
 }
 
-export const CodeView: React.FC<CodeViewProps> = ({
+export const CodeView: React.FC<CodeViewProps> = memo(({
   path,
   content,
   onChange,
@@ -57,4 +57,4 @@ export const CodeView: React.FC<CodeViewProps> = ({
       />
     </div>
   );
-};
+});

@@ -11,7 +11,8 @@ import {
   fetchPreviewHtml,
   fetchProjectFiles,
 } from "@/features/codegen/services/codegenApi";
-import { bundlePreviewHtml, listHtmlPages } from "@/features/codegen/lib/previewBundler";
+import { listHtmlPages } from "@/features/codegen/lib/previewBundler";
+import { getCachedPreviewHtml } from "@/features/codegen/lib/previewBundleCache";
 import { getProjectEditorPath } from "@/lib/projectRoutes";
 
 interface CodegenPreviewProps {
@@ -48,7 +49,7 @@ export const CodegenPreview: React.FC<CodegenPreviewProps> = ({ projectId }) => 
     setIsLoading(true);
     try {
       const projectFiles = await fetchProjectFiles(projectId);
-      const localHtml = bundlePreviewHtml(
+      const localHtml = getCachedPreviewHtml(
         projectFiles.map((f) => ({ path: f.path, content: f.content })),
         page,
         projectId,

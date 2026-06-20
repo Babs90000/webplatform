@@ -303,8 +303,12 @@ export const NAV_INIT_CLOSED_JS = `
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", forceClosed);
   }
+  var resizeTimer = 0;
   window.addEventListener("resize", function () {
-    if (isTablet()) forceClosed();
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(function () {
+      if (isTablet()) forceClosed();
+    }, 150);
   });
 })();
 `.trim();
@@ -355,32 +359,49 @@ export const NAV_MOBILE_FIX_JS = `
     return false;
   };
 
+  var rafPending = false;
+  var scheduleRefresh = function () {
+    if (rafPending) return;
+    rafPending = true;
+    requestAnimationFrame(function () {
+      rafPending = false;
+      refresh();
+    });
+  };
+
   var refresh = function () {
     if (!window.matchMedia("(max-width: 1023px)").matches) {
       panels().forEach(function (el) {
-        el.classList.remove("wp-nav-revealed");
+        if (el.classList.contains("wp-nav-revealed")) {
+          el.classList.remove("wp-nav-revealed");
+        }
       });
       return;
     }
     var shouldReveal =
       overlayVisible() || toggleOpen() || panelExplicitlyOpen();
     panels().forEach(function (el) {
+      var has = el.classList.contains("wp-nav-revealed");
+      if (shouldReveal === has) return;
       if (shouldReveal) el.classList.add("wp-nav-revealed");
       else el.classList.remove("wp-nav-revealed");
     });
   };
 
-  document.addEventListener("click", function () {
-    requestAnimationFrame(refresh);
-    setTimeout(refresh, 50);
-    setTimeout(refresh, 280);
-  });
+  document.addEventListener(
+    "click",
+    function () {
+      scheduleRefresh();
+      setTimeout(scheduleRefresh, 50);
+      setTimeout(scheduleRefresh, 280);
+    },
+    true,
+  );
 
   if (document.body) {
-    new MutationObserver(refresh).observe(document.body, {
+    new MutationObserver(scheduleRefresh).observe(document.body, {
       attributes: true,
-      attributeFilter: ["class", "style"],
-      subtree: true,
+      attributeFilter: ["class"],
     });
   }
 

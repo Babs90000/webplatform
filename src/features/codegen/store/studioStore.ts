@@ -2,6 +2,10 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import type { ArchitectPlan, ProjectFile } from "../services/codegenApi";
 import type { ReviewExpertScores } from "../lib/creativeCommittee";
+import {
+  cancelStreamingFlush,
+  scheduleStreamingFlush,
+} from "./studioStreamingFlush";
 
 export type StudioPhase =
   | "idle"
@@ -47,6 +51,7 @@ interface StudioState {
   setCodeVisible: (visible: boolean) => void;
   setCommitteeReviewActive: (active: boolean) => void;
   setExpertScores: (scores: ReviewExpertScores | null) => void;
+  flushStreamingToFiles: () => void;
 }
 
 export const useStudioStore = create<StudioState>()(
@@ -122,14 +127,54 @@ export const useStudioStore = create<StudioState>()(
         }
       },
       appendFileChunk: (path, chunk) => {
-        const streaming = { ...get().streamingPaths };
-        streaming[path] = (streaming[path] ?? "") + chunk;
-        set({ streamingPaths: streaming });
-        get().upsertFile(path, streaming[path]);
+        set((state) => ({
+          streamingPaths: {
+            ...state.streamingPaths,
+            [path]: (state.streamingPaths[path] ?? "") + chunk,
+          },
+        }));
+        scheduleStreamingFlush();
+      },
+      flushStreamingToFiles: () => {
+        const { streamingPaths, files } = get();
+        const paths = Object.keys(streamingPaths);
+        if (paths.length === 0) return;
+
+        const next = [...files];
+        let changed = false;
+
+        for (const path of paths) {
+          const content = streamingPaths[path] ?? "";
+          const idx = next.findIndex((f) => f.path === path);
+          if (idx >= 0) {
+            if (next[idx].content === content) continue;
+            next[idx] = {
+              ...next[idx],
+              content,
+              updated_at: new Date().toISOString(),
+            };
+            changed = true;
+          } else {
+            next.push({
+              id: `temp-${path}`,
+              project_id: "",
+              tenant_id: "",
+              path,
+              content,
+              updated_at: new Date().toISOString(),
+            });
+            changed = true;
+          }
+        }
+
+        if (changed) set({ files: next });
       },
       selectPath: (path) => set({ selectedPath: path }),
       setPreviewPage: (page) => set({ previewPage: page }),
-      setPreviewHtml: (html) => set({ previewHtml: html }),
+      setPreviewHtml: (html) => {
+        if (get().previewHtml === html) return;
+        set({ previewHtml: html });
+      },
       setPhase: (phase) => set({ phase }),
       setStatusMessage: (msg) => set({ statusMessage: msg }),
       setProgress: (percent, done, pending) =>
@@ -137,7 +182,10 @@ export const useStudioStore = create<StudioState>()(
       setPlan: (plan) => set({ plan }),
       addChatMessage: (role, content) =>
         set({ chatMessages: [...get().chatMessages, { role, content }] }),
-      resetStreaming: () => set({ streamingPaths: {} }),
+      resetStreaming: () => {
+        cancelStreamingFlush();
+        set({ streamingPaths: {} });
+      },
       setVisualEditMode: (on) => set({ visualEditMode: on }),
       setCodeVisible: (visible) => set({ codeVisible: visible }),
       setCommitteeReviewActive: (active) => set({ committeeReviewActive: active }),

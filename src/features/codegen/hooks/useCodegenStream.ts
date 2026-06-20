@@ -9,7 +9,7 @@ import {
   startGenerateJob,
   type CodegenSseEvent,
 } from "../services/codegenApi";
-import { bundlePreviewHtml } from "../lib/previewBundler";
+import { getCachedPreviewHtml, mergeFilesForPreview } from "../lib/previewBundleCache";
 import type { ReviewExpertScores } from "../lib/creativeCommittee";
 import { useStudioStore } from "../store/studioStore";
 import { toast } from "@/store/toast";
@@ -107,13 +107,15 @@ export const useCodegenStream = (projectId: string) => {
 
   const refreshPreview = useCallback(async () => {
     const state = useStudioStore.getState();
-    const localFiles = state.files.map((f) => ({
-      path: f.path,
-      content: f.content,
-    }));
+    state.flushStreamingToFiles();
 
-    const localHtml = bundlePreviewHtml(
-      localFiles,
+    const merged = mergeFilesForPreview(
+      state.files.map((f) => ({ path: f.path, content: f.content })),
+      state.streamingPaths,
+    );
+
+    const localHtml = getCachedPreviewHtml(
+      merged,
       state.previewPage,
       projectId,
     );
@@ -184,6 +186,7 @@ export const useCodegenStream = (projectId: string) => {
           appendFileChunk(event.path, event.chunk);
           break;
         case "file_saved": {
+          useStudioStore.getState().flushStreamingToFiles();
           await syncFilesFromServer();
           const streamed =
             useStudioStore.getState().streamingPaths[event.path] ??

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo, useMemo } from "react";
 import styles from "./FileTree.module.css";
 import type { ProjectFile } from "../../services/codegenApi";
 
@@ -8,12 +8,15 @@ interface FileTreeProps {
   onSelect: (path: string) => void;
 }
 
-export const FileTree: React.FC<FileTreeProps> = ({
+export const FileTree: React.FC<FileTreeProps> = memo(({
   files,
   selectedPath,
   onSelect,
 }) => {
-  const sorted = [...files].sort((a, b) => a.path.localeCompare(b.path));
+  const sorted = useMemo(
+    () => [...files].sort((a, b) => a.path.localeCompare(b.path)),
+    [files],
+  );
 
   return (
     <div className={styles.container}>
@@ -38,7 +41,7 @@ export const FileTree: React.FC<FileTreeProps> = ({
       </ul>
     </div>
   );
-};
+});
 
 const getFileIcon = (path: string): string => {
   if (path.endsWith(".html")) return "📄";
