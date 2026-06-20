@@ -23,6 +23,11 @@
   cursor: not-allowed;
 }
 
+.button > span {
+  white-space: nowrap;
+  line-height: 1.2;
+}
+
 /* Sizes */
 .sm {
   padding: 6px 14px;

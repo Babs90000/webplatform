@@ -26,7 +26,7 @@ export const ProjectList: React.FC<ProjectListProps> = ({
   if (error) {
     return (
       <ErrorMessage 
-        title="Failed to load projects" 
+        title="Impossible de charger les projets" 
         message={error.message}
         onRetry={onRetry}
       />
@@ -50,9 +50,9 @@ export const ProjectList: React.FC<ProjectListProps> = ({
   if (!projects || projects.length === 0) {
     return (
       <EmptyState
-        title="No projects yet"
-        description="Create your first project to start building your website."
-        actionLabel="Create Project"
+        title="Aucun projet"
+        description="Créez votre premier site avec l'assistant guidé ou Koala Codeur."
+        actionLabel="Créer un projet"
         onAction={onCreateProject}
         icon={<Icon icon={Plus} size="lg" />}
       />

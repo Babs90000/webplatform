@@ -11,11 +11,17 @@ interface ProjectCardProps {
 }
 
 export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
-  const formattedDate = new Date(project.updated_at).toLocaleDateString("en-US", {
-    month: "short",
+  const formattedDate = new Date(project.updated_at).toLocaleDateString("fr-FR", {
     day: "numeric",
+    month: "short",
     year: "numeric",
   });
+
+  const statusLabel: Record<Project["status"], string> = {
+    draft: "Brouillon",
+    published: "En ligne",
+    archived: "Archivé",
+  };
 
   const getBadgeClass = (status: Project["status"]) => {
     switch (status) {
@@ -38,12 +44,12 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
           </div>
         </div>
         <span className={`${styles.badge} ${getBadgeClass(project.status)}`}>
-          {project.status}
+          {statusLabel[project.status]}
         </span>
       </div>
 
       <div className={styles.footer}>
-        <span className={styles.date}>Updated {formattedDate}</span>
+        <span className={styles.date}>Modifié le {formattedDate}</span>
         <Icon icon={ArrowRight} size="md" className={styles.arrow} />
       </div>
     </Link>

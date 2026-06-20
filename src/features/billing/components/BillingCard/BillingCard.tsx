@@ -1,8 +1,10 @@
 "use client";
 
 import React from "react";
+import { Check } from "lucide-react";
 import styles from "./BillingCard.module.css";
 import { Button } from "@/shared/components/Button";
+import { Icon } from "@/shared/components/Icon";
 import { LoadingPanel } from "@/shared/components/LoadingPanel";
 import type { BillingSubscriptionStatus } from "../../services/billingApi";
 import {
@@ -14,8 +16,8 @@ import {
 
 const STATUS_LABELS: Record<BillingSubscriptionStatus, string> = {
   active: "Actif",
-  trialing: "Essai gratuit",
-  past_due: "Paiement en retard",
+  trialing: "Essai",
+  past_due: "Impayé",
   canceled: "Résilié",
 };
 
@@ -60,14 +62,17 @@ export const BillingCard: React.FC = () => {
   return (
     <section className={styles.card} aria-labelledby="billing-heading">
       <div className={styles.header}>
-        <div>
-          <h2 id="billing-heading" className={styles.title}>
-            Abonnement — 12 €/mois
-          </h2>
+        <div className={styles.headerText}>
+          <div className={styles.priceRow}>
+            <h2 id="billing-heading" className={styles.title}>
+              Abonnement
+            </h2>
+            <span className={styles.price}>12 €/mois</span>
+          </div>
           <p className={styles.subtitle}>
             {trialDays > 0
-              ? `${trialDays} jours d'essai gratuits (studio complet, sans nom de domaine). Vous pouvez vous engager pendant l'essai pour activer votre domaine tout de suite — sans perdre vos jours gratuits. Puis 12 €/mois avec engagement ${minMonths} mois.`
-              : `12 €/mois, engagement ${minMonths} mois. Nom de domaine et hébergement inclus.`}
+              ? `${trialDays} jours d'essai · studio complet · domaine après engagement (${minMonths} mois min.)`
+              : `Engagement ${minMonths} mois · domaine et hébergement inclus`}
           </p>
         </div>
         {status && (
@@ -79,25 +84,27 @@ export const BillingCard: React.FC = () => {
 
       <ul className={styles.features}>
         <li className={styles.feature}>
-          <span className={styles.featureIcon} aria-hidden="true">✓</span>
+          <Icon icon={Check} size="sm" className={styles.featureIcon} />
           Génération IA illimitée
         </li>
         <li className={styles.feature}>
-          <span className={styles.featureIcon} aria-hidden="true">✓</span>
-          Édition visuelle + KoalaCoder
+          <Icon icon={Check} size="sm" className={styles.featureIcon} />
+          Édition visuelle + Koala Codeur
         </li>
         <li className={styles.feature}>
-          <span className={styles.featureIcon} aria-hidden="true">✓</span>
-          Nom de domaine & hébergement
-          {isTrialing && !domainEligible && (
-            <span className={styles.featureNote}> (dès la fin de l&apos;essai ou engagement anticipé)</span>
-          )}
-          {isTrialing && domainEligible && (
-            <span className={styles.featureNote}> (activé)</span>
-          )}
+          <Icon icon={Check} size="sm" className={styles.featureIcon} />
+          <span>
+            Domaine & hébergement
+            {isTrialing && !domainEligible && (
+              <span className={styles.featureNote}> · après essai</span>
+            )}
+            {isTrialing && domainEligible && (
+              <span className={styles.featureNote}> · actif</span>
+            )}
+          </span>
         </li>
         <li className={styles.feature}>
-          <span className={styles.featureIcon} aria-hidden="true">✓</span>
+          <Icon icon={Check} size="sm" className={styles.featureIcon} />
           Support sous 24 h
         </li>
       </ul>
@@ -112,7 +119,7 @@ export const BillingCard: React.FC = () => {
       {error && (
         <p className={styles.error}>
           Impossible de charger l&apos;abonnement.{" "}
-          <button type="button" onClick={() => void refetch()}>
+          <button type="button" className={styles.retryLink} onClick={() => void refetch()}>
             Réessayer
           </button>
         </p>
@@ -122,67 +129,58 @@ export const BillingCard: React.FC = () => {
         <div className={styles.actions}>
           {!isSubscribed && (
             <Button
+              size="sm"
               onClick={() => checkout.mutate()}
               disabled={isBusy}
+              title="12 €/mois après la période d'essai"
             >
-              {checkout.isPending ? "Redirection…" : "S'abonner — 12 €/mois"}
+              {checkout.isPending ? "Redirection…" : "S'abonner"}
             </Button>
           )}
           {canEarlyCommit && (
             <Button
+              size="sm"
+              variant="cta"
               onClick={() => earlyCommit.mutate()}
               disabled={isBusy}
+              title={`Engagement ${minMonths} mois · activation immédiate du domaine`}
             >
-              {earlyCommit.isPending
-                ? "Activation…"
-                : `Activer mon domaine — engagement ${minMonths} mois`}
+              {earlyCommit.isPending ? "Activation…" : "Activer le domaine"}
             </Button>
           )}
           {isSubscribed && subscription?.has_customer && canCancel && (
             <Button
               variant="secondary"
+              size="sm"
               onClick={() => portal.mutate()}
               disabled={isBusy}
+              title={isTrialing ? "Annuler ou modifier l'essai" : "Portail client Stripe"}
             >
-              {portal.isPending
-                ? "Ouverture…"
-                : isTrialing
-                  ? "Gérer / annuler l'essai"
-                  : "Gérer mon abonnement"}
+              {portal.isPending ? "Ouverture…" : "Gérer"}
             </Button>
           )}
-          {isSubscribed && subscription?.has_customer && !canCancel && (
-            <p className={styles.meta}>
-              Engagement actif jusqu&apos;au {commitmentEnd ?? "—"} ({minMonths}{" "}
-              mois minimum
-              {hasEarlyCommitment ? "" : " si vous restez après l&apos;essai"}).
-            </p>
-          )}
           {status === "past_due" && (
-            <Button onClick={() => portal.mutate()} disabled={isBusy}>
-              Mettre à jour le paiement
+            <Button size="sm" onClick={() => portal.mutate()} disabled={isBusy}>
+              {portal.isPending ? "Ouverture…" : "Paiement"}
             </Button>
           )}
         </div>
       )}
 
+      {isSubscribed && subscription?.has_customer && !canCancel && (
+        <p className={styles.meta}>
+          Engagement jusqu&apos;au {commitmentEnd ?? "—"}
+          {!hasEarlyCommitment && isTrialing ? " si vous restez après l'essai" : ""}.
+        </p>
+      )}
+
       {periodEnd && isSubscribed && (
         <p className={styles.meta}>
-          {isTrialing ? "Fin de l'essai gratuit" : "Prochaine échéance"} : {periodEnd}
-          {isTrialing && !domainEligible && (
-            <> · Pas de nom de domaine tant que vous n&apos;êtes pas engagé</>
-          )}
-          {isTrialing && domainEligible && (
-            <> · Essai gratuit maintenu · Domaine activé</>
-          )}
+          {isTrialing ? "Fin de l'essai" : "Prochaine échéance"} : {periodEnd}
+          {isTrialing && !domainEligible && " · Domaine après engagement"}
+          {isTrialing && domainEligible && " · Domaine actif"}
           {commitmentEnd && !isTrialing && !canCancel && (
             <> · Engagement jusqu&apos;au {commitmentEnd}</>
-          )}
-          {commitmentEnd && isTrialing && hasEarlyCommitment && !canCancel && (
-            <> · Engagement jusqu&apos;au {commitmentEnd}</>
-          )}
-          {commitmentEnd && isTrialing && !hasEarlyCommitment && (
-            <> · Si vous restez : engagement jusqu&apos;au {commitmentEnd}</>
           )}
         </p>
       )}

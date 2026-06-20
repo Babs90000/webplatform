@@ -1,9 +1,8 @@
 "use client";
 
 import React, { Suspense } from "react";
-import { Plus } from "lucide-react";
+import { Plus, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import styles from "./Dashboard.module.css";
 import { AuthGuard } from "@/shared/components/AuthGuard";
 import { Button } from "@/shared/components/Button";
@@ -24,29 +23,34 @@ const DashboardContent: React.FC = () => {
   return (
     <div className={styles.container}>
       <header className={styles.header}>
-        <div>
-          <h1 className={styles.title}>Projects</h1>
+        <div className={styles.titleBlock}>
+          <h1 className={styles.title}>Mes projets</h1>
           <p className={styles.subtitle}>
-            Welcome back, {user?.email}
+            Bon retour{user?.email ? `, ${user.email.split("@")[0]}` : ""}
           </p>
         </div>
         <div className={styles.headerActions}>
-          <Link href="/onboarding" className={styles.onboardingLink}>
-            Assistant guidé
-          </Link>
-          <Button variant="ghost" onClick={logout}>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => router.push("/onboarding")}
+          >
+            <Icon icon={Sparkles} size="sm" />
+            Assistant
+          </Button>
+          <Button variant="ghost" size="sm" onClick={logout}>
             Déconnexion
           </Button>
-          <Button onClick={() => router.push("/onboarding")} className={styles.newProjectBtn}>
+          <Button size="sm" onClick={() => router.push("/onboarding")}>
             <Icon icon={Plus} size="sm" />
-            New Project
+            Nouveau
           </Button>
         </div>
       </header>
 
-      <BillingCard />
+      <div className={styles.main}>
+        <BillingCard />
 
-      <main>
         <ProjectList
           projects={projects}
           isLoading={isLoading}
@@ -54,7 +58,7 @@ const DashboardContent: React.FC = () => {
           onRetry={refetch}
           onCreateProject={() => router.push("/onboarding")}
         />
-      </main>
+      </div>
     </div>
   );
 };
