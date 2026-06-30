@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "exported_at": "2026-06-20T00:00:00.000Z",
+  "source": {
+    "api_base": "http://127.0.0.1:3999/api/v1",
+    "project_id": "e2e-portfolio-project"
+  },
+  "project": {
+    "id": "e2e-portfolio-project",
+    "tenant_id": "e2e-tenant",
+    "name": "Portfolio E2E",
+    "slug": "portfolio-e2e",
+    "subdomain": "portfolio-e2e",
+    "custom_domain": null,
+    "status": "draft",
+    "published_url": null,
+    "created_at": "2026-01-01T00:00:00.000Z",
+    "updated_at": "2026-01-01T00:00:00.000Z"
+  },
+  "files": [
+    {
+      "path": "index.html",
+      "content": "<!DOCTYPE html>\n<html lang=\"fr\">\n<head>\n  <meta charset=\"utf-8\" />\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n  <title>Studio Lumière — Portfolio</title>\n  <style>\n    * { box-sizing: border-box; margin: 0; }\n    body { font-family: system-ui, sans-serif; padding: 1rem; background: #0f172a; color: #f8fafc; }\n    a { color: #bae6fd; text-decoration: underline; }\n    header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }\n    .nav-toggle { padding: 0.5rem 0.75rem; border: 1px solid #475569; border-radius: 0.5rem; background: #1e293b; color: #f8fafc; cursor: pointer; }\n    .nav-panel { display: none; gap: 0.75rem; }\n    body.nav-open .nav-panel { display: flex; flex-direction: column; position: absolute; top: 3rem; left: 1rem; right: 1rem; background: #1e293b; border: 1px solid #334155; border-radius: 0.5rem; padding: 0.75rem; }\n    @media (min-width: 768px) {\n      .nav-toggle { display: none; }\n      .nav-panel { display: flex !important; flex-direction: row; position: static; border: 0; padding: 0; background: transparent; }\n    }\n    h1 { font-size: 1.75rem; margin-bottom: 0.75rem; }\n    .gallery { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; margin-top: 1rem; }\n    .gallery figure { aspect-ratio: 4/3; background: linear-gradient(135deg, #6366f1, #8b5cf6); border-radius: 0.5rem; }\n  </style>\n</head>\n<body>\n  <header>\n    <strong>Studio Lumière</strong>\n    <button type=\"button\" class=\"nav-toggle\" id=\"nav-toggle\" aria-label=\"Menu navigation\">Menu</button>\n    <nav class=\"nav-panel\" aria-label=\"Navigation principale\">\n      <a href=\"#projets\">Projets</a>\n      <a href=\"#apropos\">À propos</a>\n      <a href=\"#contact\">Contact</a>\n    </nav>\n  </header>\n  <main>\n    <h1>Photographe &amp; direction artistique</h1>\n    <p id=\"projets\">Sélection de shootings mode, portrait et éditorial.</p>\n    <div class=\"gallery\" role=\"region\" aria-label=\"Galerie\">\n      <figure></figure>\n      <figure></figure>\n      <figure></figure>\n      <figure></figure>\n    </div>\n  </main>\n  <script>\n    document.getElementById(\"nav-toggle\").addEventListener(\"click\", function () {\n      document.body.classList.toggle(\"nav-open\");\n    });\n  </script>\n</body>\n</html>"
+    }
+  ]
+}

@@ -14,6 +14,7 @@ import { useZodForm } from "@/shared/hooks/useZodForm";
 import { useAuth } from "../../hooks/useAuth";
 import { mapAuthError } from "../../utils/mapAuthError";
 import { ApiError } from "@/lib/api";
+import { redirectAfterAuth, resolvePostLoginPath } from "@/lib/authToken";
 import { toast } from "@/store/toast";
 
 const loginSchema = z.object({
@@ -32,6 +33,7 @@ const LoginFormFields: React.FC = () => {
   const { login, isLoading, isAuthenticated } = useAuth();
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [sessionNotice, setSessionNotice] = useState<string | null>(null);
+  const redirectPath = resolvePostLoginPath(searchParams.get("redirect"));
 
   const {
     register,
@@ -47,13 +49,19 @@ const LoginFormFields: React.FC = () => {
   });
 
   useEffect(() => {
+    if (isAuthenticated) {
+      redirectAfterAuth(redirectPath);
+    }
+  }, [isAuthenticated, redirectPath]);
+
+  useEffect(() => {
+    if (isAuthenticated) return;
+
     if (searchParams.get("reason") === "session") {
       setSessionNotice(
         "Votre session a expiré ou n'est plus valide. Reconnectez-vous pour continuer.",
       );
       toast.error("Session expirée — reconnectez-vous");
-      router.replace("/login");
-      return;
     }
 
     const hasCredentialsInUrl =
@@ -61,13 +69,7 @@ const LoginFormFields: React.FC = () => {
     if (hasCredentialsInUrl) {
       router.replace("/login");
     }
-  }, [router, searchParams]);
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      router.replace("/dashboard");
-    }
-  }, [isAuthenticated, router]);
+  }, [router, searchParams, isAuthenticated]);
 
   const onSubmit = async (data: LoginFormData): Promise<void> => {
     setSubmitError(null);
@@ -76,7 +78,8 @@ const LoginFormFields: React.FC = () => {
       await login(data.email.trim(), data.password);
       toast.success("Connexion réussie");
       reset();
-      router.push("/dashboard");
+      // La redirection est gérée par le useEffect sur isAuthenticated ci-dessus.
+      // Ne pas appeler redirectAfterAuth ici — double appel = deux navigations simultanées.
     } catch (err) {
       const raw =
         err instanceof ApiError
@@ -115,7 +118,7 @@ const LoginFormFields: React.FC = () => {
         onSubmit={handleSubmit(onSubmit, onInvalid)}
         className={styles.form}
         noValidate
-        method="post"
+        data-testid="login-form"
       >
         <div>
           <Input

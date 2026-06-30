@@ -3,7 +3,13 @@
 .container {
   @apply min-h-screen mx-auto;
   max-width: 72rem;
-  padding: var(--space-xl) var(--space-lg) var(--space-3xl);
+  padding: var(--space-lg) var(--space-md) var(--space-2xl);
+}
+
+@media (min-width: 768px) {
+  .container {
+    padding: var(--space-xl) var(--space-lg) var(--space-3xl);
+  }
 }
 
 .header {
@@ -38,7 +44,7 @@
 
 .headerActions {
   @apply flex items-center gap-2 shrink-0;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   overflow-x: auto;
   padding-bottom: 2px;
   -webkit-overflow-scrolling: touch;

@@ -1,14 +1,17 @@
 .root {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: 100dvh;
   background: var(--color-bg-primary);
   overflow: hidden;
 }
 
 .body {
   display: grid;
-  grid-template-columns: 220px 1fr 320px;
+  grid-template-columns: minmax(0, var(--sidebar-width, 220px)) minmax(0, 1fr) minmax(
+      0,
+      var(--properties-width, 320px)
+    );
   flex: 1;
   min-height: 0;
 }
@@ -22,6 +25,7 @@
   display: grid;
   grid-template-rows: 1fr 1fr;
   min-height: 0;
+  min-width: 0;
   border-left: 1px solid var(--color-border-subtle);
   border-right: 1px solid var(--color-border-subtle);
 }
@@ -46,9 +50,47 @@
   overflow: hidden;
 }
 
+.drawerHeader {
+  display: none;
+}
+
+.drawerTitle {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.drawerClose {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+.drawerClose:hover {
+  background: var(--color-bg-elevated);
+  color: var(--color-text-primary);
+}
+
+.drawerBody {
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.backdrop {
+  display: none;
+}
+
 @media (max-width: 1200px) {
   .body {
-    grid-template-columns: 180px 1fr 280px;
+    grid-template-columns: minmax(0, 180px) minmax(0, 1fr) minmax(0, 260px);
   }
 }
 
@@ -59,19 +101,100 @@
 @media (max-width: 900px) {
   .body {
     grid-template-columns: 1fr;
-    grid-template-rows: auto 1fr auto;
+    grid-template-rows: minmax(0, 1fr);
+    padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .bodyDrawerOpen {
+    overflow: hidden;
   }
 
   .sidebar,
   .chatPanel {
-    max-height: 200px;
+    position: fixed;
+    top: 56px;
+    bottom: calc(56px + env(safe-area-inset-bottom, 0px));
+    z-index: calc(var(--z-sticky) + 2);
+    width: min(80vw, 280px);
+    max-width: 280px;
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border-subtle);
+    box-shadow: var(--shadow-xl);
+    transform: translateX(-110%);
+    transition: transform var(--transition-normal);
+    pointer-events: none;
+    visibility: hidden;
+  }
+
+  .sidebar {
+    left: 0;
+    border-left: none;
+    border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+  }
+
+  .chatPanel {
+    right: 0;
+    left: auto;
+    transform: translateX(110%);
+    border-right: none;
+    border-radius: var(--radius-lg) 0 0 var(--radius-lg);
+  }
+
+  .sidebarDrawerOpen,
+  .chatDrawerOpen {
+    transform: translateX(0);
+    pointer-events: auto;
+    visibility: visible;
+  }
+
+  .drawerHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-sm) var(--space-md);
+    border-bottom: 1px solid var(--color-border-subtle);
+    flex-shrink: 0;
+  }
+
+  .drawerBody {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .sidebar,
+  .chatPanel {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
   }
 
   .center {
-    grid-template-rows: 1fr;
+    grid-template-rows: minmax(0, 1fr);
+    min-height: 0;
+    border-left: none;
+    border-right: none;
+  }
+
+  .centerWithCode {
+    grid-template-rows: minmax(120px, 0.45fr) minmax(0, 1fr);
   }
 
   .codePanel {
-    display: none;
+    display: block;
+    min-height: 0;
+  }
+
+  .backdrop {
+    display: block;
+    position: fixed;
+    inset: 56px 0 calc(56px + env(safe-area-inset-bottom, 0px)) 0;
+    z-index: calc(var(--z-sticky) + 1);
+    border: none;
+    padding: 0;
+    background: rgba(10, 14, 26, 0.55);
+    backdrop-filter: blur(2px);
+    cursor: pointer;
   }
 }

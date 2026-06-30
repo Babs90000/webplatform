@@ -321,6 +321,7 @@ const LivePreviewComponent: React.FC<LivePreviewProps> = ({
             </button>
           </div>
         )}
+        <div className={styles.toolbarEnd}>
         {showNavMobileHint && onOpenViewportMenu && (
           <button
             type="button"
@@ -328,7 +329,7 @@ const LivePreviewComponent: React.FC<LivePreviewProps> = ({
             onClick={onOpenViewportMenu}
             title="Tester le menu burger en mode mobile ou tablette"
           >
-            Menu mobile : touche <kbd>2</kbd> ou <kbd>3</kbd>
+            Menu : <kbd>2</kbd>/<kbd>3</kbd>
           </button>
         )}
         {editable && (
@@ -362,6 +363,7 @@ const LivePreviewComponent: React.FC<LivePreviewProps> = ({
             <span>{displayPercent}% — {loadingMessage}</span>
           </span>
         )}
+        </div>
       </div>
       <div
         ref={frameWrapRef}
@@ -401,6 +403,7 @@ const LivePreviewComponent: React.FC<LivePreviewProps> = ({
                       ref={iframeRef}
                       title={`Aperçu ${viewportConfig.label}`}
                       className={styles.frameDevice}
+                      data-testid="studio-preview-iframe"
                       sandbox="allow-scripts allow-same-origin"
                     />
                   </div>
@@ -410,6 +413,7 @@ const LivePreviewComponent: React.FC<LivePreviewProps> = ({
                   ref={iframeRef}
                   title="Aperçu du site"
                   className={styles.frame}
+                  data-testid="studio-preview-iframe"
                   sandbox="allow-scripts allow-same-origin"
                 />
               ))}

@@ -1,7 +1,7 @@
 .root {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  min-height: 100dvh;
 }
 
 .toolbar {
@@ -49,13 +49,12 @@
 .content {
   padding-top: 56px;
   flex: 1;
-  min-height: 0;
-  min-height: calc(100vh - 56px);
+  min-height: calc(100dvh - 56px);
 }
 
 .frame {
   width: 100%;
-  height: calc(100vh - 56px);
+  height: calc(100dvh - 56px);
   border: none;
   background: var(--color-bg-primary);
 }
@@ -65,6 +64,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: calc(100vh - 56px);
+  min-height: calc(100dvh - 56px);
   color: var(--color-text-secondary);
 }

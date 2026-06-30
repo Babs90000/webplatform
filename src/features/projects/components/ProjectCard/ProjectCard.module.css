@@ -79,6 +79,12 @@
   opacity: 1;
 }
 
+@media (hover: none), (max-width: 768px) {
+  .deleteBtn {
+    opacity: 1;
+  }
+}
+
 .header {
   display: flex;
   justify-content: space-between;

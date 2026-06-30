@@ -98,6 +98,12 @@
   --sidebar-width: 260px;
   --properties-width: 320px;
   --toolbar-height: 56px;
+
+  /* Breakpoints (reference for media queries) */
+  --bp-sm: 480px;
+  --bp-md: 768px;
+  --bp-lg: 1024px;
+  --bp-xl: 1280px;
 }
 
 /* --- Base Reset & Defaults --- */
@@ -114,13 +120,16 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   scroll-behavior: smooth;
+  overflow-x: clip;
 }
 
 body {
   background-color: var(--color-bg-primary);
   color: var(--color-text-primary);
-  min-height: 100vh;
+  min-height: 100dvh;
   line-height: 1.6;
+  overflow-x: clip;
+  max-width: 100%;
 }
 
 /* --- Scrollbar Styling --- */

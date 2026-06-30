@@ -2,7 +2,7 @@
 
 import React, { useEffect } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { z } from "zod";
 import styles from "./RegisterForm.module.css";
 import { Input } from "@/shared/components/Input";
@@ -11,6 +11,7 @@ import { ErrorMessage } from "@/shared/components/ErrorMessage";
 import { useZodForm } from "@/shared/hooks/useZodForm";
 import { useAuth } from "../../hooks/useAuth";
 import { toast } from "@/store/toast";
+import { redirectAfterAuth } from "@/lib/authToken";
 
 const registerSchema = z.object({
   name: z.string().min(2, "Le nom doit contenir au moins 2 caractères"),
@@ -21,7 +22,6 @@ const registerSchema = z.object({
 type RegisterFormData = z.infer<typeof registerSchema>;
 
 export const RegisterForm: React.FC = () => {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const refCode = searchParams.get("ref");
   
@@ -43,9 +43,9 @@ export const RegisterForm: React.FC = () => {
 
   useEffect(() => {
     if (isAuthenticated) {
-      router.replace("/dashboard");
+      redirectAfterAuth("/onboarding");
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated]);
 
   useEffect(() => {
     if (error) clearError();
@@ -61,7 +61,7 @@ export const RegisterForm: React.FC = () => {
       );
       toast.success("Compte créé avec succès");
       reset();
-      router.push("/onboarding");
+      // La redirection est gérée par le useEffect sur isAuthenticated ci-dessus.
     } catch (err) {
       console.error(err);
     }

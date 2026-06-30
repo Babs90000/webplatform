@@ -1,4 +1,7 @@
-/** Métadonnées des 6 experts du comité créatif (labels courts + détail au survol). */
+/** Métadonnées des 6 experts du comité créatif (labels courts + détail au survol).
+ *  Revue IA : intégrée à la génération/audit (events review_start / review_done).
+ *  Garde-fous E2E : e2e/helpers/committee-quality.ts (mêmes axes, sans second LLM).
+ */
 
 export type ReviewExpertId =
   | "directeur_artistique"

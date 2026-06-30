@@ -1,6 +1,6 @@
 .welcomeLayout {
   display: grid;
-  grid-template-columns: 1fr 420px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 420px);
   gap: var(--space-3xl);
   width: 100%;
   max-width: 960px;
@@ -213,7 +213,7 @@
 
 .choiceGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
   gap: var(--space-md);
   margin-top: var(--space-sm);
 }
@@ -636,5 +636,16 @@
 
   .choiceGrid {
     grid-template-columns: 1fr;
+  }
+
+  .scaleContainer {
+    max-width: 100%;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .scaleButton {
+    width: 44px;
+    height: 44px;
   }
 }

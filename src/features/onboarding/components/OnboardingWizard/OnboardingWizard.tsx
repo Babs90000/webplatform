@@ -399,7 +399,7 @@ export const OnboardingWizard: React.FC = () => {
   if (phase === "welcome") {
     return (
       <OnboardingShell badge="Nouveau projet">
-        <div className={styles.welcomeLayout}>
+        <div className={styles.welcomeLayout} data-testid="onboarding-welcome">
           <aside className={styles.welcomeAside}>
             <div className={styles.welcomeEyebrow}>
               <span className={styles.welcomeEyebrowDot} />

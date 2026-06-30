@@ -25,7 +25,9 @@
 }
 
 .loadingBadge {
-  @apply flex items-center gap-2 ml-auto;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
   padding: 0.25rem 0.65rem;
   border-radius: var(--radius-full);
   background: rgba(99, 102, 241, 0.12);
@@ -33,6 +35,15 @@
   font-size: 0.75rem;
   font-weight: 500;
   color: var(--color-text-accent);
+}
+
+.toolbarEnd {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin-left: auto;
+  min-width: 0;
 }
 
 .editBadge {
@@ -96,7 +107,6 @@
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  margin-left: auto;
   padding: 0.25rem 0.65rem;
   border-radius: var(--radius-full);
   border: 1px solid rgba(99, 102, 241, 0.22);
@@ -235,7 +245,6 @@
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  margin-left: auto;
   padding: 0.25rem 0.55rem;
   border-radius: var(--radius-sm);
   border: 1px solid rgba(245, 158, 11, 0.35);
@@ -290,4 +299,14 @@
   height: 100%;
   color: var(--color-text-tertiary);
   font-size: 0.875rem;
+}
+
+@media (max-width: 640px) {
+  .shortcutsHint {
+    display: none;
+  }
+
+  .navMobileHint {
+    font-size: 0.65rem;
+  }
 }

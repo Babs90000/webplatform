@@ -28,15 +28,44 @@
 }
 
 .headerInner {
-  @apply mx-auto flex max-w-6xl items-center justify-between px-6 py-4;
+  @apply mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-4 sm:px-6;
 }
 
-.logo {
-  @apply flex items-center gap-2.5 no-underline;
+.navDesktop {
+  display: none;
+  align-items: center;
+  gap: 1rem;
 }
 
-.logoText {
-  @apply text-lg font-semibold tracking-tight text-white;
+@media (min-width: 768px) {
+  .navDesktop {
+    display: flex;
+    gap: 1.5rem;
+  }
+}
+
+.menuBtn {
+  @apply inline-flex items-center justify-center rounded-md border border-white/10 bg-white/5 p-2 text-zinc-100;
+}
+
+@media (min-width: 768px) {
+  .menuBtn {
+    display: none;
+  }
+}
+
+.mobileNav {
+  @apply flex flex-col gap-3 border-t border-white/5 bg-[#0a0a0f]/95 px-4 py-4;
+}
+
+@media (min-width: 768px) {
+  .mobileNav {
+    display: none;
+  }
+}
+
+.mobileNavLink {
+  @apply rounded-md px-2 py-2 text-sm text-zinc-300 no-underline transition-colors hover:bg-white/5 hover:text-white;
 }
 
 .nav {
@@ -44,11 +73,19 @@
 }
 
 .navLink {
-  @apply text-sm text-zinc-400 no-underline transition-colors hover:text-white;
+  @apply text-sm text-zinc-300 no-underline transition-colors hover:text-white;
+}
+
+.logo {
+  @apply flex min-w-0 items-center gap-2.5 no-underline;
+}
+
+.logoText {
+  @apply text-lg font-semibold tracking-tight text-white;
 }
 
 .heroSection {
-  @apply relative px-6 pb-16 pt-12 md:pb-24 md:pt-16;
+  @apply relative px-4 pb-16 pt-12 sm:px-6 md:pb-24 md:pt-16;
 }
 
 .heroInner {
@@ -78,11 +115,11 @@
 }
 
 .heroAccent {
-  @apply block bg-gradient-to-r from-indigo-400 to-violet-400 bg-clip-text text-transparent;
+  @apply block text-indigo-300;
 }
 
 .heroSubtitle {
-  @apply mb-8 max-w-lg text-base leading-relaxed text-zinc-400 md:text-lg;
+  @apply mb-8 max-w-lg text-base leading-relaxed text-zinc-300 md:text-lg;
 }
 
 .heroActions {
@@ -94,7 +131,7 @@
 }
 
 .trustList {
-  @apply flex flex-wrap gap-x-5 gap-y-2 text-sm text-zinc-500;
+  @apply flex flex-wrap gap-x-5 gap-y-2 text-sm text-zinc-400;
 }
 
 .trustList li {
@@ -129,7 +166,7 @@
 .mockDotGreen { @apply bg-emerald-500/80; }
 
 .mockUrl {
-  @apply ml-2 flex-1 truncate text-center text-[10px] text-zinc-600;
+  @apply ml-2 flex-1 truncate text-center text-[10px] text-zinc-500;
 }
 
 .mockLayout {
@@ -146,7 +183,7 @@
 }
 
 .mockFile {
-  @apply text-zinc-600;
+  @apply text-zinc-500;
 }
 
 .mockFileActive {
@@ -166,7 +203,7 @@
 }
 
 .mockCodeLine {
-  @apply pl-2 text-zinc-400;
+  @apply pl-2 text-zinc-300;
 }
 
 .mockPreviewFrame {
@@ -198,7 +235,7 @@
 }
 
 .mockChatReply {
-  @apply rounded-lg rounded-br-none bg-zinc-800 px-2 py-1 text-[8px] text-zinc-400;
+  @apply rounded-lg rounded-br-none bg-zinc-800 px-2 py-1 text-[8px] text-zinc-300;
 }
 
 .visualBadge {
@@ -226,7 +263,7 @@
 }
 
 .statLabel {
-  @apply text-sm text-zinc-500;
+  @apply text-sm text-zinc-400;
 }
 
 .featuresSection,
@@ -247,7 +284,7 @@
 }
 
 .sectionDesc {
-  @apply text-base leading-relaxed text-zinc-400;
+  @apply text-base leading-relaxed text-zinc-300;
 }
 
 .featuresGrid {
@@ -271,7 +308,7 @@
 }
 
 .featureDesc {
-  @apply text-sm leading-relaxed text-zinc-400;
+  @apply text-sm leading-relaxed text-zinc-300;
 }
 
 .stepsList {
@@ -283,7 +320,7 @@
 }
 
 .stepNum {
-  @apply shrink-0 font-mono text-2xl font-bold text-indigo-500/50 md:text-3xl;
+  @apply shrink-0 font-mono text-2xl font-bold text-indigo-400 md:text-3xl;
 }
 
 .stepTitle {
@@ -291,7 +328,7 @@
 }
 
 .stepDesc {
-  @apply text-sm leading-relaxed text-zinc-400;
+  @apply text-sm leading-relaxed text-zinc-300;
 }
 
 .ctaSection {
@@ -307,7 +344,7 @@
 }
 
 .ctaDesc {
-  @apply mb-8 text-base text-zinc-400;
+  @apply mb-8 text-base text-zinc-300;
 }
 
 .footer {
@@ -323,7 +360,7 @@
 }
 
 .footerCopy {
-  @apply text-xs text-zinc-600;
+  @apply text-xs text-zinc-400;
 }
 
 .footerLinks {
@@ -331,5 +368,5 @@
 }
 
 .footerLinks a {
-  @apply text-zinc-500 no-underline hover:text-zinc-300;
+  @apply text-zinc-300 no-underline hover:text-white;
 }

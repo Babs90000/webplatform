@@ -129,6 +129,8 @@
   padding: var(--space-md);
   margin-top: var(--space-md);
   font-size: 0.85rem;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .dnsTitle {
@@ -139,6 +141,7 @@
 
 .dnsTable {
   width: 100%;
+  min-width: 320px;
   border-collapse: collapse;
   margin-top: var(--space-sm);
 }

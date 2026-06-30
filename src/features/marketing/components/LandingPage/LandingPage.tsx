@@ -1,9 +1,11 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
+import { Menu, X } from "lucide-react";
 import styles from "./LandingPage.module.css";
 import { Button } from "@/shared/components/Button";
+import { Icon } from "@/shared/components/Icon";
 import { AI_ASSISTANT_NAME } from "@/lib/branding";
 
 const LogoIcon: React.FC = () => (
@@ -68,7 +70,12 @@ const STATS = [
   { value: "0", label: "Dépendance build requise" },
 ] as const;
 
-export const LandingPage: React.FC = () => (
+export const LandingPage: React.FC = () => {
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+
+  const closeMobileNav = (): void => setMobileNavOpen(false);
+
+  return (
   <div className={styles.page}>
     <div className={styles.gridBg} aria-hidden />
     <div className={styles.glowPrimary} aria-hidden />
@@ -80,7 +87,7 @@ export const LandingPage: React.FC = () => (
           <LogoIcon />
           <span className={styles.logoText}>WebPlatform</span>
         </Link>
-        <nav className={styles.nav}>
+        <nav className={styles.navDesktop} aria-label="Navigation principale">
           <a href="#features" className={styles.navLink}>Fonctionnalités</a>
           <a href="#how" className={styles.navLink}>Comment ça marche</a>
           <Link href="/login" className={styles.navLink}>Connexion</Link>
@@ -88,7 +95,32 @@ export const LandingPage: React.FC = () => (
             <Button size="sm">Commencer gratuitement</Button>
           </Link>
         </nav>
+        <button
+          type="button"
+          className={styles.menuBtn}
+          aria-label={mobileNavOpen ? "Fermer le menu" : "Ouvrir le menu"}
+          aria-expanded={mobileNavOpen}
+          onClick={() => setMobileNavOpen((open) => !open)}
+        >
+          <Icon icon={mobileNavOpen ? X : Menu} size="md" />
+        </button>
       </div>
+      {mobileNavOpen && (
+        <nav className={styles.mobileNav} aria-label="Navigation mobile">
+          <a href="#features" className={styles.mobileNavLink} onClick={closeMobileNav}>
+            Fonctionnalités
+          </a>
+          <a href="#how" className={styles.mobileNavLink} onClick={closeMobileNav}>
+            Comment ça marche
+          </a>
+          <Link href="/login" className={styles.mobileNavLink} onClick={closeMobileNav}>
+            Connexion
+          </Link>
+          <Link href="/register" onClick={closeMobileNav}>
+            <Button size="md" fullWidth>Commencer gratuitement</Button>
+          </Link>
+        </nav>
+      )}
     </header>
 
     <main>
@@ -126,7 +158,11 @@ export const LandingPage: React.FC = () => (
             </ul>
           </div>
 
-          <div className={styles.heroVisual}>
+          <div
+            className={styles.heroVisual}
+            aria-hidden
+            data-testid="landing-hero-decorative"
+          >
             <div className={styles.studioMock}>
               <div className={styles.mockChrome}>
                 <span className={styles.mockDotRed} />
@@ -264,4 +300,5 @@ export const LandingPage: React.FC = () => (
       </div>
     </footer>
   </div>
-);
+  );
+};

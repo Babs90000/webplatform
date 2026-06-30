@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "fixtures": [
+    {
+      "slug": "default",
+      "file": "default.json",
+      "label": "Projet E2E référence (studio)",
+      "projectIdEnv": "E2E_DEFAULT_PROJECT_ID",
+      "nameHint": "e2e"
+    },
+    {
+      "slug": "restaurant",
+      "file": "restaurant.json",
+      "label": "Template restaurant",
+      "projectIdEnv": "E2E_RESTAURANT_PROJECT_ID",
+      "nameHint": "restaurant"
+    },
+    {
+      "slug": "portfolio",
+      "file": "portfolio.json",
+      "label": "Template portfolio",
+      "projectIdEnv": "E2E_PORTFOLIO_PROJECT_ID",
+      "nameHint": "portfolio"
+    }
+  ]
+}

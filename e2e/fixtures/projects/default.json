@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "exported_at": "2026-06-20T00:00:00.000Z",
+  "source": {
+    "api_base": "http://127.0.0.1:3999/api/v1",
+    "project_id": "e2e-studio-project"
+  },
+  "project": {
+    "id": "e2e-studio-project",
+    "tenant_id": "e2e-tenant",
+    "name": "Projet E2E Studio",
+    "slug": "projet-e2e",
+    "subdomain": "projet-e2e",
+    "custom_domain": null,
+    "status": "draft",
+    "published_url": null,
+    "created_at": "2026-01-01T00:00:00.000Z",
+    "updated_at": "2026-01-01T00:00:00.000Z"
+  },
+  "files": [
+    {
+      "path": "index.html",
+      "content": "<!DOCTYPE html>\n<html lang=\"fr\">\n<head>\n  <meta charset=\"utf-8\" />\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n  <title>Site E2E</title>\n  <style>\n    * { box-sizing: border-box; margin: 0; }\n    body { font-family: system-ui, sans-serif; padding: 1rem; background: #f8fafc; color: #0f172a; }\n    header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }\n    .menu-btn { padding: 0.5rem 0.75rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; background: #fff; cursor: pointer; }\n    .nav-links { display: none; gap: 0.75rem; }\n    body.nav-open .nav-links { display: flex; flex-direction: column; position: absolute; top: 3rem; left: 1rem; right: 1rem; background: #fff; border: 1px solid #e2e8f0; border-radius: 0.5rem; padding: 0.75rem; }\n    @media (min-width: 768px) {\n      .menu-btn { display: none; }\n      .nav-links { display: flex !important; flex-direction: row; position: static; border: 0; padding: 0; background: transparent; }\n    }\n    h1 { font-size: 1.5rem; }\n  </style>\n</head>\n<body>\n  <header>\n    <strong>Demo E2E</strong>\n    <button type=\"button\" class=\"menu-btn\" id=\"menu-btn\" aria-label=\"Ouvrir le menu\">Menu</button>\n    <nav id=\"nav-menu\" class=\"nav-links\" aria-label=\"Navigation\">\n      <a href=\"#accueil\">Accueil</a>\n      <a href=\"#services\">Services</a>\n    </nav>\n  </header>\n  <main>\n    <h1>Site généré E2E</h1>\n    <p id=\"accueil\">Contenu de démonstration pour Playwright.</p>\n  </main>\n  <script>\n    document.getElementById(\"menu-btn\").addEventListener(\"click\", function () {\n      document.body.classList.toggle(\"nav-open\");\n    });\n  </script>\n</body>\n</html>"
+    }
+  ]
+}

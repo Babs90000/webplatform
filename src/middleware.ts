@@ -4,18 +4,28 @@ import type { NextRequest } from "next/server";
 const TOKEN_COOKIE = "webplatform_token";
 const AUTH_PAGES = ["/login", "/register"];
 
-/**
- * Protection des routes (Next 16 « proxy », ex-middleware).
- * Gating UX basé sur la présence du cookie de session — l'autorisation réelle
- * reste appliquée côté API. Le JWT n'est pas vérifié ici (pas de secret côté
- * edge), on ne contrôle que la présence du token.
- */
-export const proxy = (request: NextRequest): NextResponse => {
-  const token = request.cookies.get(TOKEN_COOKIE)?.value;
-  const { pathname } = request.nextUrl;
-  const isAuthPage = AUTH_PAGES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+const readTokenFromCookie = (request: NextRequest): string | undefined => {
+  const raw = request.cookies.get(TOKEN_COOKIE)?.value;
+  if (!raw || raw === "undefined") return undefined;
 
-  // Déjà connecté → on évite les pages d'auth.
+  try {
+    return decodeURIComponent(raw);
+  } catch {
+    return raw;
+  }
+};
+
+/**
+ * Protection des routes (middleware Next.js).
+ * Gating UX basé sur le cookie de session — l'autorisation réelle reste côté API.
+ */
+export const middleware = (request: NextRequest): NextResponse => {
+  const token = readTokenFromCookie(request);
+  const { pathname } = request.nextUrl;
+  const isAuthPage = AUTH_PAGES.some(
+    (p) => pathname === p || pathname.startsWith(`${p}/`),
+  );
+
   if (isAuthPage) {
     if (token) {
       return NextResponse.redirect(new URL("/dashboard", request.url));
@@ -23,12 +33,10 @@ export const proxy = (request: NextRequest): NextResponse => {
     return NextResponse.next();
   }
 
-  // Les previews de site sont consultables sans session.
   if (pathname.includes("/preview")) {
     return NextResponse.next();
   }
 
-  // Routes protégées sans token → redirection vers la connexion.
   if (!token) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("redirect", pathname);

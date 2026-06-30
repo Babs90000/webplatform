@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "exported_at": "2026-06-20T00:00:00.000Z",
+  "source": {
+    "api_base": "http://127.0.0.1:3999/api/v1",
+    "project_id": "e2e-restaurant-project"
+  },
+  "project": {
+    "id": "e2e-restaurant-project",
+    "tenant_id": "e2e-tenant",
+    "name": "Restaurant E2E",
+    "slug": "restaurant-e2e",
+    "subdomain": "restaurant-e2e",
+    "custom_domain": null,
+    "status": "draft",
+    "published_url": null,
+    "created_at": "2026-01-01T00:00:00.000Z",
+    "updated_at": "2026-01-01T00:00:00.000Z"
+  },
+  "files": [
+    {
+      "path": "index.html",
+      "content": "<!DOCTYPE html>\n<html lang=\"fr\">\n<head>\n  <meta charset=\"utf-8\" />\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n  <title>Le Bistrot du Port</title>\n  <style>\n    * { box-sizing: border-box; margin: 0; }\n    body { font-family: Georgia, serif; padding: 1rem; background: #1c1917; color: #fafaf9; }\n    a { color: #bae6fd; text-decoration: underline; }\n    header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }\n    .menu-btn { padding: 0.5rem 0.75rem; border: 1px solid #78716c; border-radius: 0.5rem; background: #292524; color: #fafaf9; cursor: pointer; }\n    .nav-links { display: none; gap: 0.75rem; }\n    body.nav-open .nav-links { display: flex; flex-direction: column; position: absolute; top: 3rem; left: 1rem; right: 1rem; background: #292524; border: 1px solid #57534e; border-radius: 0.5rem; padding: 0.75rem; }\n    @media (min-width: 768px) {\n      .menu-btn { display: none; }\n      .nav-links { display: flex !important; flex-direction: row; position: static; border: 0; padding: 0; background: transparent; }\n    }\n    h1 { font-size: 2rem; margin-bottom: 0.5rem; }\n    .hours { margin-top: 1rem; padding: 1rem; background: #292524; border-radius: 0.5rem; }\n  </style>\n</head>\n<body>\n  <header>\n    <strong>Le Bistrot du Port</strong>\n    <button type=\"button\" class=\"menu-btn\" id=\"menu-btn\" aria-label=\"Ouvrir le menu\">Menu</button>\n    <nav class=\"nav-links\" aria-label=\"Navigation\">\n      <a href=\"#carte\">Carte</a>\n      <a href=\"#horaires\">Horaires</a>\n      <a href=\"#reservation\">Réserver</a>\n    </nav>\n  </header>\n  <main>\n    <h1>Cuisine du marché</h1>\n    <p id=\"carte\">Poissons du jour, produits locaux et carte des vins sélectionnée.</p>\n    <section class=\"hours\" id=\"horaires\" aria-label=\"Horaires\">\n      <h2>Horaires</h2>\n      <p>Mar–Sam 12h–14h · 19h–22h</p>\n    </section>\n  </main>\n  <script>\n    document.getElementById(\"menu-btn\").addEventListener(\"click\", function () {\n      document.body.classList.toggle(\"nav-open\");\n    });\n  </script>\n</body>\n</html>"
+    }
+  ]
+}

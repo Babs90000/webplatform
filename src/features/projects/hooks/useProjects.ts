@@ -14,6 +14,8 @@ export const useProjects = (filter: ProjectListFilter = "active") => {
     queryKey: ["projects", filter],
     queryFn: () => projectsApi.getAll(filter),
     enabled: isHydrated && !!token,
+    staleTime: 2 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 };
 

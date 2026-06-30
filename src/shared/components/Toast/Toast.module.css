@@ -2,11 +2,19 @@
   position: fixed;
   bottom: var(--space-lg);
   right: var(--space-lg);
+  left: var(--space-lg);
   z-index: var(--z-toast);
   display: flex;
   flex-direction: column;
+  align-items: flex-end;
   gap: var(--space-sm);
   pointer-events: none;
+}
+
+@media (min-width: 480px) {
+  .provider {
+    left: auto;
+  }
 }
 
 .toast {
@@ -19,11 +27,19 @@
   border: 1px solid var(--color-border-primary);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-lg);
-  min-width: 300px;
+  width: 100%;
   max-width: 400px;
+  min-width: 0;
   position: relative;
   overflow: hidden;
   animation: toastSlideIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@media (min-width: 480px) {
+  .toast {
+    min-width: 280px;
+    width: auto;
+  }
 }
 
 .toast.removing {
@@ -49,10 +65,12 @@
 }
 
 .message {
-  flex-grow: 1;
+  flex: 1;
+  min-width: 0;
   font-size: 0.875rem;
   font-weight: 500;
   color: var(--color-text-primary);
+  word-break: break-word;
 }
 
 .action {

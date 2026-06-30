@@ -23,7 +23,7 @@ const DashboardContent: React.FC = () => {
   useCheckoutReturnToast();
 
   return (
-    <div className={styles.container}>
+    <div className={styles.container} data-testid="dashboard-page">
       <header className={styles.header}>
         <div className={styles.titleBlock}>
           <h1 className={styles.title}>Mes projets</h1>
