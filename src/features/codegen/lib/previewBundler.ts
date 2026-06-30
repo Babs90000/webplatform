@@ -26,7 +26,7 @@ const NAVIGATION_SCRIPT = `
     var href = a.getAttribute('href');
     if (!href || href.startsWith('http') || href.startsWith('#') || href.startsWith('mailto:')) return;
     e.preventDefault();
-    window.parent.postMessage({ type: 'wp-preview-navigate', path: href }, '*');
+    window.parent.postMessage({ type: 'wp-preview-navigate', path: href }, document.referrer || '*');
   });
 })();
 </script>`;

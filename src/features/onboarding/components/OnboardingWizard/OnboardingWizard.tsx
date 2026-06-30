@@ -264,7 +264,9 @@ export const OnboardingWizard: React.FC = () => {
       }
     } catch (err) {
       setPhase(dynamicQuestions.length > 0 ? "dynamic" : "base");
-      console.error(err);
+      const msg =
+        err instanceof Error ? err.message : "Une erreur est survenue, réessayez.";
+      toast.error(msg);
     }
   };
 

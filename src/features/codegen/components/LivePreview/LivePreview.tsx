@@ -155,6 +155,10 @@ const LivePreviewComponent: React.FC<LivePreviewProps> = ({
 
   const handleMessage = useCallback(
     (event: MessageEvent) => {
+      // L'iframe utilise srcdoc → son origin est "null" (spec HTML5).
+      // On accepte uniquement "null" (srcdoc) ou notre propre origin.
+      if (event.origin !== "null" && event.origin !== window.location.origin) return;
+
       const data = event.data;
       if (typeof data !== "object" || data === null) return;
 

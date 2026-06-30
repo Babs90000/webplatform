@@ -355,7 +355,7 @@ const EDITOR_SCRIPT = `
     setTimeout(function(){h&&h.remove();},8000);
   }
 
-  function send(msg){window.parent.postMessage(msg,'*');}
+  function send(msg){window.parent.postMessage(msg, document.referrer || '*');}
 
   document.body.classList.add('wp-edit-on');
   markEditableText();

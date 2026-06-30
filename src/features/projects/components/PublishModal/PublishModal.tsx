@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useId, useRef, useState } from "react";
 import styles from "./PublishModal.module.css";
 import { Button } from "@/shared/components/Button";
 import { toast } from "@/store/toast";
@@ -22,6 +22,8 @@ export const PublishModal: React.FC<PublishModalProps> = ({
   initialSubdomain = "",
   initialCustomDomain = "",
 }) => {
+  const titleId = useId();
+  const firstFocusRef = useRef<HTMLButtonElement>(null);
   const [publishType, setPublishType] = useState<"subdomain" | "domain">(
     "subdomain",
   );
@@ -29,6 +31,21 @@ export const PublishModal: React.FC<PublishModalProps> = ({
   const [customDomain, setCustomDomain] = useState(initialCustomDomain);
   const [isLoading, setIsLoading] = useState(false);
   const [publishedUrl, setPublishedUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const id = requestAnimationFrame(() => firstFocusRef.current?.focus());
+    return () => cancelAnimationFrame(id);
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") handleClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  });
 
   if (!isOpen) return null;
 
@@ -67,8 +84,14 @@ export const PublishModal: React.FC<PublishModalProps> = ({
   };
 
   return (
-    <div className={styles.modalOverlay} onClick={handleClose}>
-      <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+    <div className={styles.modalOverlay} onClick={handleClose} aria-hidden>
+      <div
+        className={styles.modal}
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+      >
         {publishedUrl ? (
           <div className={styles.successState}>
             <span className={styles.successIcon}>🚀</span>
@@ -91,8 +114,13 @@ export const PublishModal: React.FC<PublishModalProps> = ({
         ) : (
           <>
             <header className={styles.header}>
-              <h3 className={styles.title}>Publier le projet</h3>
-              <button onClick={handleClose} className={styles.closeBtn}>
+              <h3 id={titleId} className={styles.title}>Publier le projet</h3>
+              <button
+                ref={firstFocusRef}
+                onClick={handleClose}
+                className={styles.closeBtn}
+                aria-label="Fermer"
+              >
                 <svg
                   width="20"
                   height="20"
