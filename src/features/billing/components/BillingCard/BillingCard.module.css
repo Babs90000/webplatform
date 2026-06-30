@@ -1,13 +1,26 @@
 @reference "#tailwind-reference";
 
 .card {
-  @apply rounded-xl border p-5 sm:p-6;
+  @apply rounded-xl border;
+  padding: 16px 20px;
   background: var(--color-bg-elevated);
   border-color: var(--color-border-primary);
 }
 
+@media (min-width: 640px) {
+  .card {
+    padding: 16px 24px;
+  }
+}
+
 .header {
-  @apply flex items-start justify-between gap-4 mb-4;
+  @apply flex items-center justify-between gap-4;
+  margin-bottom: 0;
+}
+
+.header:has(~ .features),
+.header:has(~ .actions) {
+  margin-bottom: 14px;
 }
 
 .headerText {
@@ -15,11 +28,12 @@
 }
 
 .priceRow {
-  @apply flex flex-wrap items-baseline gap-x-3 gap-y-1;
+  @apply flex flex-wrap items-center gap-x-2 gap-y-1;
 }
 
 .title {
-  @apply text-lg font-semibold;
+  font-size: 0.875rem;
+  font-weight: 600;
   color: var(--color-text-primary);
 }
 
@@ -31,12 +45,16 @@
 }
 
 .subtitle {
-  @apply mt-1.5 text-sm leading-relaxed;
+  margin-top: 2px;
+  font-size: 0.8125rem;
+  line-height: 1.5;
   color: var(--color-text-secondary);
 }
 
 .badge {
-  @apply inline-flex shrink-0 items-center rounded-full px-2.5 py-1 text-xs font-semibold uppercase tracking-wide;
+  @apply inline-flex shrink-0 items-center rounded-full text-xs font-semibold uppercase tracking-wide;
+  padding: 3px 10px;
+  height: 24px;
 }
 
 .badgeActive {
@@ -60,11 +78,13 @@
 }
 
 .features {
-  @apply mb-4 grid gap-2 sm:grid-cols-2;
+  @apply grid gap-1.5 sm:grid-cols-2;
+  margin-bottom: 14px;
 }
 
 .feature {
-  @apply flex items-center gap-2 text-sm;
+  @apply flex items-center gap-2;
+  font-size: 0.8125rem;
   color: var(--color-text-secondary);
 }
 
@@ -78,7 +98,8 @@
 }
 
 .actions {
-  @apply flex flex-wrap items-center gap-2;
+  @apply flex flex-wrap items-center;
+  gap: var(--space-sm);
 }
 
 @media (max-width: 639px) {
@@ -93,7 +114,9 @@
 }
 
 .meta {
-  @apply mt-3 text-xs leading-relaxed;
+  margin-top: 10px;
+  font-size: 0.75rem;
+  line-height: 1.5;
   color: var(--color-text-tertiary);
 }
 

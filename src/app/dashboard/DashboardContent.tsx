@@ -42,6 +42,7 @@ export const DashboardContent: React.FC = () => {
           <Button variant="ghost" size="sm" onClick={logout}>
             Déconnexion
           </Button>
+          <div className={styles.divider} aria-hidden="true" />
           <Button size="sm" onClick={() => router.push("/onboarding")}>
             <Icon icon={Plus} size="sm" />
             Nouveau

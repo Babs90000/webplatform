@@ -30,19 +30,22 @@
 
 /* Sizes */
 .sm {
-  padding: 6px 14px;
+  padding: 0 14px;
+  height: 34px;
   font-size: 0.8125rem;
   border-radius: var(--radius-sm);
 }
 
 .md {
-  padding: 10px 20px;
+  padding: 0 20px;
+  height: 40px;
   font-size: 0.875rem;
   border-radius: var(--radius-md);
 }
 
 .lg {
-  padding: 14px 28px;
+  padding: 0 28px;
+  height: 48px;
   font-size: 1rem;
   border-radius: var(--radius-md);
 }
