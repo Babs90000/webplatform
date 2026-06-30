@@ -1,7 +1,7 @@
 "use client";
 
 import React, { use, useCallback, useEffect, useMemo, useState, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useShallow } from "zustand/react/shallow";
 import { AuthGuard } from "@/shared/components/AuthGuard";
 import { useProject } from "@/features/projects/hooks/useProjects";
@@ -27,9 +27,13 @@ import type { PreviewViewport } from "@/features/codegen/lib/previewViewport";
 import type { CustomPreviewPreset } from "@/features/codegen/lib/customPreviewPresets";
 import { findCustomPreviewPreset } from "@/features/codegen/lib/customPreviewPresets";
 import {
+  fetchActiveCodegenJob,
   saveProjectFile,
   uploadProjectAsset,
 } from "@/features/codegen/services/codegenApi";
+import {
+  getProjectStudioPath,
+} from "@/lib/projectRoutes";
 import {
   getCachedPreviewHtml,
   mergeFilesForPreview,
@@ -41,13 +45,19 @@ interface StudioPageProps {
   params: Promise<{ id: string }>;
 }
 
+const autoGenerateStorageKey = (projectId: string): string =>
+  `wp-studio-auto-generate-${projectId}`;
+
 const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const { data: project, refetch: refetchProject } = useProject(projectId);
-  const { data: serverFiles, refetch } = useProjectFiles(projectId);
+  const { data: serverFiles, refetch, isFetched: filesFetched } =
+    useProjectFiles(projectId);
   const { generate, edit, auditQuality, isBusy, refreshPreview } = useCodegenStream(projectId);
   const [isSaving, setIsSaving] = useState(false);
   const [autoGenerateStarted, setAutoGenerateStarted] = useState(false);
+  const shouldAutoGenerate = searchParams.get("generate") === "1";
 
   usePreviewBundle(projectId, isBusy);
 
@@ -134,17 +144,57 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
     }
   }, [serverFiles, setFiles, selectPath, selectedPath]);
 
+  const clearGenerateQueryParam = useCallback(() => {
+    if (!shouldAutoGenerate) return;
+    router.replace(getProjectStudioPath(projectId), { scroll: false });
+  }, [router, projectId, shouldAutoGenerate]);
+
   useEffect(() => {
-    if (
-      searchParams.get("generate") === "1" &&
-      !autoGenerateStarted &&
-      project &&
-      files.length === 0
-    ) {
-      setAutoGenerateStarted(true);
-      void generate();
+    if (!shouldAutoGenerate || autoGenerateStarted || !project || !filesFetched) {
+      return;
     }
-  }, [searchParams, autoGenerateStarted, project, files.length, generate]);
+
+    void (async () => {
+      if (
+        typeof sessionStorage !== "undefined" &&
+        sessionStorage.getItem(autoGenerateStorageKey(projectId)) === "1"
+      ) {
+        clearGenerateQueryParam();
+        return;
+      }
+
+      if (serverFiles && serverFiles.length > 0) {
+        clearGenerateQueryParam();
+        return;
+      }
+
+      try {
+        const { job } = await fetchActiveCodegenJob(projectId);
+        if (job && (job.status === "queued" || job.status === "running")) {
+          clearGenerateQueryParam();
+          return;
+        }
+      } catch {
+        // pas de job actif
+      }
+
+      setAutoGenerateStarted(true);
+      if (typeof sessionStorage !== "undefined") {
+        sessionStorage.setItem(autoGenerateStorageKey(projectId), "1");
+      }
+      clearGenerateQueryParam();
+      void generate();
+    })();
+  }, [
+    shouldAutoGenerate,
+    autoGenerateStarted,
+    project,
+    filesFetched,
+    serverFiles,
+    projectId,
+    generate,
+    clearGenerateQueryParam,
+  ]);
 
   const selectedFile = useMemo(
     () => files.find((f) => f.path === selectedPath) ?? null,
