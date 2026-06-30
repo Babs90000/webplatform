@@ -1,8 +1,10 @@
 "use client";
 
-import React, { useRef, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
+import { Upload, X, Link } from "lucide-react";
 import { Modal } from "@/shared/components/Modal";
 import { Button } from "@/shared/components/Button";
+import { Icon } from "@/shared/components/Icon";
 import styles from "./ImageReplaceModal.module.css";
 
 interface ImageReplaceModalProps {
@@ -25,6 +27,7 @@ export const ImageReplaceModal: React.FC<ImageReplaceModalProps> = ({
   const [alt, setAlt] = useState("");
   const [preview, setPreview] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const reset = (): void => {
@@ -32,6 +35,8 @@ export const ImageReplaceModal: React.FC<ImageReplaceModalProps> = ({
     setAlt("");
     setPreview(null);
     setError(null);
+    setIsDragging(false);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const handleClose = (): void => {
@@ -39,20 +44,36 @@ export const ImageReplaceModal: React.FC<ImageReplaceModalProps> = ({
     onClose();
   };
 
-  const handleFile = async (file: File): Promise<void> => {
+  const handleFile = useCallback(async (file: File): Promise<void> => {
+    if (!file.type.startsWith("image/")) {
+      setError("Format non supporté — utilisez JPG, PNG, WebP ou GIF.");
+      return;
+    }
     setError(null);
     setIsUploading(true);
-    setPreview(URL.createObjectURL(file));
+    const localPreview = URL.createObjectURL(file);
+    setPreview(localPreview);
     try {
       const uploadedUrl = await onUpload(file);
       setUrl(uploadedUrl);
     } catch {
       setError("Import impossible. Réessayez ou collez une URL.");
       setPreview(null);
+      URL.revokeObjectURL(localPreview);
     } finally {
       setIsUploading(false);
     }
-  };
+  }, [onUpload]);
+
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      setIsDragging(false);
+      const file = e.dataTransfer.files[0];
+      if (file) void handleFile(file);
+    },
+    [handleFile],
+  );
 
   const handleConfirm = (): void => {
     const finalUrl = url.trim();
@@ -67,23 +88,49 @@ export const ImageReplaceModal: React.FC<ImageReplaceModalProps> = ({
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title={title} size="sm">
       <div className={styles.body}>
-        <button
-          type="button"
-          className={styles.dropzone}
-          onClick={() => fileInputRef.current?.click()}
+
+        {/* Zone drop */}
+        <div
+          className={`${styles.dropzone} ${isDragging ? styles.dragging : ""} ${preview ? styles.hasPreview : ""}`}
+          onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+          onDragLeave={() => setIsDragging(false)}
+          onDrop={handleDrop}
+          onClick={() => !preview && fileInputRef.current?.click()}
+          role="button"
+          tabIndex={0}
+          aria-label="Zone d'import d'image"
+          onKeyDown={(e) => e.key === "Enter" && !preview && fileInputRef.current?.click()}
         >
           {preview ? (
-            <img src={preview} alt="Aperçu" className={styles.previewImg} />
+            <div className={styles.previewWrapper}>
+              <img src={preview} alt="Aperçu" className={styles.previewImg} />
+              {isUploading && (
+                <div className={styles.uploadOverlay}>
+                  <div className={styles.spinner} />
+                </div>
+              )}
+              <button
+                type="button"
+                className={styles.removeBtn}
+                onClick={(e) => { e.stopPropagation(); reset(); }}
+                aria-label="Supprimer l'image"
+              >
+                <Icon icon={X} size="xs" />
+              </button>
+            </div>
           ) : (
-            <>
-              <span className={styles.dropIcon}>↑</span>
-              <span className={styles.dropText}>
-                Cliquez pour importer une image
-              </span>
-              <span className={styles.dropHint}>JPG, PNG, WebP…</span>
-            </>
+            <div className={styles.dropContent}>
+              <div className={styles.dropIconWrap}>
+                <Icon icon={Upload} size="md" />
+              </div>
+              <div className={styles.dropText}>
+                Glissez une image ou <span className={styles.dropLink}>parcourir</span>
+              </div>
+              <div className={styles.dropHint}>JPG, PNG, WebP, GIF — max 10 Mo</div>
+            </div>
           )}
-        </button>
+        </div>
+
         <input
           ref={fileInputRef}
           type="file"
@@ -95,27 +142,37 @@ export const ImageReplaceModal: React.FC<ImageReplaceModalProps> = ({
           }}
         />
 
+        {/* Séparateur */}
         <div className={styles.divider}>
-          <span>ou</span>
+          <span>ou coller une URL</span>
         </div>
 
+        {/* URL */}
         <label className={styles.field}>
-          <span className={styles.fieldLabel}>URL de l&apos;image</span>
+          <span className={styles.fieldLabel}>
+            <Icon icon={Link} size="xs" />
+            URL de l&apos;image
+          </span>
           <input
             type="url"
             className={styles.input}
-            placeholder="https://…"
+            placeholder="https://images.pexels.com/…"
             value={url}
-            onChange={(e) => setUrl(e.target.value)}
+            onChange={(e) => {
+              setUrl(e.target.value);
+              if (e.target.value.trim()) setPreview(e.target.value.trim());
+              else if (!fileInputRef.current?.files?.length) setPreview(null);
+            }}
           />
         </label>
 
+        {/* Alt */}
         <label className={styles.field}>
           <span className={styles.fieldLabel}>Texte alternatif (SEO)</span>
           <input
             type="text"
             className={styles.input}
-            placeholder="Description de l'image"
+            placeholder="Description courte de l'image"
             value={alt}
             onChange={(e) => setAlt(e.target.value)}
           />

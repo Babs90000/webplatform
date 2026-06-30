@@ -1,41 +1,307 @@
-@reference "#tailwind-reference";
-
 .overlay {
-  @apply fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4;
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.65);
+  padding: var(--space-md);
+  backdrop-filter: blur(4px);
 }
 
 .modal {
-  @apply w-full max-w-md rounded-xl border border-zinc-800 bg-zinc-900 p-6 shadow-xl;
+  width: 100%;
+  max-width: 480px;
+  max-height: calc(100dvh - 2rem);
+  overflow-y: auto;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-border-primary);
+  background: var(--color-bg-secondary);
+  box-shadow: var(--shadow-xl);
+  display: flex;
+  flex-direction: column;
 }
 
 .header {
-  @apply mb-4 flex items-center justify-between;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-lg) var(--space-lg) 0;
+  flex-shrink: 0;
 }
 
 .title {
-  @apply text-lg font-semibold text-zinc-100;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--color-text-primary);
 }
 
 .closeBtn {
-  @apply text-2xl leading-none text-zinc-400 hover:text-zinc-200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: transparent;
+  font-size: 1.25rem;
+  line-height: 1;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  transition: color var(--transition-fast), background var(--transition-fast);
+}
+
+.closeBtn:hover {
+  color: var(--color-text-primary);
+  background: var(--color-bg-tertiary);
 }
 
 .body {
-  @apply space-y-4;
+  padding: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  flex: 1;
 }
 
-.hint {
-  @apply text-sm text-zinc-500;
+/* --- Section email --- */
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
 }
 
+.sectionHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  margin-bottom: 4px;
+}
+
+.sectionIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  background: rgba(99, 102, 241, 0.12);
+  color: var(--color-accent-primary);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.sectionTitle {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  line-height: 1.3;
+}
+
+.sectionDesc {
+  font-size: 0.8125rem;
+  color: var(--color-text-tertiary);
+  margin-top: 2px;
+}
+
+.statusOk {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8125rem;
+  color: var(--color-accent-success);
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+}
+
+.statusOk strong {
+  font-weight: 600;
+}
+
+.statusWarn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8125rem;
+  color: var(--color-accent-warning);
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+}
+
+/* --- Guide SMTP --- */
+.smtpSection {
+  border: 1px solid var(--color-border-primary);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.smtpToggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  width: 100%;
+  padding: 12px var(--space-md);
+  background: var(--color-bg-elevated);
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  transition: color var(--transition-fast), background var(--transition-fast);
+}
+
+.smtpToggle:hover {
+  color: var(--color-text-primary);
+  background: var(--color-bg-tertiary);
+}
+
+.smtpChevron {
+  margin-left: auto;
+  font-size: 0.625rem;
+  color: var(--color-text-tertiary);
+}
+
+.smtpGuide {
+  padding: var(--space-md);
+  border-top: 1px solid var(--color-border-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: var(--color-bg-primary);
+}
+
+.smtpIntro {
+  font-size: 0.8125rem;
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+}
+
+.smtpIntro strong {
+  color: var(--color-text-primary);
+}
+
+.smtpVars {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.smtpVar {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-sm);
+}
+
+.varName {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--color-text-accent);
+  font-family: var(--font-mono);
+}
+
+.varDesc {
+  font-size: 0.75rem;
+  color: var(--color-text-tertiary);
+}
+
+.varExample {
+  font-size: 0.6875rem;
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  text-align: right;
+}
+
+.smtpProviders {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.providersTitle {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-tertiary);
+}
+
+.providersList {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.providerLink {
+  font-size: 0.8125rem;
+  color: var(--color-text-accent);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: color var(--transition-fast);
+}
+
+.providerLink:hover {
+  color: var(--color-accent-primary-hover);
+}
+
+.providerLink span {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+}
+
+.smtpNote {
+  font-size: 0.8125rem;
+  color: var(--color-text-tertiary);
+  background: var(--color-bg-elevated);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  line-height: 1.5;
+}
+
+.smtpNote code {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--color-text-accent);
+  background: rgba(99, 102, 241, 0.1);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+/* --- Tip images --- */
 .tip {
-  @apply rounded-lg border border-zinc-800 bg-zinc-950/60 p-3 text-sm text-zinc-400;
+  font-size: 0.8125rem;
+  color: var(--color-text-tertiary);
+  background: var(--color-bg-elevated);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  border: 1px solid var(--color-border-subtle);
+  line-height: 1.5;
 }
 
 .tip strong {
-  @apply text-zinc-200;
+  color: var(--color-text-secondary);
 }
 
+/* --- Footer --- */
 .footer {
-  @apply mt-6 flex justify-end gap-3;
+  padding: var(--space-md) var(--space-lg) var(--space-lg);
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-sm);
+  border-top: 1px solid var(--color-border-subtle);
+  flex-shrink: 0;
 }
