@@ -12,7 +12,7 @@
 
 .modal {
   width: 100%;
-  max-width: 480px;
+  max-width: 540px;
   max-height: calc(100dvh - 2rem);
   overflow-y: auto;
   border-radius: var(--radius-xl);
@@ -196,7 +196,7 @@
 
 .smtpVar {
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: auto 1fr auto auto;
   align-items: center;
   gap: 8px;
   padding: 8px 10px;
@@ -207,8 +207,26 @@
 .varName {
   font-size: 0.75rem;
   font-weight: 700;
-  color: var(--color-text-accent);
+  color: var(--color-accent-primary);
   font-family: var(--font-mono);
+  white-space: nowrap;
+}
+
+.varValue {
+  font-size: 0.6875rem;
+  color: var(--color-text-secondary);
+  font-family: var(--font-mono);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.varHint {
+  font-size: 0.6875rem;
+  color: var(--color-text-muted);
+  font-style: italic;
+  white-space: nowrap;
+  display: none;
 }
 
 .varDesc {
@@ -223,13 +241,82 @@
   text-align: right;
 }
 
-.smtpProviders {
+.copyBtn {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: transparent;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: color var(--transition-fast), background var(--transition-fast);
 }
 
-.providersTitle {
+.copyBtn:hover {
+  color: var(--color-accent-primary);
+  background: rgba(99, 102, 241, 0.1);
+}
+
+/* --- Onglets fournisseur --- */
+.providerTabs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.providerTab {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border-primary);
+  background: var(--color-bg-secondary);
+  cursor: pointer;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  transition: border-color var(--transition-fast), background var(--transition-fast), color var(--transition-fast);
+  flex: 1;
+  min-width: 100px;
+}
+
+.providerTab:hover {
+  border-color: var(--color-accent-primary);
+  color: var(--color-text-primary);
+}
+
+.providerTabActive {
+  border-color: var(--color-accent-primary);
+  background: rgba(99, 102, 241, 0.08);
+  color: var(--color-accent-primary);
+}
+
+.providerFree {
+  font-size: 0.6875rem;
+  font-weight: 400;
+  color: var(--color-text-muted);
+}
+
+/* --- Contenu fournisseur --- */
+.providerContent {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.stepsSection {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.stepsTitle {
   font-size: 0.75rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -237,30 +324,58 @@
   color: var(--color-text-tertiary);
 }
 
-.providersList {
+.stepsList {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
 }
 
-.providerLink {
-  font-size: 0.8125rem;
-  color: var(--color-text-accent);
-  text-decoration: none;
+.step {
   display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 0.8125rem;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+.stepNum {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(99, 102, 241, 0.12);
+  color: var(--color-accent-primary);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.providerCta {
+  display: inline-flex;
   align-items: center;
   gap: 6px;
-  transition: color var(--transition-fast);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-accent-primary);
+  text-decoration: none;
+  padding: 7px 12px;
+  border: 1px solid rgba(99, 102, 241, 0.35);
+  border-radius: var(--radius-sm);
+  background: rgba(99, 102, 241, 0.06);
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+  align-self: flex-start;
 }
 
-.providerLink:hover {
-  color: var(--color-accent-primary-hover);
-}
-
-.providerLink span {
-  font-size: 0.75rem;
-  color: var(--color-text-muted);
-  font-family: var(--font-mono);
+.providerCta:hover {
+  background: rgba(99, 102, 241, 0.12);
+  border-color: var(--color-accent-primary);
 }
 
 .smtpNote {
