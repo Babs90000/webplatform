@@ -1,78 +1,47 @@
-"use client";
+import { Suspense } from "react";
+import { redirect } from "next/navigation";
+import { dehydrate, HydrationBoundary, QueryClient } from "@tanstack/react-query";
+import { DashboardContent } from "./DashboardContent";
+import { getServerToken, getServerProjects, getServerBilling } from "@/lib/server/dal";
+import { BILLING_QUERY_KEY } from "@/features/billing/hooks/useBilling";
 
-import React, { Suspense, useState } from "react";
-import { Plus, Sparkles } from "lucide-react";
-import { useRouter } from "next/navigation";
-import styles from "./Dashboard.module.css";
-import { AuthGuard } from "@/shared/components/AuthGuard";
-import { Button } from "@/shared/components/Button";
-import { useAuth } from "@/features/auth/hooks/useAuth";
-import { useProjects } from "@/features/projects/hooks/useProjects";
-import { ProjectList } from "@/features/projects/components/ProjectList";
-import { BillingCard } from "@/features/billing/components/BillingCard";
-import { Icon } from "@/shared/components/Icon";
-import { useCheckoutReturnToast } from "@/features/billing/hooks/useCheckoutReturnToast";
-import type { ProjectListFilter } from "@/features/projects/services/projectsApi";
+/**
+ * Server Component : données préchargées côté serveur, HTML complet livré
+ * au premier byte. Aucun waterfall client, aucun LoadingPanel visible.
+ */
+export default async function DashboardPage() {
+  const token = await getServerToken();
 
-const DashboardContent: React.FC = () => {
-  const router = useRouter();
-  const { user, logout } = useAuth();
-  const [filter, setFilter] = useState<ProjectListFilter>("active");
-  const { data: projects, isLoading, error, refetch } = useProjects(filter);
+  // Le middleware gère déjà la redirection — double vérification côté serveur.
+  if (!token) {
+    redirect("/login?redirect=/dashboard");
+  }
 
-  useCheckoutReturnToast();
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        staleTime: 2 * 60 * 1000,
+      },
+    },
+  });
+
+  // Préchargement parallèle — aucun waterfall réseau.
+  await Promise.all([
+    queryClient.prefetchQuery({
+      queryKey: ["projects", "active"],
+      queryFn: () => getServerProjects("active"),
+    }),
+    queryClient.prefetchQuery({
+      queryKey: BILLING_QUERY_KEY,
+      queryFn: () => getServerBilling(),
+    }),
+  ]);
 
   return (
-    <div className={styles.container} data-testid="dashboard-page">
-      <header className={styles.header}>
-        <div className={styles.titleBlock}>
-          <h1 className={styles.title}>Mes projets</h1>
-          <p className={styles.subtitle}>
-            Bon retour{user?.email ? `, ${user.email.split("@")[0]}` : ""}
-          </p>
-        </div>
-        <div className={styles.headerActions}>
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => router.push("/onboarding")}
-          >
-            <Icon icon={Sparkles} size="sm" />
-            Assistant
-          </Button>
-          <Button variant="ghost" size="sm" onClick={logout}>
-            Déconnexion
-          </Button>
-          <Button size="sm" onClick={() => router.push("/onboarding")}>
-            <Icon icon={Plus} size="sm" />
-            Nouveau
-          </Button>
-        </div>
-      </header>
-
-      <div className={styles.main}>
-        <BillingCard />
-
-        <ProjectList
-          projects={projects}
-          isLoading={isLoading}
-          error={error}
-          filter={filter}
-          onFilterChange={setFilter}
-          onRetry={refetch}
-          onCreateProject={() => router.push("/onboarding")}
-        />
-      </div>
-    </div>
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <Suspense fallback={null}>
+        <DashboardContent />
+      </Suspense>
+    </HydrationBoundary>
   );
-};
-
-const DashboardPage: React.FC = () => (
-  <AuthGuard>
-    <Suspense fallback={null}>
-      <DashboardContent />
-    </Suspense>
-  </AuthGuard>
-);
-
-export default DashboardPage;
+}
