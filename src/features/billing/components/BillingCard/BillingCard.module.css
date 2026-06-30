@@ -2,9 +2,8 @@
 
 .card {
   @apply rounded-xl border p-5 sm:p-6;
-  background: var(--gradient-card);
+  background: var(--color-bg-elevated);
   border-color: var(--color-border-primary);
-  backdrop-filter: blur(8px);
 }
 
 .header {

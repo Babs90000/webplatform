@@ -228,6 +228,7 @@ export const useStudioStore = create<StudioState>()(
     }),
     {
       name: "wp-studio-ui",
+      version: 2,
       storage: createJSONStorage(() => sessionStorage),
       partialize: (state) => ({
         studioProjectId: state.studioProjectId,
@@ -236,6 +237,16 @@ export const useStudioStore = create<StudioState>()(
         previewPage: state.previewPage,
         previewViewport: state.previewViewport,
         activeCustomPresetId: state.activeCustomPresetId,
+      }),
+      // version 2 : supprime l'ancienne entrée sessionStorage qui pouvait
+      // contenir files/previewHtml/streamingPaths (potentiellement > 1 Mo).
+      migrate: () => ({
+        studioProjectId: null,
+        chatMessages: [],
+        selectedPath: null,
+        previewPage: "index.html",
+        previewViewport: "full",
+        activeCustomPresetId: null,
       }),
     },
   ),
