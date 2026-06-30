@@ -13,7 +13,8 @@ interface AuthGuardProps {
 
 export const AuthGuard: React.FC<AuthGuardProps> = ({ children, fallback }) => {
   const router = useRouter();
-  const { token, isHydrated } = useAuthStore();
+  const token = useAuthStore((s) => s.token);
+  const isHydrated = useAuthStore((s) => s.isHydrated);
 
   useEffect(() => {
     if (!isHydrated) return;

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useShallow } from "zustand/react/shallow";
 import {
   fetchActiveCodegenJob,
   fetchPreviewHtml,
@@ -105,7 +106,24 @@ export const useCodegenStream = (projectId: string) => {
     upsertFile,
     setCommitteeReviewActive,
     setExpertScores,
-  } = useStudioStore();
+  } = useStudioStore(
+    useShallow((s) => ({
+      setPhase: s.setPhase,
+      setStatusMessage: s.setStatusMessage,
+      setProgress: s.setProgress,
+      setPlan: s.setPlan,
+      appendFileChunk: s.appendFileChunk,
+      resetStreaming: s.resetStreaming,
+      addChatMessage: s.addChatMessage,
+      setPreviewHtml: s.setPreviewHtml,
+      progressPercent: s.progressPercent,
+      progressDone: s.progressDone,
+      progressPending: s.progressPending,
+      upsertFile: s.upsertFile,
+      setCommitteeReviewActive: s.setCommitteeReviewActive,
+      setExpertScores: s.setExpertScores,
+    })),
+  );
 
   const refreshPreview = useCallback(async () => {
     const state = useStudioStore.getState();
