@@ -125,6 +125,13 @@ export const ProjectList: React.FC<ProjectListProps> = ({
         ? "archived"
         : "active";
 
+  /** Garde-fou UI : ne jamais afficher le mauvais onglet si l'API renvoie un mauvais set */
+  const visibleProjects = (projects ?? []).filter((p) => {
+    if (filter === "archived") return p.status === "archived";
+    if (filter === "trash") return p.status === "trashed";
+    return p.status === "draft" || p.status === "published";
+  });
+
   return (
     <>
       <div className={styles.tabs} role="tablist" aria-label="Filtrer les projets">
@@ -167,7 +174,7 @@ export const ProjectList: React.FC<ProjectListProps> = ({
             </div>
           ))}
         </div>
-      ) : !projects || projects.length === 0 ? (
+      ) : visibleProjects.length === 0 ? (
         <EmptyState
           title={empty.title}
           description={empty.description}
@@ -177,7 +184,7 @@ export const ProjectList: React.FC<ProjectListProps> = ({
         />
       ) : (
         <div className={styles.grid}>
-          {projects.map((project) => (
+          {visibleProjects.map((project) => (
             <ProjectCard
               key={project.id}
               project={project}
