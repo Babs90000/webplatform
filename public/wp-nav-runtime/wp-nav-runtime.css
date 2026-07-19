@@ -18,6 +18,7 @@
     display: flex !important;
     flex-direction: row !important;
     align-items: center !important;
+    gap: 1.5rem !important;
     position: static !important;
     visibility: visible !important;
     opacity: 1 !important;
@@ -29,6 +30,24 @@
     box-shadow: none !important;
     pointer-events: auto !important;
     overflow: visible !important;
+  }
+
+  #nav-menu .btn,
+  #nav-menu a.btn,
+  .nav-menu .btn,
+  .nav-menu a.btn {
+    margin-top: 0 !important;
+    padding: 0.5rem 1.15rem !important;
+    width: auto !important;
+    max-width: none !important;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+  }
+
+  #nav-menu a:not(.btn),
+  .nav-menu a:not(.btn) {
+    border-bottom: none !important;
+    padding-block: 0 !important;
   }
 
   #nav-overlay,

@@ -34,6 +34,20 @@ iframe {
   height: auto;
 }
 
+/* Avatars / photos rondes — jamais écrasés par height:auto ou grilles */
+img.avatar,
+img[class*="avatar"],
+.testimonial-avatar,
+[class*="testimonial-avatar"] {
+  width: 48px !important;
+  height: 48px !important;
+  max-width: 48px !important;
+  aspect-ratio: 1 / 1 !important;
+  object-fit: cover !important;
+  border-radius: 999px !important;
+  flex-shrink: 0 !important;
+}
+
 .container {
   width: min(100% - 2rem, var(--container-max, 1200px));
   margin-inline: auto;
@@ -63,6 +77,7 @@ iframe {
     display: flex !important;
     flex-direction: row !important;
     align-items: center !important;
+    gap: 1.5rem !important;
     position: static !important;
     visibility: visible !important;
     opacity: 1 !important;
@@ -71,6 +86,28 @@ iframe {
     overflow: visible !important;
     transform: none !important;
     pointer-events: auto !important;
+  }
+
+  /* CTA dans la navbar : pill compacte à droite, pas un bloc drawer */
+  .nav-menu .btn,
+  .nav-menu a.btn,
+  .nav-links .btn,
+  #nav-menu .btn,
+  #nav-menu a.btn {
+    margin-top: 0 !important;
+    margin-inline: 0 !important;
+    padding: 0.5rem 1.15rem !important;
+    width: auto !important;
+    max-width: none !important;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+    align-self: center !important;
+  }
+
+  .nav-menu a:not(.btn),
+  #nav-menu a:not(.btn) {
+    border-bottom: none !important;
+    padding-block: 0 !important;
   }
 }
 `.trim();
@@ -126,8 +163,8 @@ export const MOBILE_RESCUE_CSS = `
     min-height: auto !important;
   }
 
-  [class*="hero"] img,
-  [class*="Hero"] img,
+  [class*="hero"] img:not([class*="avatar"]),
+  [class*="Hero"] img:not([class*="avatar"]),
   .hero-image,
   .about-image {
     width: 100% !important;
@@ -151,6 +188,7 @@ export const MOBILE_RESCUE_CSS = `
     flex-wrap: wrap !important;
   }
 
+  /* Tablette : footer en 2 colonnes côte à côte */
   .footer-grid,
   .footer-content,
   .footer-columns {
@@ -158,9 +196,12 @@ export const MOBILE_RESCUE_CSS = `
     grid-template-columns: 1fr 1fr !important;
     gap: 1.5rem !important;
     width: 100% !important;
+    text-align: left !important;
+    justify-items: stretch !important;
   }
 
-  .footer-brand {
+  .footer-brand,
+  .footer-grid > :first-child {
     grid-column: 1 / -1 !important;
   }
 
@@ -173,6 +214,10 @@ export const MOBILE_RESCUE_CSS = `
 }
 
 @media (max-width: 767px) {
+  /* Grilles de contenu — NE PAS cibler .testimonial-avatar / auteurs */
+  .testimonials-grid,
+  [class*="testimonials-grid"],
+  [class*="testimonial-grid"],
   [class*="grid"]:not(.nav-menu):not(.nav-links):not(.navbar-menu):not(.mobile-menu):not(.mobile-nav):not([class*="icon"]),
   [class*="cards"],
   [class*="Cards"],
@@ -180,8 +225,6 @@ export const MOBILE_RESCUE_CSS = `
   [class*="Features"],
   [class*="services"],
   [class*="Services"],
-  [class*="testimonial"],
-  [class*="Testimonial"],
   [class*="team"],
   [class*="Team"],
   [class*="gallery"],
@@ -193,7 +236,8 @@ export const MOBILE_RESCUE_CSS = `
   .footer-columns,
   footer [class*="col"],
   .stats-grid,
-  [class*="stats"] {
+  [class*="stats-row"],
+  [class*="stats-grid"] {
     display: grid !important;
     grid-template-columns: 1fr !important;
     gap: 1.25rem !important;
@@ -251,7 +295,7 @@ export const MOBILE_RESCUE_CSS = `
     padding-inline: 0 !important;
   }
 
-  [class*="cta"],
+  [class*="cta"]:not(.nav-menu):not(.navbar),
   [class*="buttons"],
   [class*="btn-group"],
   [class*="actions"],
@@ -274,8 +318,17 @@ export const MOBILE_RESCUE_CSS = `
     max-width: 100% !important;
   }
 
+  /* CTA dans le drawer mobile : pleine largeur OK */
+  .nav-menu .btn,
+  #nav-menu .btn {
+    width: 100% !important;
+    margin-top: 0.75rem !important;
+    text-align: center !important;
+  }
+
   footer {
     padding: 2rem 1rem !important;
+    text-align: center !important;
   }
 
   footer > div,
@@ -283,15 +336,43 @@ export const MOBILE_RESCUE_CSS = `
   footer .container > div {
     display: flex !important;
     flex-direction: column !important;
-    align-items: flex-start !important;
+    align-items: center !important;
     gap: 1.5rem !important;
     width: 100% !important;
+    text-align: center !important;
   }
 
   .footer-grid,
   .footer-content,
   .footer-columns {
     grid-template-columns: 1fr !important;
+    justify-items: center !important;
+    text-align: center !important;
+  }
+
+  .footer-brand,
+  .footer-grid > :first-child {
+    grid-column: auto !important;
+  }
+
+  .footer-links,
+  .social-links {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    align-items: center !important;
+  }
+
+  .footer-links {
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+  }
+
+  .footer h4,
+  .footer-logo,
+  .footer p,
+  .footer address {
+    text-align: center !important;
   }
 
   form,
@@ -315,8 +396,23 @@ export const MOBILE_RESCUE_CSS = `
   [class*="grid"]:not(.nav-menu):not(.nav-links):not(.navbar-menu):not(.mobile-menu):not(.footer-grid):not(.about-grid),
   [class*="cards"],
   [class*="features"],
-  [class*="services"] {
+  [class*="services"],
+  .testimonials-grid,
+  [class*="testimonials-grid"] {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .footer-grid,
+  .footer-content,
+  .footer-columns {
+    grid-template-columns: 1fr 1fr !important;
+    text-align: left !important;
+    justify-items: stretch !important;
+  }
+
+  footer,
+  footer .container {
+    text-align: left !important;
   }
 }
 `.trim();
