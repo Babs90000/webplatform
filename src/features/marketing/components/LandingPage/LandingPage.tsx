@@ -91,7 +91,7 @@ export const LandingPage: React.FC = () => {
           <a href="#features" className={styles.navLink}>Fonctionnalités</a>
           <a href="#how" className={styles.navLink}>Comment ça marche</a>
           <Link href="/login" className={styles.navLink}>Connexion</Link>
-          <Link href="/register">
+          <Link href="/register" className={styles.navCta}>
             <Button size="sm">Commencer gratuitement</Button>
           </Link>
         </nav>

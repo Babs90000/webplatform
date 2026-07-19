@@ -103,8 +103,17 @@
 }
 
 @media (max-width: 639px) {
+  .header {
+    @apply flex-col items-start;
+    gap: 10px;
+  }
+
+  .badge {
+    align-self: flex-start;
+  }
+
   .actions {
-    @apply flex-nowrap overflow-x-auto pb-1;
+    @apply flex-nowrap overflow-x-auto pb-1 w-full;
     scrollbar-width: none;
   }
 

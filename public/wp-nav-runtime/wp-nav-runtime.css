@@ -1,4 +1,48 @@
-﻿/* wp-nav-runtime — navigation mobile/tablette (WebPlatform) */
+/* wp-nav-runtime — barre de navigation desktop + mobile/tablette (WebPlatform) */
+
+/* ——— Barre header commune ——— */
+header:has(.nav-toggle),
+header:has(.menu-toggle),
+header:has([data-wp-nav="toggle"]),
+header:has(#nav-toggle),
+.site-header,
+.main-header,
+.navbar,
+.nav-bar,
+[data-wp-nav="bar"] {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 1rem !important;
+  flex-wrap: nowrap !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  min-height: 3.5rem;
+}
+
+header .logo,
+header .brand,
+header .site-logo,
+header a.logo,
+.site-header .logo,
+.navbar .logo,
+[data-wp-nav="brand"] {
+  flex-shrink: 0 !important;
+  max-width: min(60vw, 16rem);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+header img.logo,
+header .logo img,
+.site-header img,
+.navbar img {
+  max-height: 2.25rem !important;
+  width: auto !important;
+  object-fit: contain;
+}
 
 @media (min-width: 1024px) {
   .nav-toggle,
@@ -11,24 +55,55 @@
     display: none !important;
   }
 
+  header:has(.nav-toggle),
+  header:has(.menu-toggle),
+  header:has([data-wp-nav="toggle"]),
+  header:has(#nav-toggle),
+  .site-header,
+  .main-header,
+  .navbar,
+  .nav-bar,
+  [data-wp-nav="bar"] {
+    padding-inline: clamp(1.25rem, 4vw, 3rem) !important;
+    gap: 1.5rem !important;
+  }
+
   #nav-menu,
   .nav-menu,
+  .nav-links,
+  .navbar-menu,
+  .main-nav,
+  .header-nav,
   .nav-menu[data-wp-nav="panel"],
   [data-wp-nav="panel"] {
     display: flex !important;
     flex-direction: row !important;
+    flex-wrap: nowrap !important;
     align-items: center !important;
+    justify-content: flex-end !important;
+    gap: clamp(0.75rem, 1.5vw, 1.75rem) !important;
     position: static !important;
+    inset: auto !important;
     visibility: visible !important;
     opacity: 1 !important;
     transform: none !important;
     width: auto !important;
     height: auto !important;
     max-height: none !important;
+    max-width: none !important;
+    margin: 0 !important;
     padding: 0 !important;
+    background: transparent !important;
     box-shadow: none !important;
     pointer-events: auto !important;
     overflow: visible !important;
+  }
+
+  #nav-menu a,
+  .nav-menu a,
+  .nav-links a,
+  [data-wp-nav="panel"] a {
+    white-space: nowrap;
   }
 
   #nav-overlay,
@@ -38,6 +113,22 @@
 }
 
 @media (max-width: 1023px) {
+  header:has(.nav-toggle),
+  header:has(.menu-toggle),
+  header:has([data-wp-nav="toggle"]),
+  header:has(#nav-toggle),
+  .site-header,
+  .main-header,
+  .navbar,
+  .nav-bar,
+  [data-wp-nav="bar"] {
+    padding-inline: max(1rem, env(safe-area-inset-left, 0px))
+      max(1rem, env(safe-area-inset-right, 0px)) !important;
+    padding-block: 0.65rem !important;
+    position: relative;
+    z-index: 1002;
+  }
+
   .nav-toggle,
   .menu-toggle,
   .navbar-toggle,
@@ -51,12 +142,31 @@
     justify-content: center;
     min-width: 44px;
     min-height: 44px;
+    margin-left: auto;
     cursor: pointer;
-    z-index: 1002;
+    z-index: 1003;
+    flex-shrink: 0;
+  }
+
+  /* CTA desktop souvent trop large sur mobile : ne pas casser la barre */
+  header > .btn,
+  header > .button,
+  header > .cta,
+  header > a.cta,
+  .site-header > .btn,
+  .site-header > .cta,
+  .navbar > .cta:not([data-wp-nav="toggle"]) {
+    display: none !important;
   }
 
   #nav-menu,
   .nav-menu,
+  .nav-links,
+  .navbar-menu,
+  .mobile-nav,
+  .mobile-menu,
+  .main-nav,
+  .header-nav,
   .nav-menu[data-wp-nav="panel"],
   [data-wp-nav="panel"] {
     position: fixed;
@@ -65,16 +175,20 @@
     width: min(100vw - 3rem, 320px);
     max-width: 85vw;
     height: 100dvh;
+    height: 100vh;
     display: flex;
     flex-direction: column;
     align-items: stretch;
-    gap: 0.5rem;
-    padding: 5rem 1.5rem 2rem;
+    gap: 0.35rem;
+    padding: max(4.5rem, calc(env(safe-area-inset-top, 0px) + 3.5rem))
+      1.25rem
+      max(1.5rem, env(safe-area-inset-bottom, 0px));
     background: var(--color-surface, var(--surface, var(--color-bg, #fff)));
     color: var(--color-text, inherit);
     box-shadow: -8px 0 32px rgba(0, 0, 0, 0.12);
     z-index: 1001;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
     visibility: hidden;
     pointer-events: none;
     transform: translateX(100%);
@@ -82,8 +196,21 @@
     transition: transform 0.3s ease, visibility 0.3s ease, opacity 0.3s ease;
   }
 
+  #nav-menu a,
+  .nav-menu a,
+  .nav-links a,
+  [data-wp-nav="panel"] a {
+    display: block;
+    padding: 0.75rem 0.5rem;
+    font-size: 1rem;
+    line-height: 1.4;
+    text-decoration: none;
+    border-radius: 0.5rem;
+  }
+
   body:not(.wp-nav-open):not(.nav-open) #nav-menu,
   body:not(.wp-nav-open):not(.nav-open) .nav-menu,
+  body:not(.wp-nav-open):not(.nav-open) .nav-links,
   body:not(.wp-nav-open):not(.nav-open) .nav-menu[data-wp-nav="panel"],
   body:not(.wp-nav-open):not(.nav-open) [data-wp-nav="panel"] {
     visibility: hidden;
@@ -94,10 +221,12 @@
 
   body.wp-nav-open #nav-menu,
   body.wp-nav-open .nav-menu,
+  body.wp-nav-open .nav-links,
   body.wp-nav-open .nav-menu[data-wp-nav="panel"],
   body.wp-nav-open [data-wp-nav="panel"],
   body.nav-open #nav-menu,
   body.nav-open .nav-menu,
+  body.nav-open .nav-links,
   body.nav-open .nav-menu[data-wp-nav="panel"],
   body.nav-open [data-wp-nav="panel"] {
     display: flex !important;
@@ -125,11 +254,17 @@
     opacity: 1;
     pointer-events: auto;
   }
+
+  body.wp-nav-open,
+  body.nav-open {
+    overflow: hidden;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   #nav-menu,
   .nav-menu,
+  .nav-links,
   [data-wp-nav="panel"],
   #nav-overlay,
   [data-wp-nav="overlay"] {

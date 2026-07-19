@@ -34,14 +34,28 @@
 .navDesktop {
   display: none;
   align-items: center;
-  gap: 1rem;
+  gap: 0.25rem;
 }
 
 @media (min-width: 768px) {
   .navDesktop {
     display: flex;
-    gap: 1.5rem;
+    gap: 0.5rem;
   }
+}
+
+.navLink {
+  @apply text-sm text-zinc-300 no-underline transition-colors hover:text-white;
+  padding: 0.45rem 0.75rem;
+  border-radius: 0.5rem;
+}
+
+.navLink:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.navCta {
+  margin-left: 0.5rem;
 }
 
 .menuBtn {
@@ -66,14 +80,6 @@
 
 .mobileNavLink {
   @apply rounded-md px-2 py-2 text-sm text-zinc-300 no-underline transition-colors hover:bg-white/5 hover:text-white;
-}
-
-.nav {
-  @apply flex items-center gap-6;
-}
-
-.navLink {
-  @apply text-sm text-zinc-300 no-underline transition-colors hover:text-white;
 }
 
 .logo {
