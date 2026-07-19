@@ -1,4 +1,4 @@
-/* wp-nav-runtime — navigation mobile/tablette (WebPlatform) */
+﻿/* wp-nav-runtime — navigation mobile/tablette (WebPlatform) */
 
 @media (min-width: 1024px) {
   .nav-toggle,
@@ -12,6 +12,7 @@
   }
 
   #nav-menu,
+  .nav-menu,
   .nav-menu[data-wp-nav="panel"],
   [data-wp-nav="panel"] {
     display: flex !important;
@@ -55,6 +56,7 @@
   }
 
   #nav-menu,
+  .nav-menu,
   .nav-menu[data-wp-nav="panel"],
   [data-wp-nav="panel"] {
     position: fixed;
@@ -63,35 +65,46 @@
     width: min(100vw - 3rem, 320px);
     max-width: 85vw;
     height: 100dvh;
+    display: flex;
     flex-direction: column;
     align-items: stretch;
     gap: 0.5rem;
     padding: 5rem 1.5rem 2rem;
-    background: var(--surface, var(--color-bg, #fff));
+    background: var(--color-surface, var(--surface, var(--color-bg, #fff)));
+    color: var(--color-text, inherit);
     box-shadow: -8px 0 32px rgba(0, 0, 0, 0.12);
     z-index: 1001;
     overflow-y: auto;
     visibility: hidden;
     pointer-events: none;
     transform: translateX(100%);
-    transition: transform 0.3s ease, visibility 0.3s ease;
+    opacity: 0;
+    transition: transform 0.3s ease, visibility 0.3s ease, opacity 0.3s ease;
   }
 
-  body:not(.wp-nav-open) #nav-menu,
-  body:not(.wp-nav-open) .nav-menu[data-wp-nav="panel"],
-  body:not(.wp-nav-open) [data-wp-nav="panel"] {
+  body:not(.wp-nav-open):not(.nav-open) #nav-menu,
+  body:not(.wp-nav-open):not(.nav-open) .nav-menu,
+  body:not(.wp-nav-open):not(.nav-open) .nav-menu[data-wp-nav="panel"],
+  body:not(.wp-nav-open):not(.nav-open) [data-wp-nav="panel"] {
     visibility: hidden;
     pointer-events: none;
     transform: translateX(100%);
+    opacity: 0;
   }
 
   body.wp-nav-open #nav-menu,
+  body.wp-nav-open .nav-menu,
   body.wp-nav-open .nav-menu[data-wp-nav="panel"],
-  body.wp-nav-open [data-wp-nav="panel"] {
+  body.wp-nav-open [data-wp-nav="panel"],
+  body.nav-open #nav-menu,
+  body.nav-open .nav-menu,
+  body.nav-open .nav-menu[data-wp-nav="panel"],
+  body.nav-open [data-wp-nav="panel"] {
     display: flex !important;
-    visibility: visible;
-    pointer-events: auto;
-    transform: translateX(0);
+    visibility: visible !important;
+    pointer-events: auto !important;
+    transform: translateX(0) !important;
+    opacity: 1 !important;
   }
 
   #nav-overlay,
@@ -106,7 +119,9 @@
   }
 
   body.wp-nav-open #nav-overlay,
-  body.wp-nav-open [data-wp-nav="overlay"] {
+  body.wp-nav-open [data-wp-nav="overlay"],
+  body.nav-open #nav-overlay,
+  body.nav-open [data-wp-nav="overlay"] {
     opacity: 1;
     pointer-events: auto;
   }
@@ -114,6 +129,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   #nav-menu,
+  .nav-menu,
   [data-wp-nav="panel"],
   #nav-overlay,
   [data-wp-nav="overlay"] {

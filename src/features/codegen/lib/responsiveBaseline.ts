@@ -1,4 +1,8 @@
-/** Baseline responsive injectée dans css/style.css des sites générés. */
+/**
+ * Correctifs CSS appendus en fin de style.css pour éviter les régressions desktop
+ * (débordements horizontaux, images non contraintes).
+ * La navigation mobile est gérée par css/wp-nav-runtime.css (fichier séparé).
+ */
 
 export const RESPONSIVE_BASELINE_MARKER = "wp-responsive-baseline";
 export const MOBILE_RESCUE_MARKER = "wp-mobile-rescue";
@@ -71,10 +75,14 @@ iframe {
 }
 `.trim();
 
-/** Filet de sécurité mobile — rattrape les grilles/flex oubliés par l'IA. */
+/**
+ * Filet de sécurité — tablette + mobile.
+ * Couvre max-width 1023px pour les layouts 2-col (hero/about/footer),
+ * puis renforce typo/boutons/forms sous 767px.
+ */
 export const MOBILE_RESCUE_CSS = `
 /* ${MOBILE_RESCUE_MARKER} */
-@media (max-width: 767px) {
+@media (max-width: 1023px) {
   main,
   section,
   article,
@@ -94,6 +102,77 @@ export const MOBILE_RESCUE_CSS = `
     margin-inline: auto !important;
   }
 
+  /* Hero / about / split : toujours 1 colonne sous desktop */
+  .hero .container,
+  [class*="hero"] .container,
+  [class*="Hero"] .container,
+  .about-grid,
+  [class*="about-grid"],
+  [class*="about"] > .container,
+  [class*="split"],
+  [class*="Split"],
+  [class*="two-col"],
+  [class*="two_col"] {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 1.5rem !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    text-align: center !important;
+  }
+
+  [class*="hero"],
+  [class*="Hero"] {
+    min-height: auto !important;
+  }
+
+  [class*="hero"] img,
+  [class*="Hero"] img,
+  .hero-image,
+  .about-image {
+    width: 100% !important;
+    max-width: 100% !important;
+    object-fit: cover;
+  }
+
+  .hero-content,
+  .about-content,
+  [class*="hero-content"],
+  [class*="about-content"] {
+    align-items: center !important;
+    text-align: center !important;
+  }
+
+  .hero-cta,
+  [class*="hero-cta"],
+  [class*="hero"] [class*="cta"],
+  [class*="hero"] [class*="btn"] {
+    justify-content: center !important;
+    flex-wrap: wrap !important;
+  }
+
+  .footer-grid,
+  .footer-content,
+  .footer-columns {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 1.5rem !important;
+    width: 100% !important;
+  }
+
+  .footer-brand {
+    grid-column: 1 / -1 !important;
+  }
+
+  /* Formulaires 2 colonnes → 1 colonne */
+  .reservation-form,
+  [class*="form-grid"],
+  form[class*="grid"] {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 767px) {
   [class*="grid"]:not(.nav-menu):not(.nav-links):not(.navbar-menu):not(.mobile-menu):not(.mobile-nav):not([class*="icon"]),
   [class*="cards"],
   [class*="Cards"],
@@ -112,7 +191,9 @@ export const MOBILE_RESCUE_CSS = `
   .footer-grid,
   .footer-content,
   .footer-columns,
-  footer [class*="col"] {
+  footer [class*="col"],
+  .stats-grid,
+  [class*="stats"] {
     display: grid !important;
     grid-template-columns: 1fr !important;
     gap: 1.25rem !important;
@@ -135,13 +216,6 @@ export const MOBILE_RESCUE_CSS = `
     min-height: auto !important;
     padding: clamp(2.5rem, 10vw, 4rem) 1rem !important;
     text-align: center !important;
-  }
-
-  [class*="hero"] img,
-  [class*="Hero"] img {
-    width: 100% !important;
-    max-width: 100% !important;
-    object-fit: cover;
   }
 
   h1,
@@ -214,6 +288,12 @@ export const MOBILE_RESCUE_CSS = `
     width: 100% !important;
   }
 
+  .footer-grid,
+  .footer-content,
+  .footer-columns {
+    grid-template-columns: 1fr !important;
+  }
+
   form,
   input:not([type="checkbox"]):not([type="radio"]),
   textarea,
@@ -232,42 +312,104 @@ export const MOBILE_RESCUE_CSS = `
 }
 
 @media (min-width: 768px) and (max-width: 1023px) {
-  [class*="grid"]:not(.nav-menu):not(.nav-links):not(.navbar-menu):not(.mobile-menu),
+  [class*="grid"]:not(.nav-menu):not(.nav-links):not(.navbar-menu):not(.mobile-menu):not(.footer-grid):not(.about-grid),
   [class*="cards"],
   [class*="features"],
-  [class*="services"],
-  .footer-grid,
-  .footer-content {
+  [class*="services"] {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
 }
 `.trim();
 
-export const appendResponsiveBaseline = (css: string): string => {
-  let out = css.trim();
-  if (!out.includes(RESPONSIVE_BASELINE_MARKER)) {
-    out = `${out}\n\n${RESPONSIVE_BASELINE_CSS}\n`;
-  }
-  if (!out.includes(MOBILE_RESCUE_MARKER)) {
-    out = `${out}\n\n${MOBILE_RESCUE_CSS}\n`;
-  }
-  return out;
-};
-
 const VIEWPORT_CONTENT =
   "width=device-width, initial-scale=1, viewport-fit=cover";
 
+/**
+ * Garantit un meta viewport correct, placé juste après <head>.
+ * Remplace toute variante existante (y compris mal formées).
+ */
 export const ensureViewportMeta = (html: string): string => {
   const viewportTag = `<meta name="viewport" content="${VIEWPORT_CONTENT}">`;
 
-  if (/<meta[^>]+name=["']viewport["']/i.test(html)) {
-    return html.replace(
-      /<meta[^>]+name=["']viewport["'][^>]*>/i,
-      viewportTag,
+  // Retire toutes les balises viewport existantes (y compris variants)
+  let out = html.replace(/<meta[^>]*name\s*=\s*["']viewport["'][^>]*>\s*/gi, "");
+
+  if (/<head[^>]*>/i.test(out)) {
+    // Insère immédiatement après <head> (avant charset éventuel ok — viewport early)
+    out = out.replace(/<head([^>]*)>/i, `<head$1>\n  ${viewportTag}`);
+    return out;
+  }
+
+  if (/<html[^>]*>/i.test(out)) {
+    return out.replace(
+      /<html([^>]*)>/i,
+      `<html$1><head>${viewportTag}</head>`,
     );
   }
 
-  return html.includes("<head>")
-    ? html.replace(/<head([^>]*)>/i, `<head$1>${viewportTag}`)
-    : `<head>${viewportTag}</head>${html}`;
+  return `<!DOCTYPE html><html><head>${viewportTag}</head>${out}`;
 };
+
+/** Retire un bloc CSS délimité par un marqueur commentaire jusqu'au prochain marqueur ou EOF. */
+const stripMarkedBlock = (css: string, marker: string): string => {
+  const start = css.indexOf(`/* ${marker}`);
+  if (start === -1) {
+    // Ancien format possible : /* marker */ sans espace après /*
+    const alt = css.indexOf(`/*${marker}`);
+    if (alt === -1) return css;
+    return stripFrom(css, alt, marker);
+  }
+  return stripFrom(css, start, marker);
+};
+
+const stripFrom = (css: string, start: number, marker: string): string => {
+  const afterStart = css.slice(start + 3);
+  // Cherche le prochain marqueur wp- ou fin de fichier
+  const nextMarkers = [
+    RESPONSIVE_BASELINE_MARKER,
+    MOBILE_RESCUE_MARKER,
+  ].filter((m) => m !== marker);
+
+  let end = css.length;
+  for (const m of nextMarkers) {
+    const idx = css.indexOf(`/* ${m}`, start + 1);
+    const idx2 = css.indexOf(`/*${m}`, start + 1);
+    for (const i of [idx, idx2]) {
+      if (i !== -1 && i < end) end = i;
+    }
+  }
+
+  // Si le marqueur est suivi d'un autre bloc non-wp, on coupe à la fin
+  // du contenu typique : on garde jusqu'à end
+  void afterStart;
+  return `${css.slice(0, start).trimEnd()}\n${css.slice(end).trimStart()}`.trim();
+};
+
+/**
+ * Append (ou remplace) baseline + mobile-rescue.
+ * Les sites déjà patchés reçoivent le nouveau rescue au prochain deploy/serve.
+ */
+export const appendResponsiveBaseline = (css: string): string => {
+  let out = css.trim();
+  out = stripMarkedBlock(out, RESPONSIVE_BASELINE_MARKER);
+  out = stripMarkedBlock(out, MOBILE_RESCUE_MARKER);
+  out = out.trimEnd();
+  return `${out}\n\n${RESPONSIVE_BASELINE_CSS}\n\n${MOBILE_RESCUE_CSS}\n`;
+};
+
+export const isMainStylesheetPath = (filePath: string): boolean => {
+  const lower = filePath.toLowerCase().replace(/\\/g, "/").replace(/^\/+/, "");
+  return (
+    lower === "css/style.css" ||
+    lower === "styles.css" ||
+    lower === "style.css" ||
+    lower.endsWith("/style.css") ||
+    lower.endsWith("/styles.css")
+  );
+};
+
+export const patchCssFile = (content: string): string =>
+  appendResponsiveBaseline(content);
+
+export const patchHtmlFile = (content: string): string =>
+  ensureViewportMeta(content);
