@@ -22,6 +22,18 @@
   cursor: pointer;
 }
 
+.cardStatic {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 80px;
+  color: inherit;
+}
+
+.cardTrashed {
+  opacity: 0.92;
+}
+
 .card:hover {
   border-color: var(--color-border-focus);
   box-shadow: var(--shadow-md), var(--shadow-glow);
@@ -135,6 +147,11 @@
 .badgeArchived {
   background: rgba(239, 68, 68, 0.1);
   color: var(--color-accent-danger);
+}
+
+.badgeTrashed {
+  background: rgba(100, 116, 139, 0.14);
+  color: var(--color-text-secondary);
 }
 
 .footer {

@@ -371,6 +371,25 @@ export interface ProjectBrief {
 
 export interface ProjectSettings {
   contact_email?: string;
+  smtp_host?: string;
+  smtp_port?: number;
+  smtp_user?: string;
+  /** Toujours vide côté client — le serveur ne renvoie jamais le secret */
+  smtp_pass?: string;
+  smtp_from?: string;
+  smtp_secure?: boolean;
+  smtp_configured?: boolean;
+}
+
+export interface ProjectSmtpSettingsInput {
+  contact_email?: string;
+  smtp_host?: string;
+  smtp_port?: number;
+  smtp_user?: string;
+  smtp_pass?: string;
+  smtp_from?: string;
+  smtp_secure?: boolean;
+  clear_smtp?: boolean;
 }
 
 /** Row shape for webplatform.projects */
@@ -381,11 +400,15 @@ export interface Project {
   slug: string;
   subdomain?: string | null;
   custom_domain?: string | null;
-  status: "draft" | "published" | "archived";
+  status: "draft" | "published" | "archived" | "trashed";
+  /** Statut avant archive/corbeille — restauré tel quel (draft|published) */
+  previous_status?: "draft" | "published" | null;
   brief?: ProjectBrief | null;
   meta?: SeoMeta | null;
   settings?: ProjectSettings | null;
   published_url?: string | null;
+  /** Présent si status=trashed — purge auto 30 jours après */
+  deleted_at?: string | null;
   created_at: string;
   updated_at: string;
 }

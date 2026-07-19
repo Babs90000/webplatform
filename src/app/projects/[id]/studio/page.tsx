@@ -521,7 +521,7 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
       isOpen={settingsOpen}
       onClose={() => setSettingsOpen(false)}
       projectId={projectId}
-      initialContactEmail={project?.settings?.contact_email ?? ""}
+      initialSettings={project?.settings ?? null}
       onSaved={() => void refetchProject()}
     />
     <PublishModal

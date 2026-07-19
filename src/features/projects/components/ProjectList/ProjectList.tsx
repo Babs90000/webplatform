@@ -13,6 +13,7 @@ import {
   useArchiveProject,
   useDeleteProject,
   useRestoreProject,
+  useTrashProject,
 } from "../../hooks/useProjects";
 import type { ProjectListFilter } from "../../services/projectsApi";
 import type { Project } from "@/types";
@@ -27,6 +28,27 @@ interface ProjectListProps {
   onCreateProject?: () => void;
 }
 
+const emptyCopy: Record<
+  ProjectListFilter,
+  { title: string; description: string }
+> = {
+  active: {
+    title: "Aucun projet",
+    description:
+      "Créez votre premier site avec l'assistant guidé ou Koala Codeur.",
+  },
+  archived: {
+    title: "Aucun projet archivé",
+    description:
+      "Les projets archivés apparaissent ici et peuvent être restaurés.",
+  },
+  trash: {
+    title: "Corbeille vide",
+    description:
+      "Les projets supprimés restent ici 30 jours avant suppression définitive.",
+  },
+};
+
 export const ProjectList: React.FC<ProjectListProps> = ({
   projects,
   isLoading,
@@ -38,11 +60,13 @@ export const ProjectList: React.FC<ProjectListProps> = ({
 }) => {
   const [actionTarget, setActionTarget] = useState<Project | null>(null);
   const archiveProject = useArchiveProject();
+  const trashProject = useTrashProject();
   const restoreProject = useRestoreProject();
   const deleteProject = useDeleteProject();
 
   const isPending =
     archiveProject.isPending ||
+    trashProject.isPending ||
     restoreProject.isPending ||
     deleteProject.isPending;
 
@@ -61,6 +85,13 @@ export const ProjectList: React.FC<ProjectListProps> = ({
       onSuccess: () => setActionTarget(null),
     });
   }, [actionTarget, archiveProject]);
+
+  const handleTrash = useCallback(() => {
+    if (!actionTarget) return;
+    trashProject.mutate(actionTarget.id, {
+      onSuccess: () => setActionTarget(null),
+    });
+  }, [actionTarget, trashProject]);
 
   const handleRestore = useCallback(() => {
     if (!actionTarget) return;
@@ -86,11 +117,21 @@ export const ProjectList: React.FC<ProjectListProps> = ({
     );
   }
 
+  const empty = emptyCopy[filter];
+  const lifecycle =
+    actionTarget?.status === "trashed"
+      ? "trashed"
+      : actionTarget?.status === "archived"
+        ? "archived"
+        : "active";
+
   return (
     <>
-      <div className={styles.tabs}>
+      <div className={styles.tabs} role="tablist" aria-label="Filtrer les projets">
         <button
           type="button"
+          role="tab"
+          aria-selected={filter === "active"}
           className={`${styles.tab} ${filter === "active" ? styles.tabActive : ""}`}
           onClick={() => onFilterChange("active")}
         >
@@ -98,10 +139,21 @@ export const ProjectList: React.FC<ProjectListProps> = ({
         </button>
         <button
           type="button"
+          role="tab"
+          aria-selected={filter === "archived"}
           className={`${styles.tab} ${filter === "archived" ? styles.tabActive : ""}`}
           onClick={() => onFilterChange("archived")}
         >
           Archivés
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={filter === "trash"}
+          className={`${styles.tab} ${filter === "trash" ? styles.tabActive : ""}`}
+          onClick={() => onFilterChange("trash")}
+        >
+          Corbeille
         </button>
       </div>
 
@@ -117,12 +169,8 @@ export const ProjectList: React.FC<ProjectListProps> = ({
         </div>
       ) : !projects || projects.length === 0 ? (
         <EmptyState
-          title={filter === "archived" ? "Aucun projet archivé" : "Aucun projet"}
-          description={
-            filter === "archived"
-              ? "Les projets archivés apparaissent ici et peuvent être restaurés."
-              : "Créez votre premier site avec l'assistant guidé ou Koala Codeur."
-          }
+          title={empty.title}
+          description={empty.description}
           actionLabel={filter === "active" ? "Créer un projet" : undefined}
           onAction={filter === "active" ? onCreateProject : undefined}
           icon={filter === "active" ? <Icon icon={Plus} size="lg" /> : undefined}
@@ -142,10 +190,13 @@ export const ProjectList: React.FC<ProjectListProps> = ({
       <DeleteProjectModal
         isOpen={actionTarget !== null}
         projectName={actionTarget?.name ?? ""}
-        isArchived={actionTarget?.status === "archived"}
+        lifecycle={lifecycle}
+        deletedAt={actionTarget?.deleted_at}
+        previousStatus={actionTarget?.previous_status}
         isPending={isPending}
         onClose={handleClose}
         onArchive={handleArchive}
+        onTrash={handleTrash}
         onRestore={handleRestore}
         onDeletePermanent={handleDeletePermanent}
       />

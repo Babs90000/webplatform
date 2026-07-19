@@ -1,6 +1,6 @@
 import { api } from "@/lib/api";
 import { useAuthStore } from "@/store/auth";
-import type { Project, CreateProjectBody, UpdateProjectBody } from "@/types";
+import type { Project, CreateProjectBody, UpdateProjectBody, ProjectSmtpSettingsInput } from "@/types";
 
 const getToken = () => useAuthStore.getState().token || undefined;
 
@@ -12,7 +12,7 @@ interface ProjectResponse {
   project: Project;
 }
 
-export type ProjectListFilter = "active" | "archived";
+export type ProjectListFilter = "active" | "archived" | "trash";
 
 export const projectsApi = {
   getAll: async (filter: ProjectListFilter = "active"): Promise<Project[]> => {
@@ -43,6 +43,10 @@ export const projectsApi = {
     return api.delete(`/projects/${id}${query}`, getToken());
   },
 
+  trash: (id: string): Promise<void> => {
+    return api.post(`/projects/${id}/trash`, {}, getToken());
+  },
+
   restore: async (id: string): Promise<Project> => {
     const res = await api.post<ProjectResponse>(
       `/projects/${id}/restore`,
@@ -65,7 +69,7 @@ export const projectsApi = {
 
   updateSettings: async (
     id: string,
-    data: { contact_email?: string },
+    data: ProjectSmtpSettingsInput,
   ): Promise<Project> => {
     const res = await api.put<ProjectResponse>(
       `/projects/${id}/settings`,
@@ -73,5 +77,16 @@ export const projectsApi = {
       getToken(),
     );
     return res.project;
+  },
+
+  testSmtp: async (
+    id: string,
+    data: Omit<ProjectSmtpSettingsInput, "contact_email" | "clear_smtp">,
+  ): Promise<{ ok: boolean; message?: string }> => {
+    return api.post<{ ok: boolean; message?: string }>(
+      `/projects/${id}/settings/test-smtp`,
+      data,
+      getToken(),
+    );
   },
 };

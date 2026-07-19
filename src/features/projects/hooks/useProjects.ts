@@ -82,14 +82,37 @@ export const useArchiveProject = () => {
   });
 };
 
+export const useTrashProject = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => projectsApi.trash(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
+      toast.success("Projet déplacé dans la corbeille (30 jours)");
+    },
+    onError: (error) => {
+      const message =
+        error instanceof ApiError
+          ? error.message
+          : "Impossible de mettre le projet à la corbeille";
+      toast.error(message);
+    },
+  });
+};
+
 export const useRestoreProject = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (id: string) => projectsApi.restore(id),
-    onSuccess: () => {
+    onSuccess: (project) => {
       queryClient.invalidateQueries({ queryKey: ["projects"] });
-      toast.success("Projet restauré");
+      toast.success(
+        project.status === "published"
+          ? "Projet restauré et remis en ligne"
+          : "Projet restauré en brouillon",
+      );
     },
     onError: (error) => {
       const message =

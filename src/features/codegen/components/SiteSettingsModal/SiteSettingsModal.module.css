@@ -12,7 +12,7 @@
 
 .modal {
   width: 100%;
-  max-width: 540px;
+  max-width: 640px;
   max-height: calc(100dvh - 2rem);
   overflow-y: auto;
   border-radius: var(--radius-xl);
@@ -396,8 +396,124 @@
   border-radius: 4px;
 }
 
+/* --- Formulaire SMTP --- */
+.formGrid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.formRow {
+  display: grid;
+  grid-template-columns: 1fr 100px;
+  gap: var(--space-sm);
+}
+
+@media (max-width: 520px) {
+  .formRow {
+    grid-template-columns: 1fr;
+  }
+}
+
+.checkLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8125rem;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkLabel input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--color-accent-primary);
+}
+
+.smtpActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+.smtpActions button span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.guideActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.applyPresetBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border-primary);
+  border-radius: var(--radius-sm);
+  padding: 7px 12px;
+  cursor: pointer;
+  transition: border-color var(--transition-fast), background var(--transition-fast);
+}
+
+.applyPresetBtn:hover {
+  border-color: var(--color-accent-primary);
+  background: rgba(99, 102, 241, 0.08);
+}
+
+.presetHints {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.hintList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.hintList li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 0.8125rem;
+  color: var(--color-text-secondary);
+}
+
+.hintList li span {
+  min-width: 88px;
+  color: var(--color-text-tertiary);
+  font-size: 0.75rem;
+}
+
+.hintList code {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--color-text-primary);
+  background: var(--color-bg-elevated);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
 /* --- Tip images --- */
 .tip {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
   font-size: 0.8125rem;
   color: var(--color-text-tertiary);
   background: var(--color-bg-elevated);
