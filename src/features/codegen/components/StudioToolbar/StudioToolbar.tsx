@@ -8,6 +8,7 @@ import { Icon } from "@/shared/components/Icon";
 import Link from "next/link";
 import styles from "./StudioToolbar.module.css";
 import { Button } from "@/shared/components/Button";
+import { toast } from "@/store/toast";
 import { AI_ASSISTANT_NAME } from "@/lib/branding";
 import { getExportZipUrl } from "../../services/codegenApi";
 import { getAuthToken } from "@/lib/authToken";
@@ -84,18 +85,25 @@ export const StudioToolbar: React.FC<StudioToolbarProps> = ({
   const [morePos, setMorePos] = useState({ top: 0, left: 0 });
 
   const handleExport = async () => {
-    const token = getAuthToken();
-    const res = await fetch(getExportZipUrl(projectId), {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    });
-    if (!res.ok) return;
-    const blob = await res.blob();
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${projectName.replace(/\s+/g, "-").toLowerCase()}.zip`;
-    a.click();
-    URL.revokeObjectURL(url);
+    try {
+      const token = getAuthToken();
+      const res = await fetch(getExportZipUrl(projectId), {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (!res.ok) {
+        toast.error("Échec de l'export ZIP. Réessayez.");
+        return;
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${projectName.replace(/\s+/g, "-").toLowerCase()}.zip`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      toast.error("Impossible de contacter le serveur pour l'export.");
+    }
   };
 
   const updateMorePosition = useCallback(() => {
