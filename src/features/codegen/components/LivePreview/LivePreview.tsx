@@ -138,20 +138,21 @@ const LivePreviewComponent: React.FC<LivePreviewProps> = ({
   );
 
   useEffect(() => {
-    if (!previewSrc || previewSrc === appliedSrcRef.current) return;
-    appliedSrcRef.current = previewSrc;
     const frame = iframeRef.current;
-    if (frame) {
-      frame.srcdoc = previewSrc;
-      frame.onload = () => {
-        try {
-          frame.contentWindow?.dispatchEvent(new Event("resize"));
-        } catch {
-          /* sandbox */
-        }
-      };
-    }
-  }, [previewSrc]);
+    if (!frame || !previewSrc) return;
+    // On compare au srcdoc réellement appliqué sur l'élément (et non à une ref) :
+    // un changement de viewport remonte une nouvelle iframe vide qu'il faut réhydrater.
+    if (frame.srcdoc === previewSrc) return;
+    appliedSrcRef.current = previewSrc;
+    frame.srcdoc = previewSrc;
+    frame.onload = () => {
+      try {
+        frame.contentWindow?.dispatchEvent(new Event("resize"));
+      } catch {
+        /* sandbox */
+      }
+    };
+  }, [previewSrc, devicePreview, previewViewport]);
 
   const handleMessage = useCallback(
     (event: MessageEvent) => {
@@ -404,6 +405,7 @@ const LivePreviewComponent: React.FC<LivePreviewProps> = ({
                       </span>
                     </div>
                     <iframe
+                      key={`device-${previewViewport}`}
                       ref={iframeRef}
                       title={`Aperçu ${viewportConfig.label}`}
                       className={styles.frameDevice}
@@ -414,6 +416,7 @@ const LivePreviewComponent: React.FC<LivePreviewProps> = ({
                 </div>
               ) : (
                 <iframe
+                  key="full"
                   ref={iframeRef}
                   title="Aperçu du site"
                   className={styles.frame}

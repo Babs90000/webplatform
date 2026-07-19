@@ -106,10 +106,13 @@ export const SiteSettingsModal: React.FC<SiteSettingsModalProps> = ({
   }, [isOpen, initialContactEmail]);
 
   const handleCopy = (varName: string, value: string): void => {
-    void navigator.clipboard.writeText(value).then(() => {
-      setCopiedVar(varName);
-      setTimeout(() => setCopiedVar(null), 2000);
-    });
+    navigator.clipboard
+      .writeText(value)
+      .then(() => {
+        setCopiedVar(varName);
+        setTimeout(() => setCopiedVar(null), 2000);
+      })
+      .catch(() => toast.error("Copie impossible — copiez manuellement la valeur."));
   };
 
   if (!isOpen) return null;

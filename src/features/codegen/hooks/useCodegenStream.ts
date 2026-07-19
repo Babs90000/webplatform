@@ -91,6 +91,7 @@ export const useCodegenStream = (projectId: string) => {
   const auditFlowRef = useRef(false);
   const pollLockRef = useRef(false);
   const resumeCheckedRef = useRef(false);
+  const followAbortRef = useRef<AbortController | null>(null);
   const {
     setPhase,
     setStatusMessage,
@@ -170,6 +171,11 @@ export const useCodegenStream = (projectId: string) => {
 
   const handleEvent = useCallback(
     async (event: CodegenSseEvent) => {
+      // Garde anti-contamination : ignore les events si le studio affiche
+      // désormais un autre projet (navigation pendant un job en cours).
+      const activeProjectId = useStudioStore.getState().studioProjectId;
+      if (activeProjectId && activeProjectId !== projectId) return;
+
       switch (event.type) {
         case "architect_start": {
           setPhase("architect");
@@ -347,6 +353,7 @@ export const useCodegenStream = (projectId: string) => {
       }
     },
     [
+      projectId,
       appendFileChunk,
       refreshPreview,
       resetStreaming,
@@ -367,6 +374,9 @@ export const useCodegenStream = (projectId: string) => {
       pollLockRef.current = true;
       setIsBusy(true);
 
+      const controller = new AbortController();
+      followAbortRef.current = controller;
+
       const initialAfter = readEventCursor(projectId, jobId);
       let doneMeta: {
         review_score?: number;
@@ -378,6 +388,7 @@ export const useCodegenStream = (projectId: string) => {
           projectId,
           jobId,
           async (event) => {
+            if (controller.signal.aborted) return;
             if (event.type === "done") {
               doneMeta = {
                 review_score: event.review_score,
@@ -389,8 +400,11 @@ export const useCodegenStream = (projectId: string) => {
           {
             initialAfter,
             onAfter: (cursor) => writeEventCursor(projectId, jobId, cursor),
+            signal: controller.signal,
           },
         );
+
+        if (controller.signal.aborted) return;
 
         if (options?.editInstruction) {
           if (typeof doneMeta.review_score === "number") {
@@ -414,7 +428,8 @@ export const useCodegenStream = (projectId: string) => {
         toast.error(msg);
       } finally {
         pollLockRef.current = false;
-        setIsBusy(false);
+        if (followAbortRef.current === controller) followAbortRef.current = null;
+        if (!controller.signal.aborted) setIsBusy(false);
       }
     },
     [projectId, handleEvent, addChatMessage, setPhase, setStatusMessage],
@@ -497,32 +512,48 @@ export const useCodegenStream = (projectId: string) => {
     resumeCheckedRef.current = true;
 
     void (async () => {
+      let job;
       try {
-        const { job } = await fetchActiveCodegenJob(projectId);
-        if (
-          !job ||
-          (job.status !== "queued" && job.status !== "running")
-        ) {
-          return;
+        ({ job } = await fetchActiveCodegenJob(projectId));
+      } catch (err) {
+        // 404 = pas de job actif (normal). Toute autre erreur = vrai problème réseau/serveur.
+        const status =
+          err && typeof err === "object" && "status" in err
+            ? (err as { status?: number }).status
+            : undefined;
+        if (status && status !== 404) {
+          console.error("[codegen] resume check failed", err);
         }
-
-        if (job.type === "audit") auditFlowRef.current = true;
-
-        const progressMsg =
-          typeof job.progress.status_message === "string"
-            ? job.progress.status_message
-            : "Génération en cours (reprise)…";
-        setStatusMessage(progressMsg);
-        setPhase(job.type === "edit" ? "editing" : "generating");
-
-        toast.success("Génération en cours — reprise automatique");
-
-        await runJobFollow(job.id);
-      } catch {
-        // pas de job actif ou API indisponible
+        return;
       }
+
+      if (!job || (job.status !== "queued" && job.status !== "running")) {
+        return;
+      }
+
+      if (job.type === "audit") auditFlowRef.current = true;
+
+      const progressMsg =
+        typeof job.progress.status_message === "string"
+          ? job.progress.status_message
+          : "Génération en cours (reprise)…";
+      setStatusMessage(progressMsg);
+      setPhase(job.type === "edit" ? "editing" : "generating");
+
+      toast.success("Génération en cours — reprise automatique");
+
+      await runJobFollow(job.id);
     })();
   }, [projectId, runJobFollow, setPhase, setStatusMessage]);
+
+  // Arrêt propre du polling au démontage / changement de projet.
+  useEffect(() => {
+    return () => {
+      followAbortRef.current?.abort();
+      pollLockRef.current = false;
+      resumeCheckedRef.current = false;
+    };
+  }, [projectId]);
 
   return {
     generate,

@@ -98,12 +98,13 @@ export const OnboardingWizard: React.FC = () => {
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (phase === "generating") {
+      const lastIndex = statusMessages.length - 1;
       interval = setInterval(() => {
-        setFakeStatusIndex((prev) => (prev >= 8 ? 8 : prev + 1));
+        setFakeStatusIndex((prev) => Math.min(prev + 1, lastIndex));
       }, 2000);
     }
     return () => clearInterval(interval);
-  }, [phase]);
+  }, [phase, statusMessages.length]);
 
   const handleStart = async () => {
     setStartError(null);

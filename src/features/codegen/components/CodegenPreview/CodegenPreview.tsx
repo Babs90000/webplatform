@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { LoadingPanel } from "@/shared/components/LoadingPanel";
 import { Icon } from "@/shared/components/Icon";
@@ -26,6 +26,7 @@ export const CodegenPreview: React.FC<CodegenPreviewProps> = ({ projectId }) => 
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
     const loadPages = async () => {
       try {
         const projectFiles = await fetchProjectFiles(projectId);
@@ -33,49 +34,53 @@ export const CodegenPreview: React.FC<CodegenPreviewProps> = ({ projectId }) => 
           projectFiles.map((f) => ({ path: f.path, content: f.content })),
         );
         if (localPages.length > 0) {
-          setPages(localPages);
+          if (!cancelled) setPages(localPages);
           return;
         }
+        const list = await fetchCodegenPages(projectId);
+        if (!cancelled) setPages(list.length > 0 ? list : ["index.html"]);
       } catch {
-        // fallback API
+        if (!cancelled) setPages(["index.html"]);
       }
-      const list = await fetchCodegenPages(projectId);
-      setPages(list.length > 0 ? list : ["index.html"]);
     };
     void loadPages();
-  }, [projectId]);
-
-  const loadPreview = useCallback(async (page: string) => {
-    setIsLoading(true);
-    try {
-      const projectFiles = await fetchProjectFiles(projectId);
-      const localHtml = getCachedPreviewHtml(
-        projectFiles.map((f) => ({ path: f.path, content: f.content })),
-        page,
-        projectId,
-      );
-
-      if (localHtml) {
-        setHtml(localHtml);
-        return;
-      }
-
-      const content = await fetchPreviewHtml(projectId, page);
-      if (!content.includes("Aucune page HTML")) {
-        setHtml(content);
-      } else {
-        setHtml("");
-      }
-    } catch {
-      setHtml("");
-    } finally {
-      setIsLoading(false);
-    }
+    return () => {
+      cancelled = true;
+    };
   }, [projectId]);
 
   useEffect(() => {
+    let cancelled = false;
+    const loadPreview = async (page: string): Promise<void> => {
+      setIsLoading(true);
+      try {
+        const projectFiles = await fetchProjectFiles(projectId);
+        const localHtml = getCachedPreviewHtml(
+          projectFiles.map((f) => ({ path: f.path, content: f.content })),
+          page,
+          projectId,
+        );
+
+        if (localHtml) {
+          if (!cancelled) setHtml(localHtml);
+          return;
+        }
+
+        const content = await fetchPreviewHtml(projectId, page);
+        if (cancelled) return;
+        setHtml(content.includes("Aucune page HTML") ? "" : content);
+      } catch {
+        if (!cancelled) setHtml("");
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    };
+
     void loadPreview(selectedPage);
-  }, [selectedPage, loadPreview]);
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedPage, projectId]);
 
   return (
     <div className={styles.root}>

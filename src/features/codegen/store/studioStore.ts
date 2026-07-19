@@ -97,6 +97,8 @@ export const useStudioStore = create<StudioState>()(
           set({
             studioProjectId: projectId,
             files: [],
+            selectedPath: null,
+            previewPage: "index.html",
             previewHtml: "",
             phase: "idle",
             statusMessage: "",

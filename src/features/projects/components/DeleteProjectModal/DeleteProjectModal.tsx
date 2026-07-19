@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import styles from "./DeleteProjectModal.module.css";
 import { Modal } from "@/shared/components/Modal";
 import { Button } from "@/shared/components/Button";
@@ -27,6 +27,12 @@ export const DeleteProjectModal: React.FC<DeleteProjectModalProps> = ({
   onDeletePermanent,
 }) => {
   const [confirmPermanent, setConfirmPermanent] = useState(false);
+
+  // Réinitialise l'étape de confirmation dès que la modale se ferme,
+  // y compris quand le parent ferme sans passer par handleClose (ex: onSuccess).
+  useEffect(() => {
+    if (!isOpen) setConfirmPermanent(false);
+  }, [isOpen]);
 
   const handleClose = (): void => {
     if (isPending) return;

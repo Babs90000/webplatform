@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useId, useRef, useState } from "react";
+import React, { useCallback, useEffect, useId, useRef, useState } from "react";
 import styles from "./PublishModal.module.css";
 import { Button } from "@/shared/components/Button";
 import { toast } from "@/store/toast";
@@ -32,6 +32,20 @@ export const PublishModal: React.FC<PublishModalProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [publishedUrl, setPublishedUrl] = useState<string | null>(null);
 
+  const handleClose = useCallback(() => {
+    setPublishedUrl(null);
+    onClose();
+  }, [onClose]);
+
+  // Resynchronise l'état à chaque ouverture (les valeurs initiales peuvent avoir changé).
+  useEffect(() => {
+    if (!isOpen) return;
+    setPublishType("subdomain");
+    setSubdomain(initialSubdomain);
+    setCustomDomain(initialCustomDomain);
+    setPublishedUrl(null);
+  }, [isOpen, initialSubdomain, initialCustomDomain]);
+
   useEffect(() => {
     if (!isOpen) return;
     const id = requestAnimationFrame(() => firstFocusRef.current?.focus());
@@ -45,7 +59,7 @@ export const PublishModal: React.FC<PublishModalProps> = ({
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  });
+  }, [isOpen, handleClose]);
 
   if (!isOpen) return null;
 
@@ -76,11 +90,6 @@ export const PublishModal: React.FC<PublishModalProps> = ({
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleClose = () => {
-    setPublishedUrl(null);
-    onClose();
   };
 
   return (

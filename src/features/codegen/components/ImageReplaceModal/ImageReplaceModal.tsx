@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Upload, X, Link } from "lucide-react";
 import { Modal } from "@/shared/components/Modal";
 import { Button } from "@/shared/components/Button";
@@ -23,6 +23,7 @@ export const ImageReplaceModal: React.FC<ImageReplaceModalProps> = ({
   title = "Remplacer l'image",
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const blobUrlRef = useRef<string | null>(null);
   const [url, setUrl] = useState("");
   const [alt, setAlt] = useState("");
   const [preview, setPreview] = useState<string | null>(null);
@@ -30,7 +31,15 @@ export const ImageReplaceModal: React.FC<ImageReplaceModalProps> = ({
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const revokeBlob = (): void => {
+    if (blobUrlRef.current) {
+      URL.revokeObjectURL(blobUrlRef.current);
+      blobUrlRef.current = null;
+    }
+  };
+
   const reset = (): void => {
+    revokeBlob();
     setUrl("");
     setAlt("");
     setPreview(null);
@@ -44,6 +53,12 @@ export const ImageReplaceModal: React.FC<ImageReplaceModalProps> = ({
     onClose();
   };
 
+  useEffect(() => {
+    return () => {
+      if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current);
+    };
+  }, []);
+
   const handleFile = useCallback(async (file: File): Promise<void> => {
     if (!file.type.startsWith("image/")) {
       setError("Format non supporté — utilisez JPG, PNG, WebP ou GIF.");
@@ -51,7 +66,9 @@ export const ImageReplaceModal: React.FC<ImageReplaceModalProps> = ({
     }
     setError(null);
     setIsUploading(true);
+    revokeBlob();
     const localPreview = URL.createObjectURL(file);
+    blobUrlRef.current = localPreview;
     setPreview(localPreview);
     try {
       const uploadedUrl = await onUpload(file);
@@ -59,7 +76,7 @@ export const ImageReplaceModal: React.FC<ImageReplaceModalProps> = ({
     } catch {
       setError("Import impossible. Réessayez ou collez une URL.");
       setPreview(null);
-      URL.revokeObjectURL(localPreview);
+      revokeBlob();
     } finally {
       setIsUploading(false);
     }

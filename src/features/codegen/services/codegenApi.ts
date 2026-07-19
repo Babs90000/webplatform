@@ -259,12 +259,19 @@ export const followCodegenJob = async (
   projectId: string,
   jobId: string,
   onEvent: (event: CodegenSseEvent) => void | Promise<void>,
-  options?: { initialAfter?: number; onAfter?: (cursor: number) => void },
+  options?: {
+    initialAfter?: number;
+    onAfter?: (cursor: number) => void;
+    signal?: AbortSignal;
+  },
 ): Promise<CodegenJobSnapshot> => {
   let after = options?.initialAfter ?? 0;
 
   while (true) {
     const data = await pollCodegenJob(projectId, jobId, after);
+
+    // Consommateur démonté / projet changé : on arrête sans appliquer les events.
+    if (options?.signal?.aborted) return data.job;
 
     for (const event of data.events) {
       await onEvent(event);

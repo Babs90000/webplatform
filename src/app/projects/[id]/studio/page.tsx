@@ -138,7 +138,11 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
   useEffect(() => {
     if (serverFiles && serverFiles.length > 0) {
       setFiles(serverFiles);
-      if (!selectedPath) {
+      // Re-sélectionne si aucun fichier choisi OU si le chemin persisté
+      // pointe vers un fichier absent (projet précédent / sessionStorage périmé).
+      const pathExists =
+        selectedPath && serverFiles.some((f) => f.path === selectedPath);
+      if (!pathExists) {
         selectPath(serverFiles[0].path);
       }
     }
