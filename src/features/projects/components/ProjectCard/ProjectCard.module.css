@@ -102,8 +102,13 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
+  gap: var(--space-sm);
   margin-bottom: var(--space-md);
   padding-right: 2.25rem;
+}
+
+.headerMain {
+  min-width: 0;
 }
 
 .title {
@@ -123,6 +128,17 @@
   display: flex;
   align-items: center;
   gap: 4px;
+  min-width: 0;
+}
+
+.url svg {
+  flex-shrink: 0;
+}
+
+.urlText {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .badge {

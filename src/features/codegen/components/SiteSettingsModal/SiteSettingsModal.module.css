@@ -188,52 +188,6 @@
   color: var(--color-text-primary);
 }
 
-.smtpVars {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.smtpVar {
-  display: grid;
-  grid-template-columns: auto 1fr auto auto;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 10px;
-  background: var(--color-bg-secondary);
-  border-radius: var(--radius-sm);
-}
-
-.varName {
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: var(--color-accent-primary);
-  font-family: var(--font-mono);
-  white-space: nowrap;
-}
-
-.varValue {
-  font-size: 0.6875rem;
-  color: var(--color-text-secondary);
-  font-family: var(--font-mono);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.varHint {
-  font-size: 0.6875rem;
-  color: var(--color-text-muted);
-  font-style: italic;
-  white-space: nowrap;
-  display: none;
-}
-
-.varDesc {
-  font-size: 0.75rem;
-  color: var(--color-text-tertiary);
-}
-
 .varExample {
   font-size: 0.6875rem;
   color: var(--color-text-muted);

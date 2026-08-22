@@ -80,13 +80,15 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
   const cardInner = (
     <>
       <div className={styles.header}>
-        <div>
+        <div className={styles.headerMain}>
           <h3 className={styles.title} title={project.name}>
             {project.name}
           </h3>
           <div className={styles.url}>
             <Icon icon={Link2} size="xs" />
-            {domain}
+            <span className={styles.urlText} title={domain}>
+              {domain}
+            </span>
           </div>
         </div>
         <span className={`${styles.badge} ${getBadgeClass(project.status)}`}>
