@@ -16,7 +16,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 var(--space-xl);
+  gap: var(--space-md);
+  padding-inline: clamp(0.75rem, 3vw, var(--space-xl));
   z-index: 1000;
 }
 
@@ -53,10 +54,13 @@
 }
 
 .frame {
+  display: block;
   width: 100%;
   height: calc(100dvh - 56px);
   border: none;
-  background: var(--color-bg-primary);
+  /* Fond blanc : le thème sombre de l'app ne doit pas transparaître
+     pendant le chargement du site aperçu. */
+  background: #ffffff;
 }
 
 .loading,

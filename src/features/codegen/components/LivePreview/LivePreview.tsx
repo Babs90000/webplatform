@@ -221,7 +221,7 @@ const LivePreviewComponent: React.FC<LivePreviewProps> = ({
 
   const scalePercent = Math.round(deviceScale * 100);
 
-  const deviceFrameStyle = viewportConfig.width
+  const deviceVarsStyle = viewportConfig.width
     ? ({
         "--preview-device-width": `${viewportConfig.width}px`,
         "--preview-device-height": `${viewportConfig.height}px`,
@@ -239,18 +239,14 @@ const LivePreviewComponent: React.FC<LivePreviewProps> = ({
     }
   }, [previewViewport, customPreset, deviceScale]);
 
-  const deviceFrameClass =
-    previewViewport === "tablet"
-      ? styles.deviceFrameTablet
-      : previewViewport === "desktop1280" || previewViewport === "desktop1440"
-        ? styles.deviceFrameDesktop
-        : previewViewport === "custom" &&
-            customPreset &&
-            customPreset.width >= 1024
-          ? styles.deviceFrameDesktop
-          : previewViewport === "custom"
-            ? styles.deviceFrameTablet
-            : "";
+  const isDesktopFrame = viewportConfig.category === "desktop";
+  const isPhoneFrame = devicePreview && viewportConfig.width < 500;
+
+  const deviceFrameClass = isDesktopFrame
+    ? styles.deviceFrameDesktop
+    : isPhoneFrame
+      ? ""
+      : styles.deviceFrameTablet;
 
   const showPlaceholder = !displayHtml && !isLoading;
   const displayPercent = isLoading ? Math.max(progressPercent, 8) : 0;
@@ -383,23 +379,18 @@ const LivePreviewComponent: React.FC<LivePreviewProps> = ({
             {displayHtml &&
               (devicePreview && viewportConfig.width ? (
                 <div
-                  className={styles.deviceScaler}
-                  style={{
-                    width: viewportConfig.width * deviceScale,
-                    height: viewportConfig.height * deviceScale + 32 * deviceScale,
-                  }}
+                  className={`${styles.deviceScaler} ${
+                    isDesktopFrame ? styles.deviceScalerDesktop : ""
+                  }`}
+                  style={deviceVarsStyle}
                 >
-                  <div
-                    className={`${styles.deviceFrame} ${deviceFrameClass}`}
-                    style={deviceFrameStyle}
-                  >
+                  <div className={`${styles.deviceFrame} ${deviceFrameClass}`}>
                     <div className={styles.deviceChrome}>
-                      {previewViewport === "mobile" ||
-                      (previewViewport === "custom" &&
-                        customPreset &&
-                        customPreset.width < 500) ? (
+                      {isPhoneFrame ? (
                         <span className={styles.deviceNotch} />
-                      ) : null}
+                      ) : (
+                        <span className={styles.deviceDots} aria-hidden="true" />
+                      )}
                       <span className={styles.deviceLabel}>
                         {viewportConfig.width} × {viewportConfig.height}
                       </span>

@@ -1,11 +1,27 @@
 /**
- * Correctifs CSS appendus en fin de style.css pour éviter les régressions desktop
- * (débordements horizontaux, images non contraintes).
+ * Correctifs CSS appendus en fin de style.css.
+ *
+ * Trois couches, de la plus douce à la plus intrusive :
+ *  1. baseline  — toujours injectée, spécificité nulle (`:where`) sauf pour
+ *                 les bugs bloquants (nav desktop invisible, style inline).
+ *  2. guard     — toujours injectée, empêche uniquement les débordements.
+ *  3. rescue    — injectée SEULEMENT si la feuille générée n'a pas de vrais
+ *                 points de rupture. Elle reconstruit un layout mobile de
+ *                 secours et écrase donc beaucoup de règles : l'appliquer à
+ *                 un site déjà responsive dégrade le design.
+ *
  * La navigation mobile est gérée par css/wp-nav-runtime.css (fichier séparé).
  */
 
 export const RESPONSIVE_BASELINE_MARKER = "wp-responsive-baseline";
+export const MOBILE_GUARD_MARKER = "wp-mobile-guard";
 export const MOBILE_RESCUE_MARKER = "wp-mobile-rescue";
+
+const PLATFORM_MARKERS = [
+  RESPONSIVE_BASELINE_MARKER,
+  MOBILE_GUARD_MARKER,
+  MOBILE_RESCUE_MARKER,
+];
 
 export const RESPONSIVE_BASELINE_CSS = `
 /* ${RESPONSIVE_BASELINE_MARKER} */
@@ -29,26 +45,24 @@ body {
 img,
 picture,
 video,
-iframe {
+iframe,
+canvas {
   max-width: 100%;
   height: auto;
 }
 
-/* Avatars / photos rondes — jamais écrasés par height:auto ou grilles */
-img.avatar,
-img[class*="avatar"],
-.testimonial-avatar,
-[class*="testimonial-avatar"] {
-  width: 48px !important;
-  height: 48px !important;
-  max-width: 48px !important;
-  aspect-ratio: 1 / 1 !important;
-  object-fit: cover !important;
-  border-radius: 999px !important;
-  flex-shrink: 0 !important;
+svg {
+  max-width: 100%;
 }
 
-.container {
+h1,
+h2,
+h3,
+h4 {
+  overflow-wrap: break-word;
+}
+
+:where(.container) {
   width: min(100% - 2rem, var(--container-max, 1200px));
   margin-inline: auto;
   padding-inline: 1rem;
@@ -67,6 +81,9 @@ img[class*="avatar"],
     display: none !important;
   }
 
+  /* Un drawer mobile laissé en place masque le menu sur desktop : on le
+     ramène toujours en ligne. Seules les propriétés qui le cachent sont
+     forcées — l'espacement reste au design (voir :where ci-dessous). */
   .nav-menu,
   .nav-links,
   .navbar-menu,
@@ -77,57 +94,85 @@ img[class*="avatar"],
     display: flex !important;
     flex-direction: row !important;
     align-items: center !important;
-    gap: 1.5rem !important;
     position: static !important;
     visibility: visible !important;
     opacity: 1 !important;
+    width: auto !important;
     height: auto !important;
     max-height: none !important;
     overflow: visible !important;
     transform: none !important;
     pointer-events: auto !important;
+    background: none;
+    box-shadow: none;
   }
 
-  /* CTA dans la navbar : pill compacte à droite, pas un bloc drawer */
+  :where(.nav-menu, .nav-links, .navbar-menu, .main-nav, header nav, .header-nav) {
+    gap: 1.5rem;
+    padding: 0;
+  }
+
+  /* CTA de navbar : les styles de drawer (margin-top inline, largeur 100%)
+     doivent disparaître, mais on garde le padding du design. */
   .nav-menu .btn,
   .nav-menu a.btn,
   .nav-links .btn,
   #nav-menu .btn,
   #nav-menu a.btn {
-    margin-top: 0 !important;
-    margin-inline: 0 !important;
-    padding: 0.5rem 1.15rem !important;
+    margin-block: 0 !important;
     width: auto !important;
     max-width: none !important;
     white-space: nowrap !important;
     flex-shrink: 0 !important;
-    align-self: center !important;
   }
 
-  .nav-menu a:not(.btn),
-  #nav-menu a:not(.btn) {
-    border-bottom: none !important;
-    padding-block: 0 !important;
+  :where(.nav-menu, #nav-menu) a:not(.btn) {
+    border-bottom: none;
+    padding-block: 0;
   }
 }
 `.trim();
 
 /**
- * Filet de sécurité — tablette + mobile.
- * Couvre max-width 1023px pour les layouts 2-col (hero/about/footer),
- * puis renforce typo/boutons/forms sous 767px.
+ * Garde-fou permanent : uniquement de l'anti-débordement.
+ * Aucune règle ne change une mise en page choisie par le design.
+ */
+export const MOBILE_GUARD_CSS = `
+/* ${MOBILE_GUARD_MARKER} */
+@media (max-width: 1023px) {
+  :where(main, section, article, header, footer, div) {
+    max-width: 100%;
+  }
+
+  :where(.container, .wrapper, [class*="__container"], [class*="-container"]) {
+    max-width: 100%;
+  }
+
+  :where(table, pre) {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  :where(input:not([type="checkbox"]):not([type="radio"]), textarea, select) {
+    max-width: 100%;
+  }
+
+  /* Un mot très long (URL, email) ne doit pas créer de scroll horizontal. */
+  :where(p, li, td, dd, address, blockquote) {
+    overflow-wrap: break-word;
+  }
+}
+`.trim();
+
+/**
+ * Filet de secours — appliqué uniquement aux feuilles sans points de rupture.
+ * Reconstruit un layout mobile lisible : 1 colonne, typo fluide, CTA empilés.
  */
 export const MOBILE_RESCUE_CSS = `
 /* ${MOBILE_RESCUE_MARKER} */
 @media (max-width: 1023px) {
-  main,
-  section,
-  article,
-  footer,
-  header {
-    max-width: 100%;
-  }
-
   .container,
   .wrapper,
   [class*="wrapper"]:not(.icon-wrap),
@@ -182,8 +227,7 @@ export const MOBILE_RESCUE_CSS = `
 
   .hero-cta,
   [class*="hero-cta"],
-  [class*="hero"] [class*="cta"],
-  [class*="hero"] [class*="btn"] {
+  [class*="hero"] [class*="cta"] {
     justify-content: center !important;
     flex-wrap: wrap !important;
   }
@@ -197,7 +241,6 @@ export const MOBILE_RESCUE_CSS = `
     gap: 1.5rem !important;
     width: 100% !important;
     text-align: left !important;
-    justify-items: stretch !important;
   }
 
   .footer-brand,
@@ -205,7 +248,6 @@ export const MOBILE_RESCUE_CSS = `
     grid-column: 1 / -1 !important;
   }
 
-  /* Formulaires 2 colonnes → 1 colonne */
   .reservation-form,
   [class*="form-grid"],
   form[class*="grid"] {
@@ -214,11 +256,11 @@ export const MOBILE_RESCUE_CSS = `
 }
 
 @media (max-width: 767px) {
-  /* Grilles de contenu — NE PAS cibler .testimonial-avatar / auteurs */
+  /* Grilles de contenu — les avatars/auteurs ne sont jamais ciblés */
   .testimonials-grid,
   [class*="testimonials-grid"],
   [class*="testimonial-grid"],
-  [class*="grid"]:not(.nav-menu):not(.nav-links):not(.navbar-menu):not(.mobile-menu):not(.mobile-nav):not([class*="icon"]),
+  [class*="grid"]:not(.nav-menu):not(.nav-links):not(.navbar-menu):not(.mobile-menu):not(.mobile-nav):not([class*="icon"]):not([class*="avatar"]),
   [class*="cards"],
   [class*="Cards"],
   [class*="features"],
@@ -234,7 +276,6 @@ export const MOBILE_RESCUE_CSS = `
   .footer-grid,
   .footer-content,
   .footer-columns,
-  footer [class*="col"],
   .stats-grid,
   [class*="stats-row"],
   [class*="stats-grid"] {
@@ -243,6 +284,20 @@ export const MOBILE_RESCUE_CSS = `
     gap: 1.25rem !important;
     width: 100% !important;
     max-width: 100% !important;
+  }
+
+  /* Photos rondes : protégées des règles width:100% ci-dessus */
+  img.avatar,
+  img[class*="avatar"],
+  .testimonial-avatar,
+  [class*="testimonial-avatar"] {
+    width: 48px !important;
+    height: 48px !important;
+    max-width: 48px !important;
+    aspect-ratio: 1 / 1 !important;
+    object-fit: cover !important;
+    border-radius: 999px !important;
+    flex-shrink: 0 !important;
   }
 
   [class*="hero"],
@@ -258,7 +313,6 @@ export const MOBILE_RESCUE_CSS = `
     align-items: stretch !important;
     gap: 1.25rem !important;
     min-height: auto !important;
-    padding: clamp(2.5rem, 10vw, 4rem) 1rem !important;
     text-align: center !important;
   }
 
@@ -267,7 +321,6 @@ export const MOBILE_RESCUE_CSS = `
   [class*="hero"] h1 {
     font-size: clamp(1.65rem, 7.5vw, 2.5rem) !important;
     line-height: 1.15 !important;
-    word-break: break-word;
   }
 
   h2,
@@ -292,14 +345,20 @@ export const MOBILE_RESCUE_CSS = `
   section,
   .section {
     padding-block: clamp(2.5rem, 8vw, 4rem) !important;
+  }
+
+  /* Le padding latéral revient au .container enfant : sinon il est doublé */
+  section:has(> .container),
+  .section:has(> .container) {
     padding-inline: 0 !important;
   }
 
-  [class*="cta"]:not(.nav-menu):not(.navbar),
-  [class*="buttons"],
+  [class*="hero-cta"],
   [class*="btn-group"],
-  [class*="actions"],
-  [class*="hero"] [class*="btn"] {
+  [class*="hero-actions"],
+  [class*="cta-actions"],
+  .hero-actions,
+  .cta-buttons {
     display: flex !important;
     flex-direction: column !important;
     align-items: stretch !important;
@@ -307,13 +366,9 @@ export const MOBILE_RESCUE_CSS = `
     width: 100% !important;
   }
 
-  main .btn,
-  main a.btn,
-  main a.button,
-  main button:not(.nav-toggle):not(.menu-toggle):not(.hamburger):not(.navbar-toggle):not(.mobile-menu-btn),
-  main input[type="submit"],
-  footer .btn,
-  footer a.btn {
+  /* Boutons pleine largeur seulement là où c'est attendu (hero, CTA, form) */
+  :is([class*="hero"], [class*="cta"], [class*="actions"], [class*="btn-group"], form)
+    :is(.btn, a.btn, a.button, button:not([aria-controls]), input[type="submit"]) {
     width: 100% !important;
     max-width: 100% !important;
   }
@@ -328,17 +383,6 @@ export const MOBILE_RESCUE_CSS = `
 
   footer {
     padding: 2rem 1rem !important;
-    text-align: center !important;
-  }
-
-  footer > div,
-  footer .container,
-  footer .container > div {
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    gap: 1.5rem !important;
-    width: 100% !important;
     text-align: center !important;
   }
 
@@ -368,13 +412,6 @@ export const MOBILE_RESCUE_CSS = `
     gap: 0.5rem !important;
   }
 
-  .footer h4,
-  .footer-logo,
-  .footer p,
-  .footer address {
-    text-align: center !important;
-  }
-
   form,
   input:not([type="checkbox"]):not([type="radio"]),
   textarea,
@@ -382,18 +419,10 @@ export const MOBILE_RESCUE_CSS = `
     max-width: 100% !important;
     width: 100% !important;
   }
-
-  table,
-  pre {
-    display: block;
-    max-width: 100%;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
 }
 
 @media (min-width: 768px) and (max-width: 1023px) {
-  [class*="grid"]:not(.nav-menu):not(.nav-links):not(.navbar-menu):not(.mobile-menu):not(.footer-grid):not(.about-grid),
+  [class*="grid"]:not(.nav-menu):not(.nav-links):not(.navbar-menu):not(.mobile-menu):not(.footer-grid):not(.about-grid):not([class*="avatar"]),
   [class*="cards"],
   [class*="features"],
   [class*="services"],
@@ -406,12 +435,6 @@ export const MOBILE_RESCUE_CSS = `
   .footer-content,
   .footer-columns {
     grid-template-columns: 1fr 1fr !important;
-    text-align: left !important;
-    justify-items: stretch !important;
-  }
-
-  footer,
-  footer .container {
     text-align: left !important;
   }
 }
@@ -459,12 +482,7 @@ const stripMarkedBlock = (css: string, marker: string): string => {
 };
 
 const stripFrom = (css: string, start: number, marker: string): string => {
-  const afterStart = css.slice(start + 3);
-  // Cherche le prochain marqueur wp- ou fin de fichier
-  const nextMarkers = [
-    RESPONSIVE_BASELINE_MARKER,
-    MOBILE_RESCUE_MARKER,
-  ].filter((m) => m !== marker);
+  const nextMarkers = PLATFORM_MARKERS.filter((m) => m !== marker);
 
   let end = css.length;
   for (const m of nextMarkers) {
@@ -475,22 +493,54 @@ const stripFrom = (css: string, start: number, marker: string): string => {
     }
   }
 
-  // Si le marqueur est suivi d'un autre bloc non-wp, on coupe à la fin
-  // du contenu typique : on garde jusqu'à end
-  void afterStart;
   return `${css.slice(0, start).trimEnd()}\n${css.slice(end).trimStart()}`.trim();
 };
 
+/** Retire tous les blocs injectés par la plateforme (idempotence). */
+export const stripPlatformBlocks = (css: string): string => {
+  let out = css.trim();
+  for (const marker of PLATFORM_MARKERS) {
+    out = stripMarkedBlock(out, marker);
+  }
+  return out.trimEnd();
+};
+
+const MEDIA_BREAKPOINT_RE =
+  /@media[^{]*\(\s*(min|max)-width\s*:\s*(\d+(?:\.\d+)?)\s*(px|rem|em)\s*\)/gi;
+
+const toPx = (value: number, unit: string): number =>
+  unit === "px" ? value : value * 16;
+
 /**
- * Append (ou remplace) baseline + mobile-rescue.
- * Les sites déjà patchés reçoivent le nouveau rescue au prochain deploy/serve.
+ * Détecte si la feuille écrite par le générateur gère réellement le responsive.
+ * Deux points de rupture distincts suffisent (mobile-first ou desktop-first) :
+ * en dessous, le site est figé en largeur desktop et a besoin du filet de secours.
+ */
+export const hasAuthoredBreakpoints = (css: string): boolean => {
+  const authored = stripPlatformBlocks(css);
+  const breakpoints = new Set<number>();
+
+  for (const match of authored.matchAll(MEDIA_BREAKPOINT_RE)) {
+    const px = toPx(Number(match[2]), match[3].toLowerCase());
+    if (px >= 320 && px <= 1600) breakpoints.add(px);
+  }
+
+  return breakpoints.size >= 2;
+};
+
+/**
+ * Append (ou remplace) baseline + garde-fou, et n'ajoute le filet de secours
+ * mobile que si la feuille n'a pas de points de rupture exploitables.
  */
 export const appendResponsiveBaseline = (css: string): string => {
-  let out = css.trim();
-  out = stripMarkedBlock(out, RESPONSIVE_BASELINE_MARKER);
-  out = stripMarkedBlock(out, MOBILE_RESCUE_MARKER);
-  out = out.trimEnd();
-  return `${out}\n\n${RESPONSIVE_BASELINE_CSS}\n\n${MOBILE_RESCUE_CSS}\n`;
+  const authored = stripPlatformBlocks(css);
+  const layers = [RESPONSIVE_BASELINE_CSS, MOBILE_GUARD_CSS];
+
+  if (!hasAuthoredBreakpoints(authored)) {
+    layers.push(MOBILE_RESCUE_CSS);
+  }
+
+  return `${authored}\n\n${layers.join("\n\n")}\n`;
 };
 
 export const isMainStylesheetPath = (filePath: string): boolean => {

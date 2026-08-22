@@ -151,7 +151,13 @@
   position: relative;
   flex: 1;
   padding: var(--space-md);
-  background: #1a1a2e;
+  background:
+    radial-gradient(
+      120% 90% at 50% 0%,
+      rgba(99, 102, 241, 0.16) 0%,
+      transparent 60%
+    ),
+    #14142a;
   min-height: 0;
 }
 
@@ -160,27 +166,49 @@
   align-items: flex-start;
   justify-content: center;
   overflow: auto;
+  padding-bottom: var(--space-xl, 2rem);
 }
 
+/*
+ * L'échelle est appliquée en transform sur le cadre (et jamais en zoom sur
+ * l'iframe) : le viewport interne reste exactement à la largeur de l'appareil,
+ * donc les media queries du site se déclenchent comme sur un vrai mobile.
+ * Ce wrapper réserve la place occupée par le cadre une fois mis à l'échelle.
+ */
 .deviceScaler {
+  --wp-frame-border: 3px;
+  --wp-frame-chrome: 32px;
   flex-shrink: 0;
-  transform-origin: top center;
+  width: calc(
+    (var(--preview-device-width) + var(--wp-frame-border) * 2) *
+      var(--preview-device-scale)
+  );
+  height: calc(
+    (
+        var(--preview-device-height) + var(--wp-frame-chrome) +
+          var(--wp-frame-border) * 2
+      ) * var(--preview-device-scale)
+  );
+}
+
+.deviceScalerDesktop {
+  --wp-frame-border: 2px;
+  --wp-frame-chrome: 28px;
 }
 
 .deviceFrame {
-  width: var(--preview-device-width, 375px);
-  max-width: calc(100% - 1rem);
-  flex-shrink: 0;
+  width: fit-content;
   display: flex;
   flex-direction: column;
   border-radius: 28px;
-  border: 3px solid #2d2d44;
+  border: var(--wp-frame-border) solid #2d2d44;
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.06),
-    0 16px 48px rgba(0, 0, 0, 0.45);
+    0 24px 60px rgba(0, 0, 0, 0.5);
   background: #0f0f18;
   overflow: hidden;
-  transform-origin: top center;
+  transform: scale(var(--preview-device-scale, 1));
+  transform-origin: top left;
 }
 
 .deviceFrameTablet {
@@ -189,11 +217,6 @@
 
 .deviceFrameDesktop {
   border-radius: 12px;
-  border-width: 2px;
-}
-
-.deviceFrameDesktop .deviceChrome {
-  height: 28px;
 }
 
 .deviceFrameDesktop .deviceLabel {
@@ -205,7 +228,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 32px;
+  height: var(--wp-frame-chrome);
   background: linear-gradient(180deg, #1e1e2e 0%, #141422 100%);
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
@@ -220,25 +243,34 @@
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
+.deviceDots {
+  position: absolute;
+  left: 12px;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #f87171;
+  box-shadow:
+    14px 0 0 #fbbf24,
+    28px 0 0 #34d399;
+}
+
 .deviceLabel {
   font-size: 0.6rem;
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #6b7280;
+  color: #8b8ba7;
   z-index: 1;
 }
 
 .frameDevice {
   width: var(--preview-device-width, 375px);
-  max-width: 100%;
   height: var(--preview-device-height, 667px);
-  min-height: 480px;
   border: none;
   border-radius: 0;
   background: white;
   display: block;
-  zoom: var(--preview-device-scale, 1);
 }
 
 .navMobileHint {
@@ -268,11 +300,15 @@
 }
 
 .frame {
+  display: block;
   width: 100%;
   height: 100%;
-  border: 1px solid var(--color-border-subtle);
+  border: none;
   border-radius: var(--radius-md);
   background: white;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 18px 48px rgba(0, 0, 0, 0.4);
 }
 
 .overlay {
@@ -299,6 +335,12 @@
   height: 100%;
   color: var(--color-text-tertiary);
   font-size: 0.875rem;
+}
+
+@media (max-width: 820px) {
+  .label {
+    display: none;
+  }
 }
 
 @media (max-width: 640px) {
