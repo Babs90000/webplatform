@@ -15,6 +15,7 @@ import { getAuthToken } from "@/lib/authToken";
 import { useExportCheckout } from "@/features/billing/hooks/useBilling";
 import { CreativeCommitteeStrip } from "../CreativeCommitteeStrip";
 import { PreviewViewportMenu } from "../PreviewViewportMenu";
+import { QualityModeToggle, type QualityMode } from "../QualityModeToggle";
 import type { ReviewExpertScores } from "../../lib/creativeCommittee";
 import type { PreviewViewport } from "../../lib/previewViewport";
 import type { CustomPreviewPreset } from "../../lib/customPreviewPresets";
@@ -24,6 +25,8 @@ interface StudioToolbarProps {
   projectName: string;
   statusMessage: string;
   isBusy: boolean;
+  qualityMode: QualityMode;
+  onQualityModeChange: (mode: QualityMode) => void;
   onGenerate: () => void;
   onRefreshPreview: () => void;
   hasFiles: boolean;
@@ -54,6 +57,8 @@ export const StudioToolbar: React.FC<StudioToolbarProps> = ({
   projectName,
   statusMessage,
   isBusy,
+  qualityMode,
+  onQualityModeChange,
   onGenerate,
   onRefreshPreview,
   hasFiles,
@@ -220,6 +225,11 @@ export const StudioToolbar: React.FC<StudioToolbarProps> = ({
         </Button>
 
         <div className={styles.primaryActions}>
+          <QualityModeToggle
+            value={qualityMode}
+            onChange={onQualityModeChange}
+            disabled={isBusy}
+          />
           <Button
             variant={codeVisible ? "primary" : "secondary"}
             size="sm"

@@ -167,10 +167,28 @@ const LoginFormFields: React.FC = () => {
       </form>
 
       <div className={styles.footer}>
-        Pas de compte ?{" "}
-        <Link href="/register" className={styles.link}>
-          S&apos;inscrire
-        </Link>
+        <div>
+          <Link href="/forgot-password" className={styles.link}>
+            Mot de passe oublié ?
+          </Link>
+        </div>
+        <div className={styles.footerSpacer}>
+          Pas de compte ?{" "}
+          <Link href="/register" className={styles.link}>
+            S&apos;inscrire
+          </Link>
+        </div>
+        <nav className={styles.legal} aria-label="Informations légales">
+          <Link href="/cgu" className={styles.link}>
+            CGU
+          </Link>
+          <Link href="/privacy" className={styles.link}>
+            Confidentialité
+          </Link>
+          <Link href="/mentions-legales" className={styles.link}>
+            Mentions légales
+          </Link>
+        </nav>
       </div>
     </div>
   );

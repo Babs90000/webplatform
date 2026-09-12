@@ -435,18 +435,24 @@ export const useCodegenStream = (projectId: string) => {
     [projectId, handleEvent, addChatMessage, setPhase, setStatusMessage],
   );
 
-  const generate = useCallback(async () => {
-    setProgress(5, [], [...GENERATION_TASKS]);
-    try {
-      const { job_id } = await startGenerateJob(projectId);
-      await runJobFollow(job_id);
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "Erreur de génération";
-      setPhase("error");
-      setStatusMessage(msg);
-      toast.error(msg);
-    }
-  }, [projectId, runJobFollow, setPhase, setProgress, setStatusMessage]);
+  const generate = useCallback(
+    async (options?: {
+      quality_mode?: "fast" | "premium";
+      style_override?: string;
+    }) => {
+      setProgress(5, [], [...GENERATION_TASKS]);
+      try {
+        const { job_id } = await startGenerateJob(projectId, options);
+        await runJobFollow(job_id);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "Erreur de génération";
+        setPhase("error");
+        setStatusMessage(msg);
+        toast.error(msg);
+      }
+    },
+    [projectId, runJobFollow, setPhase, setProgress, setStatusMessage],
+  );
 
   const edit = useCallback(
     async (instruction: string) => {

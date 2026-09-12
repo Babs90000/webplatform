@@ -60,7 +60,7 @@ export const BillingCard: React.FC = () => {
     checkout.isPending || portal.isPending || earlyCommit.isPending;
 
   return (
-    <section className={styles.card} aria-labelledby="billing-heading">
+    <section id="billing" className={styles.card} aria-labelledby="billing-heading">
       <div className={styles.header}>
         <div className={styles.headerText}>
           <div className={styles.priceRow}>

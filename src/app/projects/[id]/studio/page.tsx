@@ -57,6 +57,16 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
   const { generate, edit, auditQuality, isBusy, refreshPreview } = useCodegenStream(projectId);
   const [isSaving, setIsSaving] = useState(false);
   const [autoGenerateStarted, setAutoGenerateStarted] = useState(false);
+  const [qualityMode, setQualityMode] = useState<"fast" | "premium">("fast");
+  const qualityModeRef = React.useRef(qualityMode);
+  qualityModeRef.current = qualityMode;
+  const [styleOverride, setStyleOverride] = useState<string | undefined>();
+  React.useEffect(() => {
+    const stored = sessionStorage.getItem("wp-style-override");
+    if (stored) setStyleOverride(stored);
+  }, []);
+  const styleOverrideRef = React.useRef(styleOverride);
+  styleOverrideRef.current = styleOverride;
   const shouldAutoGenerate = searchParams.get("generate") === "1";
 
   usePreviewBundle(projectId, isBusy);
@@ -187,7 +197,10 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
         sessionStorage.setItem(autoGenerateStorageKey(projectId), "1");
       }
       clearGenerateQueryParam();
-      void generate();
+      void generate({
+        quality_mode: qualityModeRef.current,
+        style_override: styleOverrideRef.current,
+      });
     })();
   }, [
     shouldAutoGenerate,
@@ -436,7 +449,14 @@ const StudioContent: React.FC<{ projectId: string }> = ({ projectId }) => {
           projectName={project?.name ?? "Chargement…"}
           statusMessage={statusMessage}
           isBusy={isBusy}
-          onGenerate={() => void generate()}
+          qualityMode={qualityMode}
+          onQualityModeChange={setQualityMode}
+          onGenerate={() =>
+            void generate({
+              quality_mode: qualityMode,
+              style_override: styleOverrideRef.current,
+            })
+          }
           onRefreshPreview={() => void refreshPreview()}
           hasFiles={files.length > 0}
           visualEditMode={visualEditMode}

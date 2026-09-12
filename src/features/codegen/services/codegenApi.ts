@@ -215,8 +215,21 @@ const postCodegenJob = async (
 
 export const startGenerateJob = async (
   projectId: string,
-): Promise<CodegenJobStartResponse> =>
-  postCodegenJob(`${BASE}/projects/${projectId}/codegen/generate`);
+  options?: {
+    quality_mode?: "fast" | "premium";
+    style_override?: string;
+  },
+): Promise<CodegenJobStartResponse> => {
+  const body: Record<string, string> = {};
+  if (options?.quality_mode) body.quality_mode = options.quality_mode;
+  if (options?.style_override?.trim()) {
+    body.style_override = options.style_override.trim();
+  }
+  return postCodegenJob(
+    `${BASE}/projects/${projectId}/codegen/generate`,
+    Object.keys(body).length > 0 ? body : {},
+  );
+};
 
 export const startEditJob = async (
   projectId: string,

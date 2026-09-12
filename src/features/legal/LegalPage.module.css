@@ -1,0 +1,96 @@
+@reference "#tailwind-reference";
+
+.page {
+  @apply min-h-dvh;
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+}
+
+.container {
+  @apply mx-auto;
+  max-width: 42rem;
+  padding: var(--space-xl) var(--space-md) var(--space-3xl);
+}
+
+@media (min-width: 768px) {
+  .container {
+    padding: var(--space-2xl) var(--space-lg) var(--space-3xl);
+  }
+}
+
+.brand {
+  @apply inline-flex items-center gap-2 no-underline mb-8;
+  color: var(--color-text-primary);
+  font-weight: 700;
+  font-size: 1rem;
+  letter-spacing: -0.02em;
+}
+
+.brand:hover {
+  color: var(--color-text-accent);
+}
+
+.title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  margin: 0 0 var(--space-sm);
+}
+
+.updated {
+  margin: 0 0 var(--space-xl);
+  font-size: 0.8125rem;
+  color: var(--color-text-tertiary);
+}
+
+.content {
+  @apply flex flex-col;
+  gap: var(--space-lg);
+}
+
+.sectionTitle {
+  margin: 0 0 var(--space-sm);
+  font-size: 1.0625rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.paragraph {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.65;
+  color: var(--color-text-secondary);
+}
+
+.list {
+  margin: 0;
+  padding-left: 1.25rem;
+  font-size: 0.9375rem;
+  line-height: 1.65;
+  color: var(--color-text-secondary);
+}
+
+.list li + li {
+  margin-top: 0.35rem;
+}
+
+.footer {
+  @apply flex flex-wrap items-center justify-center gap-x-4 gap-y-2;
+  margin-top: var(--space-2xl);
+  padding-top: var(--space-lg);
+  border-top: 1px solid var(--color-border-subtle);
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+}
+
+.link {
+  color: var(--color-text-accent);
+  font-weight: 500;
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+.link:hover {
+  color: var(--color-accent-primary-hover);
+}

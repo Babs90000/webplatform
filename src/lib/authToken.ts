@@ -74,9 +74,12 @@ export const clearAuthToken = (): void => {
   window.dispatchEvent(new CustomEvent(AUTH_EXPIRED_EVENT));
 };
 
-/** Vrai pour les chemins d'API d'authentification (login/register). */
+/** Vrai pour les chemins d'API d'authentification (login/register/reset). */
 export const isAuthRoute = (path: string): boolean =>
-  path.startsWith("/auth/login") || path.startsWith("/auth/register");
+  path.startsWith("/auth/login") ||
+  path.startsWith("/auth/register") ||
+  path.startsWith("/auth/forgot-password") ||
+  path.startsWith("/auth/reset-password");
 
 export type AuthSessionPayload = {
   token: string;

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 const TOKEN_COOKIE = "webplatform_token";
-const AUTH_PAGES = ["/login", "/register"];
+const AUTH_PAGES = ["/login", "/register", "/forgot-password", "/reset-password"];
 
 const readTokenFromCookie = (request: NextRequest): string | undefined => {
   const raw = request.cookies.get(TOKEN_COOKIE)?.value;
@@ -51,7 +51,11 @@ export const config = {
     "/dashboard/:path*",
     "/onboarding/:path*",
     "/projects/:path*",
+    "/settings",
+    "/settings/:path*",
     "/login",
     "/register",
+    "/forgot-password",
+    "/reset-password",
   ],
 };

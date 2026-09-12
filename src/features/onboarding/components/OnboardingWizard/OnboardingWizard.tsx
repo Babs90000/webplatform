@@ -31,6 +31,9 @@ import {
   getProjectStudioGeneratePath,
   getProjectStudioPath,
 } from "@/lib/projectRoutes";
+import { DesignVariantsPicker } from "../DesignVariantsPicker";
+
+const STYLE_OVERRIDE_KEY = "wp-style-override";
 
 const WELCOME_STEPS = [
   { num: "1", title: "Brief express", desc: "Quelques questions sur votre activité et vos objectifs." },
@@ -42,12 +45,13 @@ export const OnboardingWizard: React.FC = () => {
   const router = useRouter();
 
   const [phase, setPhase] = useState<
-    "welcome" | "base" | "thinking" | "dynamic" | "generating"
+    "welcome" | "base" | "thinking" | "dynamic" | "variants" | "generating"
   >("welcome");
   const [sessionId, setSessionId] = useState<string>("");
   const [projectId, setProjectId] = useState<string>("");
   const [baseQuestions, setBaseQuestions] = useState<OnboardingQuestion[]>([]);
   const [dynamicQuestions, setDynamicQuestions] = useState<OnboardingQuestion[]>([]);
+  const [selectedStyle, setSelectedStyle] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState<number>(0);
   const [answers, setAnswers] = useState<Record<string, unknown>>({});
   const [fakeStatusIndex, setFakeStatusIndex] = useState<number>(0);
@@ -214,7 +218,7 @@ export const OnboardingWizard: React.FC = () => {
           setCurrentStep(0);
           setPhase("dynamic");
         } else {
-          void handleFinalize(answers);
+          setPhase("variants");
         }
       } catch (err) {
         setPhase("base");
@@ -227,13 +231,20 @@ export const OnboardingWizard: React.FC = () => {
         console.error(err);
       }
     } else if (phase === "dynamic") {
-      void handleFinalize(answers);
+      setPhase("variants");
     }
   };
 
   const handleFinalize = async (allAnswers: Record<string, unknown>) => {
     try {
       setPhase("generating");
+      if (selectedStyle) {
+        sessionStorage.setItem(STYLE_OVERRIDE_KEY, selectedStyle);
+        allAnswers = {
+          ...allAnswers,
+          style_vibe: [selectedStyle],
+        };
+      }
       const dynamicPayload: Record<string, unknown> = {};
       const resolved = resolveAnswersForSubmit(
         allAnswers,
@@ -481,6 +492,52 @@ export const OnboardingWizard: React.FC = () => {
             {AI_ASSISTANT_NAME} analyse vos objectifs pour préparer des questions
             d&apos;approfondissement sur mesure…
           </p>
+        </div>
+      </OnboardingShell>
+    );
+  }
+
+  if (phase === "variants") {
+    const preferred =
+      Array.isArray(answers.style_vibe) && typeof answers.style_vibe[0] === "string"
+        ? answers.style_vibe[0]
+        : typeof answers.style_vibe === "string"
+          ? answers.style_vibe
+          : undefined;
+
+    return (
+      <OnboardingShell badge="Design">
+        <div className={`${styles.wizardCard} ${styles.wizardCardWide}`}>
+          <div className={styles.titleArea}>
+            <span className={styles.phaseTag}>Choix esthétique</span>
+            <h2 className={styles.title}>Deux directions pour votre site</h2>
+            <p className={styles.subtitle}>
+              Sélectionnez l&apos;ambiance — vous pourrez peaufiner ensuite dans le Studio.
+            </p>
+          </div>
+          <DesignVariantsPicker
+            preferredStyle={preferred}
+            value={selectedStyle}
+            onChange={setSelectedStyle}
+          />
+          <div className={styles.footerActions}>
+            <Button
+              variant="secondary"
+              onClick={() =>
+                setPhase(dynamicQuestions.length > 0 ? "dynamic" : "base")
+              }
+            >
+              <Icon icon={ChevronLeft} size="sm" />
+              Retour
+            </Button>
+            <Button
+              onClick={() => void handleFinalize(answers)}
+              disabled={!selectedStyle}
+            >
+              Continuer
+              <Icon icon={ChevronRight} size="sm" />
+            </Button>
+          </div>
         </div>
       </OnboardingShell>
     );

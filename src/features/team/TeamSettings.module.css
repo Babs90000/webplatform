@@ -1,0 +1,120 @@
+@reference "#tailwind-reference";
+
+.page {
+  @apply min-h-dvh;
+  background: var(--color-bg-primary);
+}
+
+.container {
+  @apply mx-auto;
+  max-width: 42rem;
+  padding: var(--space-lg) var(--space-md) var(--space-2xl);
+}
+
+@media (min-width: 768px) {
+  .container {
+    padding: var(--space-xl) var(--space-lg) var(--space-3xl);
+  }
+}
+
+.back {
+  @apply inline-flex items-center gap-1 no-underline mb-4 text-sm font-medium;
+  color: var(--color-text-accent);
+}
+
+.back:hover {
+  color: var(--color-accent-primary-hover);
+}
+
+.title {
+  margin: 0;
+  font-size: 1.375rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  color: var(--color-text-primary);
+}
+
+.subtitle {
+  margin: 4px 0 var(--space-xl);
+  font-size: 0.8125rem;
+  color: var(--color-text-tertiary);
+}
+
+.card {
+  @apply rounded-xl border;
+  padding: var(--space-md) var(--space-lg);
+  background: var(--color-bg-elevated);
+  border-color: var(--color-border-primary);
+  margin-bottom: var(--space-lg);
+}
+
+.cardTitle {
+  margin: 0 0 var(--space-md);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.inviteForm {
+  @apply flex flex-col gap-3 sm:flex-row sm:items-end;
+}
+
+.inviteField {
+  @apply flex-1 min-w-0;
+}
+
+.memberList {
+  @apply flex flex-col;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.memberRow {
+  @apply flex items-center justify-between gap-3;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.memberRow:last-child {
+  border-bottom: none;
+}
+
+.memberInfo {
+  @apply min-w-0 flex-1;
+}
+
+.memberEmail {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.memberRole {
+  font-size: 0.75rem;
+  color: var(--color-text-tertiary);
+  text-transform: capitalize;
+}
+
+.error {
+  @apply text-sm;
+  color: var(--color-accent-danger);
+  margin: 0 0 var(--space-md);
+}
+
+.fieldError {
+  display: block;
+  margin-top: var(--space-xs);
+  font-size: 0.8125rem;
+  color: var(--color-accent-danger);
+}
+
+.empty {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--color-text-tertiary);
+}

@@ -1,0 +1,31 @@
+@reference "#tailwind-reference";
+
+.toggle {
+  @apply inline-flex items-center rounded-md border overflow-hidden;
+  border-color: var(--color-border-primary);
+  background: var(--color-bg-elevated);
+}
+
+.option {
+  @apply border-0 cursor-pointer text-xs font-medium;
+  padding: 0.35rem 0.65rem;
+  background: transparent;
+  color: var(--color-text-secondary);
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.option:hover:not(:disabled) {
+  color: var(--color-text-primary);
+}
+
+.option:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.active {
+  background: rgba(99, 102, 241, 0.18);
+  color: var(--color-text-accent);
+}

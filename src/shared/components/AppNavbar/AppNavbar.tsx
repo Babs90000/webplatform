@@ -3,7 +3,7 @@
 import React, { useEffect, useId, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { LogOut, Menu, Plus, Sparkles, X } from "lucide-react";
+import { CreditCard, LogOut, Menu, Plus, Settings, Sparkles, X } from "lucide-react";
 import styles from "./AppNavbar.module.css";
 import { Button } from "@/shared/components/Button";
 import { Icon } from "@/shared/components/Icon";
@@ -54,6 +54,16 @@ export const AppNavbar: React.FC = () => {
     router.push("/onboarding");
   };
 
+  const goBilling = (): void => {
+    closeMenu();
+    router.push("/dashboard#billing");
+  };
+
+  const goSettings = (): void => {
+    closeMenu();
+    router.push("/settings");
+  };
+
   const handleLogout = (): void => {
     closeMenu();
     logout();
@@ -77,6 +87,22 @@ export const AppNavbar: React.FC = () => {
           >
             <Icon icon={Sparkles} size="sm" />
             Assistant
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => router.push("/dashboard#billing")}
+          >
+            <Icon icon={CreditCard} size="sm" />
+            Abonnement
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => router.push("/settings")}
+          >
+            <Icon icon={Settings} size="sm" />
+            Paramètres
           </Button>
           <div className={styles.userChip} title={user?.email ?? undefined}>
             <span className={styles.userName}>{displayName}</span>
@@ -131,6 +157,14 @@ export const AppNavbar: React.FC = () => {
             <button type="button" className={styles.mobileItem} onClick={goOnboarding}>
               <Icon icon={Sparkles} size="sm" />
               Assistant guidé
+            </button>
+            <button type="button" className={styles.mobileItem} onClick={goBilling}>
+              <Icon icon={CreditCard} size="sm" />
+              Abonnement
+            </button>
+            <button type="button" className={styles.mobileItem} onClick={goSettings}>
+              <Icon icon={Settings} size="sm" />
+              Paramètres
             </button>
             <button type="button" className={styles.mobileItem} onClick={goOnboarding}>
               <Icon icon={Plus} size="sm" />
