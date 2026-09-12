@@ -123,4 +123,14 @@ export const onboardingApi = {
       getToken(),
     );
   },
+
+  analyzeReferences: (
+    urls: string,
+  ): Promise<{ references: unknown[]; brief_block: string }> => {
+    return api.post(
+      "/onboarding/reference-lite",
+      { urls },
+      getToken(),
+    );
+  },
 };
